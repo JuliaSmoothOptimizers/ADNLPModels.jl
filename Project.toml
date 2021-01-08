@@ -4,10 +4,13 @@ authors = ["Dominique Orban <dominique.orban@gmail.com>"]
 version = "0.1.0"
 
 [deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 NLPModels = "a4795742-8479-5a88-8948-cc11e1c8c1a6"
+ProfileView = "c46f51b8-102a-5cf2-8d2c-8597cb0e0da7"
 ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 SparseDiffTools = "47a9eef4-7e08-11e9-0b38-333d64bd3804"
 SparsityDetection = "684fba80-ace3-11e9-3d08-3bc7ed6f96df"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
