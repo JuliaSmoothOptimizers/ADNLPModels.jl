@@ -12,6 +12,9 @@ include("test_autodiff_model.jl") #test_autodiff_model()
 #Tests 0-problems
 #test_autodiff_model() #uses constraints
 
+problems = ["hs5", "brownden"]
+problems2 = ["arglina", "arwhead", "chainwoo"]
+
 #List of problems used in tests
 #Problems from NLPModels
 include("problems/hs5.jl") #bounds constraints n=2, dense hessian
@@ -20,9 +23,6 @@ include("problems/brownden.jl") #unconstrained n=4, dense hessian
 for pb in union(problems, problems2)
     include("problems/$(lowercase(pb)).jl")
 end
-
-problems = ["hs5", "brownden"]
-problems2 = ["arglina", "arwhead", "chainwoo"]
 
 for pb in union(problems, problems2)
     

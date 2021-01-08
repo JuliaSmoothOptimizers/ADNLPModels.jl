@@ -2,13 +2,16 @@
 
 ## TODO
 ### Tests
-- get tests from NLPModels
-- new test problems with funny structure
+- get tests from NLPModels ✓
+- new test problems with funny structure 
+- pick matrix in a depot and generate quadratic problems
 ### Benchmark
-- ff
+- improve the output of benchmark function
+- compare reversediff and zygote to compute the grad!
 ### Code (1st goal is for unconstrained)
-- compute nnzh
-- grad!, hess_structure!, hess_coord!, hprod!
+- compute nnzh, hess_structure! and hess_coord!
+- grad!
+- hprod!
 - constructors for bound-constrained
 - Uncomment consistency.jl and runtests.jl lines as we get a first implementation.
 ### Code (2nt goal is constrained)
