@@ -13,7 +13,14 @@ include("test_autodiff_model.jl") #test_autodiff_model()
 #test_autodiff_model() #uses constraints
 
 problems = ["hs5", "brownden"]
-problems2 = ["arglina", "arwhead", "chainwoo"]
+problems2 = ["arglina", "arglinb", "arglinc", "arwhead", "bdqrtic", "beale", "broydn7d",
+             "brybnd", "chainwoo", "chnrosnb", "cosine", "cragglvy", "dixon3dq", "dqdrtic",
+             "dqrtic", "edensch", "eg2", "engval1", "errinros", "extrosnb", "fletcbv2",
+             "fletcbv3", "fletchcr", "freuroth", "genhumps", "genrose", "genrose_nash",
+             "indef", "liarwhd", "morebv", "ncb20", "ncb20b", "noncvxu2", "noncvxun",
+             "nondia", "nondquar", "nzf1", "penalty2", "penalty3", "powellsg", "power",
+             "quartc", "sbrybnd", "schmvett", "scosine", "sparsine", "sparsqur", "srosenbr",
+             "sinquad", "tointgss", "tquartic", "tridia", "vardim", "woods"]
 
 #List of problems used in tests
 #Problems from NLPModels
