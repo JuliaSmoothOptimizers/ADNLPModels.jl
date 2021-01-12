@@ -1,9 +1,11 @@
 # ADNLPModels
 
 ## TODO
+- generic problems for ADNLPModel, RADNLPModel, etc...
+
 ### Tests
 - get tests from NLPModels ✓
-- new test problems with funny structure 
+- new test problems with funny structure ✓
 - pick matrix in a depot and generate quadratic problems
 ### Benchmark
 - improve the output of benchmark function
