@@ -31,7 +31,7 @@ include("additional_func.jl")
 models = [:radnlp, :autodiff]
 fun    = [:obj, :grad]
 
-rb = runbenchmark(problems, models, fun)
+rb = runbenchmark(union(problems, problems2), models, fun)
 N = length(rb[fun[1]][models[1]]) #number of problems
 gstats = group_stats(rb, N, fun, models)
 
