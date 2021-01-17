@@ -108,7 +108,7 @@ function NLPModels.grad!(model :: RADNLPModel, x :: AbstractVector, g :: Abstrac
   @lencheck model.meta.nvar x g
   increment!(model, :neval_grad)
   #...
-  ReverseDiff.gradient!(g, f, x)
+  ReverseDiff.gradient!(g, model.f, x)
   return g
 end
 

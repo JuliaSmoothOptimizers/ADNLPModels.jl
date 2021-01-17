@@ -19,58 +19,24 @@ problems2 = ["arglina", "arglinb", "arglinc", "arwhead", "bdqrtic", "beale", "br
 
 #List of problems used in tests
 #Problems from NLPModels
-include("../test/problems/hs5.jl") #bounds constraints n=2, dense hessian
-include("../test/problems/brownden.jl") #unconstrained n=4, dense hessian
+#include("../test/problems/hs5.jl") #bounds constraints n=2, dense hessian
+#include("../test/problems/brownden.jl") #unconstrained n=4, dense hessian
 
 for pb in union(problems, problems2)
     include("../test/problems/$(lowercase(pb)).jl")
 end
 
-test_problems_1 = [eval(Meta.parse("$(pb)_radnlp()")) for pb in problems]
-test_problems_2 = [eval(Meta.parse("$(pb)_autodiff()")) for pb in problems]
+include("additional_func.jl")
 
-###############################################################################
-# TO COPY-PASTE and modify.
-func = nlp -> obj(nlp, nlp.meta.x0)
+models = [:radnlp, :autodiff]
+fun    = [:obj, :grad]
 
-name1 = "RADNLPModel"
-nlp = test_problems_1[1]
-a1 = @benchmark func(nlp)
-name2 = "ADNLPModel"
-nlp = test_problems_2[1]
-a2 = @benchmark func(nlp)
-###############################################################################
+rb = runbenchmark(problems, models, fun)
+N = length(rb[fun[1]][models[1]]) #number of problems
+gstats = group_stats(rb, N, fun, models)
 
-###############################################################################
-# TO COPY-PASTE and modify.
-# Run a benchmark of the functions on each problem
-# TODO: how to treat the result?
-# 
-#
-function runbenchmark(problems)
-  #with BenchmarkTools
-  #Example: https://github.com/JuliaCI/BenchmarkTools.jl/blob/master/benchmark/benchmarks.jl
-  suite = BenchmarkGroup()
-
-  # Add some child groups to our benchmark suite.
-  suite["obj"] = BenchmarkGroup()
-  suite["grad"] = BenchmarkGroup()
-  
-  x_tab = ["x0", "xrand"]
-
-  for pb in problems
-    npb1 = eval(Meta.parse("$(pb)_radnlp()"))
-    npb2 = eval(Meta.parse("$(pb)_autodiff()"))
-    k=1
-    for x in (npb1.meta.x0, rand(npb1.meta.nvar))
-        suite["obj"][string(pb), x_tab[k], "radnlp"] = @benchmarkable obj($npb1, $x)
-        suite["obj"][string(pb), x_tab[k], "radnlp"] = @benchmarkable obj($npb2, $x)
-        suite["grad"][string(pb), x_tab[k], "radnlp"] = @benchmarkable grad($npb1, $x)
-        suite["grad"][string(pb), x_tab[k], "radnlp"] = @benchmarkable grad($npb2, $x)
-        k+=1
-    end
-  end
-
-  return run(suite)
+for f in fun
+  cost(df) = df.mean_time
+  p = performance_profile(gstats[f], cost)
+  png("perf-$(f)")
 end
-###############################################################################
