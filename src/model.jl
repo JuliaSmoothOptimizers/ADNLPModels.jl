@@ -20,8 +20,9 @@ mutable struct RADNLPModel <: AbstractNLPModel #AbstractADNLPModel
   meta :: NLPModelMeta
   counters :: Counters
   # Functions
-  f
-  c
+  f :: Function
+  c :: Function
+  ∇f! :: Function
 end
 
 show_header(io :: IO, model :: RADNLPModel) = println(io, "RADNLPModel - Model with automatic differentiation")
@@ -43,7 +44,16 @@ function RADNLPModel(f, x0::AbstractVector{T}; name::String="GenericADNLPModel")
   # f_tape = ReverseDiff.GradientTape(f, v)
   # compiled_f_tape = ReverseDiff.compile(f_tape)
   # ∇f!(g, x) = ReverseDiff.gradient!(g, compiled_f_tape, x)
+  #Option 1
   ∇f!(g, x) = ReverseDiff.gradient!(g, f, x)
+  #Option 2
+  #=
+  function ∇f!(g, x)
+    _g = Zygote.gradient(f, x)
+    g .= typeof(_g) <: AbstractVector ? _g : _g[1] #see benchmark/bug_zygote.jl
+    return g
+  end
+  =#
 
   # build v → ∇²f(x)v
   # NB: none of the options below works with compiled tapes
@@ -77,7 +87,7 @@ function RADNLPModel(f, x0::AbstractVector{T}; name::String="GenericADNLPModel")
   #   return Ap
   # end
 
-  return RADNLPModel(meta, counters, f, x->T[]) #, ∇f!, ∇²fprod!)
+  return RADNLPModel(meta, counters, f, x->T[], ∇f!) #, ∇²fprod!)
 end
 
 function RADNLPModel(f    :: Function, 
@@ -94,8 +104,18 @@ function RADNLPModel(f    :: Function,
 
   meta = NLPModelMeta(nvar, x0 = x0, lvar = lvar, uvar = uvar, nnzh = nnzh, 
                       minimize = true, islp = false, name = name)
+  #Option 2:
+  #=
+  function ∇f!(g, x)
+    _g = Zygote.gradient(f, x)
+    g .= typeof(_g) <: AbstractVector ? _g : _g[1] #see benchmark/bug_zygote.jl
+    return g
+  end
+  =#
+  #Option 1:
+  ∇f!(g, x) = ReverseDiff.gradient!(g, f, x)
 
-  return RADNLPModel(meta, Counters(), f, x->T[])
+  return RADNLPModel(meta, Counters(), f, x->T[], ∇f!)
 end
 
 function NLPModels.obj(model :: RADNLPModel, x :: AbstractVector)
@@ -107,8 +127,7 @@ end
 function NLPModels.grad!(model :: RADNLPModel, x :: AbstractVector, g :: AbstractVector)
   @lencheck model.meta.nvar x g
   increment!(model, :neval_grad)
-  #...
-  ReverseDiff.gradient!(g, model.f, x)
+  model.∇f!(g, x)
   return g
 end
 
