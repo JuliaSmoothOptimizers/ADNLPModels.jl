@@ -1,11 +1,9 @@
 export RADNLPModel
 
 """
-    ADNLPModel(f, x0)
-    ADNLPModel(f, x0, lvar, uvar)
-    ADNLPModel(f, x0, c, lcon, ucon)
-    ADNLPModel(f, x0, lvar, uvar, c, lcon, ucon)
-ADNLPModel is an AbstractNLPModel using ForwardDiff to compute the derivatives.
+    RADNLPModel(f, x0)
+    RADNLPModel(f, x0, lvar, uvar)
+RADNLPModel is an AbstractNLPModel using automatic differentiation to compute the derivatives.
 The problem is defined as
      min  f(x)
     s.to  lcon ≤ c(x) ≤ ucon
@@ -23,6 +21,7 @@ mutable struct RADNLPModel <: AbstractNLPModel #AbstractADNLPModel
   f :: Function
   c :: Function
   ∇f! :: Function
+  cfg #config gradient Union{Nothing, ReverseDiff.CompiledTape}
 end
 
 show_header(io :: IO, model :: RADNLPModel) = println(io, "RADNLPModel - Model with automatic differentiation")
@@ -33,16 +32,18 @@ function RADNLPModel(meta :: AbstractNLPModelMeta,
   counters = Counters()
 
   # build in-place objective gradient
-   #v = similar(meta.x0)
+   v = similar(meta.x0)
    #global k = -1; filler() = (k = -k; k); fill!(v, filler())
-   #f_tape = ReverseDiff.GradientTape(f, v)
-   #compiled_f_tape = ReverseDiff.compile(f_tape)
-   #∇f!(g, x) = ReverseDiff.gradient!(g, compiled_f_tape, x)
+   f_tape = ReverseDiff.GradientTape(f, v)
+   cfg = ReverseDiff.compile(f_tape) #compiled_f_tape typeof(compiled_f_tape) <: ReverseDiff.CompiledTape
+   ∇f!(g, x, cfg) = ReverseDiff.gradient!(g, cfg, x)
   #Option 1
-  ∇f!(g, x) = ReverseDiff.gradient!(g, f, x)
+  #∇f!(g, x, cfg) = ReverseDiff.gradient!(g, f, x)
+  #cfg = nothing
   #Option 2
   #=
-  function ∇f!(g, x)
+  cfg = nothing
+  function ∇f!(g, x, cfg)
     _g = Zygote.gradient(f, x)
     g .= typeof(_g) <: AbstractVector ? _g : _g[1] #see benchmark/bug_zygote.jl
     return g
@@ -55,7 +56,7 @@ function RADNLPModel(meta :: AbstractNLPModelMeta,
   function ∇²fprod!(x::AbstractVector, v::AbstractVector, Hv::AbstractVector)
     z = map(ForwardDiff.Dual, x, v)  # x + ε * v
     ∇fz = similar(z)
-    ∇f!(∇fz, z)                      # ∇f(x + ε * v) = ∇f(x) + ε * ∇²f(x)v
+    ∇f!(∇fz, z, nothing)                      # ∇f(x + ε * v) = ∇f(x) + ε * ∇²f(x)v
     Hv = ForwardDiff.extract_derivative!(Nothing, Hv, ∇fz)  # ∇²f(x)v
     return Hv
   end
@@ -81,7 +82,7 @@ function RADNLPModel(meta :: AbstractNLPModelMeta,
   #   return Ap
   # end
 
-  return RADNLPModel(meta, counters, f, x->T[], ∇f!) #, ∇²fprod!)
+  return RADNLPModel(meta, counters, f, x->T[], ∇f!, cfg) #, ∇²fprod!)
 end
 
 function RADNLPModel(f :: Function, x0::AbstractVector{T}; name::String="GenericADNLPModel") where T
@@ -121,7 +122,7 @@ end
 function NLPModels.grad!(model :: RADNLPModel, x :: AbstractVector, g :: AbstractVector)
   @lencheck model.meta.nvar x g
   increment!(model, :neval_grad)
-  model.∇f!(g, x)
+  model.∇f!(g, x, model.cfg)
   return g
 end
 

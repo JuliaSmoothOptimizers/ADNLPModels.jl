@@ -46,7 +46,7 @@ for pb in list_problems
 
     x = rand(pb_radnlp.meta.nvar)
     @test obj(pb_radnlp, x) ≈ obj(pb_adnlp, x)
-    #@test grad(pb_radnlp, x) ≈ grad(pb_adnlp, x)
+    @test grad(pb_radnlp, x) ≈ grad(pb_adnlp, x)
     #@test hess(pb_radnlp, x) ≈ hess(pb_adnlp, x)
 
     v = rand(pb_radnlp.meta.nvar)

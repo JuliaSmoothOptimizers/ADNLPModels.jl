@@ -16,13 +16,14 @@ problems2 = ["arglina", "arglinb", "arglinc", "arwhead", "bdqrtic", "beale", "br
              "nondia", "nondquar", "nzf1", "penalty2", "penalty3", "powellsg", "power",
              "quartc", "sbrybnd", "schmvett", "scosine", "sparsine", "sparsqur", "srosenbr",
              "sinquad", "tointgss", "tquartic", "tridia", "vardim", "woods"]
-
+problems2 = ["arglina", "arglinb", "arglinc", "arwhead", "bdqrtic", "beale", "broydn7d"]
+problems = problems2 #union(problems, problems2)
 #List of problems used in tests
 #Problems from NLPModels
 #include("../test/problems/hs5.jl") #bounds constraints n=2, dense hessian
 #include("../test/problems/brownden.jl") #unconstrained n=4, dense hessian
 
-for pb in union(problems, problems2)
+for pb in problems
     include("../test/problems/$(lowercase(pb)).jl")
 end
 
@@ -31,7 +32,7 @@ include("additional_func.jl")
 models = [:radnlp, :autodiff]
 fun    = [:obj, :grad]
 
-rb = runbenchmark(union(problems, problems2), models, fun)
+rb = runbenchmark(problems, models, fun)
 N = length(rb[fun[1]][models[1]]) #number of problems
 gstats = group_stats(rb, N, fun, models)
 
