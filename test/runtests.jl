@@ -12,6 +12,7 @@ include("test_autodiff_model.jl") #test_autodiff_model()
 #Tests 0-problems
 #test_autodiff_model() #uses constraints
 
+#Problems from NLPModels
 problems = ["hs5", "brownden"]
 problems2 = ["arglina", "arglinb", "arglinc", "arwhead", "bdqrtic", "beale", "broydn7d",
              "brybnd", "chainwoo", "chnrosnb", "cosine", "cragglvy", "dixon3dq", "dqdrtic",
@@ -23,15 +24,13 @@ problems2 = ["arglina", "arglinb", "arglinc", "arwhead", "bdqrtic", "beale", "br
              "sinquad", "tointgss", "tquartic", "tridia", "vardim", "woods"]
 
 #List of problems used in tests
-#Problems from NLPModels
-include("problems/hs5.jl") #bounds constraints n=2, dense hessian
-include("problems/brownden.jl") #unconstrained n=4, dense hessian
+list_problems = union(problems, problems2[1:4])
 
-for pb in union(problems, problems2)
+for pb in list_problems
     include("problems/$(lowercase(pb)).jl")
 end
 
-for pb in union(problems, problems2)
+for pb in list_problems
     
   @testset "Test for $(pb)" begin
     pb_radnlp = eval(Meta.parse("$(pb)_radnlp()"))

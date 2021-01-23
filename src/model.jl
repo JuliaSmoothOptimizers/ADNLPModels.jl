@@ -27,23 +27,17 @@ end
 
 show_header(io :: IO, model :: RADNLPModel) = println(io, "RADNLPModel - Model with automatic differentiation")
 
-function RADNLPModel(f, x0::AbstractVector{T}; name::String="GenericADNLPModel") where T
+function RADNLPModel(meta :: AbstractNLPModelMeta,
+                     f    :: Function)
   
-  nvar = length(x0)
-  @lencheck nvar x0
-
-  @warn "nnzh is not precised here."
-  nnzh = nvar * (nvar + 1) / 2
-  
-  meta = NLPModelMeta(nvar, x0=x0, nnzh=nnzh, minimize=true, islp=false, name=name)
   counters = Counters()
 
   # build in-place objective gradient
-  # v = similar(x0)
-  # global k = -1; filler() = (k = -k; k); fill!(v, filler())
-  # f_tape = ReverseDiff.GradientTape(f, v)
-  # compiled_f_tape = ReverseDiff.compile(f_tape)
-  # ∇f!(g, x) = ReverseDiff.gradient!(g, compiled_f_tape, x)
+   #v = similar(meta.x0)
+   #global k = -1; filler() = (k = -k; k); fill!(v, filler())
+   #f_tape = ReverseDiff.GradientTape(f, v)
+   #compiled_f_tape = ReverseDiff.compile(f_tape)
+   #∇f!(g, x) = ReverseDiff.gradient!(g, compiled_f_tape, x)
   #Option 1
   ∇f!(g, x) = ReverseDiff.gradient!(g, f, x)
   #Option 2
@@ -90,6 +84,17 @@ function RADNLPModel(f, x0::AbstractVector{T}; name::String="GenericADNLPModel")
   return RADNLPModel(meta, counters, f, x->T[], ∇f!) #, ∇²fprod!)
 end
 
+function RADNLPModel(f :: Function, x0::AbstractVector{T}; name::String="GenericADNLPModel") where T
+  nvar = length(x0)
+  @lencheck nvar x0
+
+  @warn "nnzh is not precised here."
+  nnzh = nvar * (nvar + 1) / 2
+  
+  meta = NLPModelMeta(nvar, x0=x0, nnzh=nnzh, minimize=true, islp=false, name=name)
+  return RADNLPModel(meta, f)
+end
+
 function RADNLPModel(f    :: Function, 
                      x0   :: AbstractVector{T}, 
                      lvar :: AbstractVector, 
@@ -104,18 +109,7 @@ function RADNLPModel(f    :: Function,
 
   meta = NLPModelMeta(nvar, x0 = x0, lvar = lvar, uvar = uvar, nnzh = nnzh, 
                       minimize = true, islp = false, name = name)
-  #Option 2:
-  #=
-  function ∇f!(g, x)
-    _g = Zygote.gradient(f, x)
-    g .= typeof(_g) <: AbstractVector ? _g : _g[1] #see benchmark/bug_zygote.jl
-    return g
-  end
-  =#
-  #Option 1:
-  ∇f!(g, x) = ReverseDiff.gradient!(g, f, x)
-
-  return RADNLPModel(meta, Counters(), f, x->T[], ∇f!)
+  return RADNLPModel(meta, f)
 end
 
 function NLPModels.obj(model :: RADNLPModel, x :: AbstractVector)
