@@ -1,4 +1,4 @@
-function morebv_radnlp(; n::Int=100, type::Val{T}=Val(Float64)) where T
+function morebv_radnlp(; n::Int=100, type::Val{T}=Val(Float64), kwargs...) where T
   n ≥ 2 || error("morebv : n ≥ 2")
   function f(x)
     n = length(x)
@@ -10,7 +10,7 @@ function morebv_radnlp(; n::Int=100, type::Val{T}=Val(Float64)) where T
   x0[1] = zero(T)
   x0[n] = zero(T)
 
-  return RADNLPModel(f, x0, name="morebv_radnlp")
+  return RADNLPModel(f, x0, name="morebv_radnlp"; kwargs...)
 end
 
 function morebv_autodiff(; n::Int=100, type::Val{T}=Val(Float64)) where T

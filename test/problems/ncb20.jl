@@ -1,4 +1,4 @@
-function ncb20_radnlp(; n::Int=100, type::Val{T}=Val(Float64)) where T
+function ncb20_radnlp(; n::Int=100, type::Val{T}=Val(Float64), kwargs...) where T
   n ≥ 20 || error("ncb20 : n ≥ 20")
   function f(x)
     n = length(x)
@@ -12,7 +12,7 @@ function ncb20_radnlp(; n::Int=100, type::Val{T}=Val(Float64)) where T
   x0 = ones(T, n)
   x0[1:n-10] .= zero(T)
 
-  return RADNLPModel(f, x0, name="ncb20_radnlp")
+  return RADNLPModel(f, x0, name="ncb20_radnlp"; kwargs...)
 end
 
 function ncb20_autodiff(; n::Int=100, type::Val{T}=Val(Float64)) where T

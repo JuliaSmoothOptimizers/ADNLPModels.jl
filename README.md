@@ -8,11 +8,14 @@
 - new test problems with funny structure ✓
 - pick matrix in a depot and generate quadratic problems
 ### Benchmark
-- improve the output of benchmark function
-- compare reversediff and zygote to compute the grad!
+- improve the output of benchmark function ✓
+- improve the benchmark or creation of models so that we can compare intra-RADNLP ✓
+- compare reversediff to compute the grad! -> add pre-allocations ✓
+- and zygote (bug?) 
 ### Code (1st goal is for unconstrained)
+- improve constructors ✓
 - compute nnzh, hess_structure! and hess_coord!
-- grad!
+- grad! ✓
 - hprod!
 - constructors for bound-constrained
 - Uncomment consistency.jl and runtests.jl lines as we get a first implementation.

@@ -1,4 +1,4 @@
-function penalty2_radnlp(; n::Int=100, type::Val{T}=Val(Float64)) where T
+function penalty2_radnlp(; n::Int=100, type::Val{T}=Val(Float64), kwargs...) where T
   n ≥ 3 || error("penalty2 : n ≥ 3")
   function f(x)
     n = length(x)
@@ -14,7 +14,7 @@ function penalty2_radnlp(; n::Int=100, type::Val{T}=Val(Float64)) where T
       (sum((n-j+1) * x[j]^2  for j=1:n) - 1.0)^2
   end
   x0 = ones(T, n) / 2
-  return RADNLPModel(f, x0, name="penalty2_radnlp")
+  return RADNLPModel(f, x0, name="penalty2_radnlp"; kwargs...)
 end
 
 function penalty2_autodiff(; n::Int=100, type::Val{T}=Val(Float64)) where T

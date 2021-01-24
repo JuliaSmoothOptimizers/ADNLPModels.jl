@@ -6,7 +6,7 @@
 #   ACM Transactions on Mathematical Software, vol. 7(1), pp. 17-41, 1981
 #
 #   classification SUR2-AN-4-0
-function brownden_radnlp(; n :: Int = 4, type :: Val{T} = Val(Float64)) where T
+function brownden_radnlp(; n :: Int = 4, type::Val{T}=Val(Float64), kwargs...) where T
 
   x0 = convert(Array{T}, [25; 5; -5; -1])
   f(x) = begin
@@ -17,7 +17,7 @@ function brownden_radnlp(; n :: Int = 4, type :: Val{T} = Val(Float64)) where T
     return s
   end
 
-  return RADNLPModel(f, x0, name="brownden_radnlp")
+  return RADNLPModel(f, x0, name="brownden_radnlp"; kwargs...)
 end
 
 function brownden_autodiff(; n :: Int = 4, type :: Val{T} = Val(Float64)) where T

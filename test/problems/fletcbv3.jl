@@ -1,4 +1,4 @@
-function fletcbv3_radnlp(; n::Int=100, type::Val{T}=Val(Float64)) where T
+function fletcbv3_radnlp(; n::Int=100, type::Val{T}=Val(Float64), kwargs...) where T
   n ≥ 2 || error("fletcbv3 : n ≥ 2")
   function f(x)
     n = length(x)
@@ -8,7 +8,7 @@ function fletcbv3_radnlp(; n::Int=100, type::Val{T}=Val(Float64)) where T
      p * sum(100.0 * (1 + (2.0 / h^2)) * sin(x[i] / 100.0) + (1 / h^2) * cos(x[i]) for i=1:n)
    end
    x0 = T.([(i/(n+1.0)) for i=1:n])
-  return RADNLPModel(f, x0, name="fletcbv3_radnlp")
+  return RADNLPModel(f, x0, name="fletcbv3_radnlp"; kwargs...)
 end
 
 function fletcbv3_autodiff(; n::Int=100, type::Val{T}=Val(Float64)) where T

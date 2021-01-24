@@ -16,8 +16,8 @@ problems2 = ["arglina", "arglinb", "arglinc", "arwhead", "bdqrtic", "beale", "br
              "nondia", "nondquar", "nzf1", "penalty2", "penalty3", "powellsg", "power",
              "quartc", "sbrybnd", "schmvett", "scosine", "sparsine", "sparsqur", "srosenbr",
              "sinquad", "tointgss", "tquartic", "tridia", "vardim", "woods"]
-problems2 = ["arglina", "arglinb", "arglinc", "arwhead", "bdqrtic", "beale", "broydn7d"]
-problems = problems2 #union(problems, problems2)
+#problems2 = ["arglina", "arglinb", "arglinc", "arwhead", "bdqrtic", "beale", "broydn7d"]
+problems = union(problems, problems2)
 #List of problems used in tests
 #Problems from NLPModels
 #include("../test/problems/hs5.jl") #bounds constraints n=2, dense hessian
@@ -29,7 +29,13 @@ end
 
 include("additional_func.jl")
 
-models = [:radnlp, :autodiff]
+#Extend the functions of each problems to the variants of RADNLPModel
+for pb in problems #readdir("test/problems")
+  eval(Meta.parse("$(pb)_radnlp_reverse(args... ; kwargs...) = $(pb)_radnlp(args... ; gradient = ADNLPModels.reverse, kwargs...)"))
+  eval(Meta.parse("$(pb)_radnlp_smartreverse(args... ; kwargs...) = $(pb)_radnlp(args... ; gradient = ADNLPModels.smart_reverse, kwargs...)"))
+end
+
+models = [:radnlp_smartreverse, :autodiff]#[:radnlp_reverse, :radnlp_smartreverse, :autodiff]
 fun    = [:obj, :grad]
 
 rb = runbenchmark(problems, models, fun)

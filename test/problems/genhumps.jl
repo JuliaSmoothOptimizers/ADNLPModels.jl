@@ -1,4 +1,4 @@
-function genhumps_radnlp(; n::Int=100, type::Val{T}=Val(Float64)) where T
+function genhumps_radnlp(; n::Int=100, type::Val{T}=Val(Float64), kwargs...) where T
   function f(x)
     n = length(x)
     ζ = 20
@@ -7,7 +7,7 @@ function genhumps_radnlp(; n::Int=100, type::Val{T}=Val(Float64)) where T
 
   x0 = -506.2 * ones(T, n)
   x0[1] = -506
-  return RADNLPModel(f, x0, name="genhumps_radnlp")
+  return RADNLPModel(f, x0, name="genhumps_radnlp"; kwargs...)
 end
 
 function genhumps_autodiff(; n::Int=100, type::Val{T}=Val(Float64)) where T

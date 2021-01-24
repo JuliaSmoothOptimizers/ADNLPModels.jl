@@ -1,4 +1,4 @@
-function sparsqur_radnlp(; n::Int=100, type::Val{T}=Val(Float64)) where T
+function sparsqur_radnlp(; n::Int=100, type::Val{T}=Val(Float64), kwargs...) where T
   n ≥ 10 || error("sparsqur : n ≥ 10")
   function f(x)
     n = length(x)
@@ -11,7 +11,7 @@ function sparsqur_radnlp(; n::Int=100, type::Val{T}=Val(Float64)) where T
         x[mod(11*i-1, n) + 1]^2)^2 for i=1:n)
   end
   x0 = ones(T, n) / 2
-  return RADNLPModel(f, x0, name="sparsqur_radnlp")
+  return RADNLPModel(f, x0, name="sparsqur_radnlp"; kwargs...)
 end
 
 function sparsqur_autodiff(; n::Int=100, type::Val{T}=Val(Float64)) where T

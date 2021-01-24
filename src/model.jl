@@ -26,21 +26,40 @@ end
 
 show_header(io :: IO, model :: RADNLPModel) = println(io, "RADNLPModel - Model with automatic differentiation")
 
+"""
+Create an RADNLPModel with ReverseDiff.gradient! and precompilation work.
+"""
+function smart_reverse(meta :: AbstractNLPModelMeta,
+                       f    :: Function)
+
+  # build in-place objective gradient
+  v = similar(meta.x0)
+  #global k = -1; filler() = (k = -k; k); fill!(v, filler())
+  f_tape = ReverseDiff.GradientTape(f, v)
+  cfg = ReverseDiff.compile(f_tape) #compiled_f_tape typeof(compiled_f_tape) <: ReverseDiff.CompiledTape
+  ∇f!(g, x, cfg) = ReverseDiff.gradient!(g, cfg, x)
+
+  return (∇f!, cfg)
+end
+
+"""
+Create an RADNLPModel with ReverseDiff.gradient!
+"""
+function reverse(meta :: AbstractNLPModelMeta,
+                 f    :: Function)
+
+  cfg = nothing
+  ∇f!(g, x, cfg) = ReverseDiff.gradient!(g, f, x)
+
+return (∇f!, cfg)
+end
+
 function RADNLPModel(meta :: AbstractNLPModelMeta,
-                     f    :: Function)
+                     f    :: Function;
+                     gradient :: Function = smart_reverse)
   
   counters = Counters()
 
-  # build in-place objective gradient
-   v = similar(meta.x0)
-   #global k = -1; filler() = (k = -k; k); fill!(v, filler())
-   f_tape = ReverseDiff.GradientTape(f, v)
-   cfg = ReverseDiff.compile(f_tape) #compiled_f_tape typeof(compiled_f_tape) <: ReverseDiff.CompiledTape
-   ∇f!(g, x, cfg) = ReverseDiff.gradient!(g, cfg, x)
-  #Option 1
-  #∇f!(g, x, cfg) = ReverseDiff.gradient!(g, f, x)
-  #cfg = nothing
-  #Option 2
   #=
   cfg = nothing
   function ∇f!(g, x, cfg)
@@ -49,6 +68,7 @@ function RADNLPModel(meta :: AbstractNLPModelMeta,
     return g
   end
   =#
+  (∇f!, cfg) = gradient(meta, f)
 
   # build v → ∇²f(x)v
   # NB: none of the options below works with compiled tapes
@@ -85,7 +105,7 @@ function RADNLPModel(meta :: AbstractNLPModelMeta,
   return RADNLPModel(meta, counters, f, x->T[], ∇f!, cfg) #, ∇²fprod!)
 end
 
-function RADNLPModel(f :: Function, x0::AbstractVector{T}; name::String="GenericADNLPModel") where T
+function RADNLPModel(f :: Function, x0::AbstractVector{T}; name::String="GenericADNLPModel", kwargs...) where T
   nvar = length(x0)
   @lencheck nvar x0
 
@@ -93,14 +113,15 @@ function RADNLPModel(f :: Function, x0::AbstractVector{T}; name::String="Generic
   nnzh = nvar * (nvar + 1) / 2
   
   meta = NLPModelMeta(nvar, x0=x0, nnzh=nnzh, minimize=true, islp=false, name=name)
-  return RADNLPModel(meta, f)
+  return RADNLPModel(meta, f; kwargs...)
 end
 
 function RADNLPModel(f    :: Function, 
                      x0   :: AbstractVector{T}, 
                      lvar :: AbstractVector, 
                      uvar :: AbstractVector;
-                     name :: String = "Generic") where T
+                     name :: String = "Generic",
+                     kwargs...) where T
                     
   nvar = length(x0)
   @lencheck nvar x0 lvar uvar
@@ -110,7 +131,7 @@ function RADNLPModel(f    :: Function,
 
   meta = NLPModelMeta(nvar, x0 = x0, lvar = lvar, uvar = uvar, nnzh = nnzh, 
                       minimize = true, islp = false, name = name)
-  return RADNLPModel(meta, f)
+  return RADNLPModel(meta, f; kwargs...)
 end
 
 function NLPModels.obj(model :: RADNLPModel, x :: AbstractVector)

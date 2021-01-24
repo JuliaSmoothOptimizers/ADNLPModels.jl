@@ -1,4 +1,4 @@
-function engval1_radnlp(; n::Int=100, type::Val{T}=Val(Float64)) where T
+function engval1_radnlp(; n::Int=100, type::Val{T}=Val(Float64), kwargs...) where T
   n ≥ 2 || error("engval : n ≥ 2")
   function f(x)
     n = length(x)
@@ -8,7 +8,7 @@ function engval1_radnlp(; n::Int=100, type::Val{T}=Val(Float64)) where T
     )
   end
   x0 = 2 * ones(T, n)
-  return RADNLPModel(f, x0, name="engval1_radnlp")
+  return RADNLPModel(f, x0, name="engval1_radnlp"; kwargs...)
 end
 
 function engval1_autodiff(; n::Int=100, type::Val{T}=Val(Float64)) where T
