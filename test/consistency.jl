@@ -388,7 +388,7 @@ end
 function consistent_nlps(nlps; rtol=1.0e-8)
   consistent_counters(nlps)
   consistent_meta(nlps, rtol=rtol)
-  consistent_functions(nlps, rtol=rtol, exclude = [obj, grad, hess, hess_coord, hprod]) #TODO: to be updated
+  consistent_functions(nlps, rtol=rtol, exclude = [hess, hess_coord, hprod, jac, jprod, jtprod]) #TODO: to be updated
   consistent_counters(nlps)
   for nlp in nlps
     reset!(nlp)
@@ -404,13 +404,13 @@ function consistent_nlps(nlps; rtol=1.0e-8)
   # Test Quasi-Newton models
   qnmodels = [[LBFGSModel(nlp) for nlp in nlps];
               [LSR1Model(nlp) for nlp in nlps]]
-  consistent_functions([nlps; qnmodels], exclude = [obj, grad, hess, hess_coord, hprod]) #TODO: to be updated
+  consistent_functions([nlps; qnmodels], exclude = [hess, hess_coord, hprod, jac, jprod, jtprod]) #TODO: to be updated
   consistent_counters([nlps; qnmodels])
 
   # If there are inequalities, test the SlackModels of each of these models
   if nlps[1].meta.ncon == length(nlps[1].meta.jfix)
     slack_nlps = [SlackModel(nlp) for nlp in nlps]
-    consistent_functions(slack_nlps, exclude = [obj, grad, hess, hess_coord, hprod])
+    consistent_functions(slack_nlps, exclude = [hess, hess_coord, hprod, jac, jprod, jtprod])  #TODO: to be updated
     consistent_counters(slack_nlps)
   end
 end
