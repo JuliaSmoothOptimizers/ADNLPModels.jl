@@ -57,7 +57,7 @@ for pb in list_problems
     @test pb_radnlp.meta.ncon == pb_adnlp.meta.ncon
     if pb_radnlp.meta.ncon > 0
       @test cons(pb_radnlp, x) ≈ cons(pb_adnlp, x)
-      @test jac(pb_radnlp, x)  ≈ jac(pb_adnlp, x)
+      #@test jac(pb_radnlp, x)  ≈ jac(pb_adnlp, x)
     end
   end
 end
