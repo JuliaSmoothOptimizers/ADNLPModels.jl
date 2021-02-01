@@ -1,4 +1,4 @@
-using LinearAlgebra, NLPModels, Test
+using LinearAlgebra, NLPModels, SparseArrays, Test
 #This package
 using ADNLPModels
 
@@ -13,7 +13,8 @@ include("test_autodiff_model.jl") #test_autodiff_model()
 #test_autodiff_model() #uses constraints
 
 #Problems from NLPModels
-problems = ["hs5", "brownden"]
+problems = ["brownden", "genrose", "hs5", "hs6", "hs10", "hs11", "hs14", "linsv"] #"lincon", 
+#=
 problems2 = ["arglina", "arglinb", "arglinc", "arwhead", "bdqrtic", "beale", "broydn7d",
              "brybnd", "chainwoo", "chnrosnb", "cosine", "cragglvy", "dixon3dq", "dqdrtic",
              "dqrtic", "edensch", "eg2", "engval1", "errinros", "extrosnb", "fletcbv2",
@@ -25,7 +26,8 @@ problems2 = ["arglina", "arglinb", "arglinc", "arwhead", "bdqrtic", "beale", "br
 
 #List of problems used in tests
 list_problems = union(problems, problems2[1:4])
-
+=#
+list_problems = problems
 for pb in list_problems
     include("problems/$(lowercase(pb)).jl")
 end
@@ -51,10 +53,14 @@ for pb in list_problems
 
     v = rand(pb_radnlp.meta.nvar)
     #@test hprod(pb_radnlp, x, v) ≈ hprod(pb_adnlp, x, v)
+
+    @test pb_radnlp.meta.ncon == pb_adnlp.meta.ncon
+    if pb_radnlp.meta.ncon > 0
+      @test cons(pb_radnlp, x) ≈ cons(pb_adnlp, x)
+      @test jac(pb_radnlp, x)  ≈ jac(pb_adnlp, x)
+    end
   end
 end
 
 #include("test_memory_of_coord.jl") #TODO
 #test_memory_of_coord()
-
-#II. Tests different sparsity patterns
