@@ -1,7 +1,7 @@
 using BenchmarkTools, DataFrames, Plots, Profile
 #using ProfileView
 #JSO packages
-using NLPModels, SolverBenchmark
+using NLPModels, BenchmarkProfiles
 #This package
 using ADNLPModels
 
@@ -41,6 +41,13 @@ fun    = [:obj, :grad]
 rb = runbenchmark(problems, models, fun)
 N = length(rb[fun[1]][models[1]]) #number of problems
 gstats = group_stats(rb, N, fun, models)
+
+function performance_profile(stats::Dict{Symbol,DataFrame}, cost::Function, args...; kwargs...)
+  solvers = keys(stats)
+  dfs = (stats[s] for s in solvers)
+  P = hcat([cost(df) for df in dfs]...)
+  performance_profile(P, string.(solvers), args...; kwargs...)
+end
 
 for f in fun
   cost(df) = df.mean_time
