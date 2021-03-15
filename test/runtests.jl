@@ -6,14 +6,16 @@ end
 for problem in NLPModelsTest.nls_problems
   include("nls/problems/$(lowercase(problem)).jl")
 end
-for problem in setdiff(NLPModelsTest.nlp_problems,["LINCON"])
+for problem in setdiff(NLPModelsTest.nlp_problems)
   include("radnlp/problems/$(lowercase(problem)).jl")
 end
 
+#=
 include("nlp/basic.jl")
 include("nls/basic.jl")
 include("nlp/nlpmodelstest.jl")
 include("nls/nlpmodelstest.jl")
+=#
 include("radnlp/basic.jl") #Doesn't work
 include("radnlp/nlpmodelstest.jl") #Partially work
 
@@ -30,6 +32,16 @@ list_problems = ["arglina", "arglinb", "arglinc", "arwhead", "bdqrtic", "beale",
 for pb in list_problems
     include("problems/$(lowercase(pb)).jl")
 end
+
+#=
+# List of problems whose symbolic hessian fails:
+# cf. issue posted on Symbolics.jl: https://github.com/JuliaSymbolics/Symbolics.jl/issues/108
+"brownden", "arwhead", "bdqrtic", "beale", "broydn7d", "brybnd", "cragglvy", "eg2", "freuroth", "genhumps"
+"indef", "ncb20", "ncb20b", "noncvxun", "nondquar", "nzf1", "penalty2", "penalty3","powellsg", "power",
+"sbrybnd", "schmvett", "sparsine", "sparsqur", "sinquad", "tquartic", "vardim"
+works but super slow:
+"arglinb", "arglinc"
+=#
 
 for problem in list_problems
   @testset "Checking NLPModelsTest tests on problem $problem" begin
@@ -68,7 +80,7 @@ for problem in list_problems
       x = rand(pb_radnlp.meta.nvar)
       @test obj(pb_radnlp, x) ≈ obj(pb_adnlp, x)
       @test grad(pb_radnlp, x) ≈ grad(pb_adnlp, x)
-      #@test hess(pb_radnlp, x) ≈ hess(pb_adnlp, x)
+      @test hess(pb_radnlp, x) ≈ hess(pb_adnlp, x)
     
       v = rand(pb_radnlp.meta.nvar)
       #@test hprod(pb_radnlp, x, v) ≈ hprod(pb_adnlp, x, v)
@@ -76,7 +88,7 @@ for problem in list_problems
       @test pb_radnlp.meta.ncon == pb_adnlp.meta.ncon
       if pb_radnlp.meta.ncon > 0
         @test cons(pb_radnlp, x) ≈ cons(pb_adnlp, x)
-        #@test jac(pb_radnlp, x)  ≈ jac(pb_adnlp, x)
+        @test jac(pb_radnlp, x)  ≈ jac(pb_adnlp, x)
       end
     end
   end

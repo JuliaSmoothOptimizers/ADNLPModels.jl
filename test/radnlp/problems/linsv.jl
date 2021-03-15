@@ -2,11 +2,14 @@ function linsv_radnlp(;kwargs...)
   
   x0 = zeros(2)
   f(x) = x[1]
+  #=
   function c(dx, x)
     dx[1] = x[1] + x[2]
     dx[2] = x[2]
     dx
   end
+  =#
+  c(x) = [x[1] + x[2]; x[2]]
   lcon = [3; 1]
   ucon = [Inf; Inf]
      

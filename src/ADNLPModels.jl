@@ -8,6 +8,8 @@ using ForwardDiff
 using ReverseDiff, Zygote
 #Sparse AD
 using SparsityDetection, SparseDiffTools
+#Sparse AD
+using Symbolics
 # JSO
 using NLPModels
 

@@ -1,4 +1,4 @@
-for problem in setdiff(NLPModelsTest.nlp_problems,["LINCON"])
+for problem in setdiff(NLPModelsTest.nlp_problems,["BROWNDEN"])
   @testset "Checking NLPModelsTest tests on problem $problem" begin
     nlp_ad = eval(Meta.parse(lowercase(problem) * "_autodiff"))()
     nlp_rad = eval(Meta.parse(lowercase(problem) * "_radnlp"))()
@@ -35,7 +35,7 @@ for problem in setdiff(NLPModelsTest.nlp_problems,["LINCON"])
       x = rand(pb_radnlp.meta.nvar)
       @test obj(pb_radnlp, x) ≈ obj(pb_adnlp, x)
       @test grad(pb_radnlp, x) ≈ grad(pb_adnlp, x)
-      #@test hess(pb_radnlp, x) ≈ hess(pb_adnlp, x)
+      @test hess(pb_radnlp, x) ≈ hess(pb_adnlp, x)
     
       v = rand(pb_radnlp.meta.nvar)
       #@test hprod(pb_radnlp, x, v) ≈ hprod(pb_adnlp, x, v)
@@ -43,7 +43,7 @@ for problem in setdiff(NLPModelsTest.nlp_problems,["LINCON"])
       @test pb_radnlp.meta.ncon == pb_adnlp.meta.ncon
       if pb_radnlp.meta.ncon > 0
         @test cons(pb_radnlp, x) ≈ cons(pb_adnlp, x)
-        #@test jac(pb_radnlp, x)  ≈ jac(pb_adnlp, x)
+        @test jac(pb_radnlp, x)  ≈ jac(pb_adnlp, x)
       end
     end
   end
