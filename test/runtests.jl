@@ -27,11 +27,9 @@ for pb in list_problems
 end
 =#
 
-#=
 include("nlp/basic.jl")
 include("nls/basic.jl")
 include("nlp/nlpmodelstest.jl")
 include("nls/nlpmodelstest.jl")
-=#
 #include("radnlp/basic.jl") #Doesn't work
 include("radnlp/nlpmodelstest.jl") #Partially work
