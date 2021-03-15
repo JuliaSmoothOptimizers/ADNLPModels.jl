@@ -1,4 +1,4 @@
-for problem in setdiff(NLPModelsTest.nlp_problems,["MGH01Feas", "LINCON"])
+for problem in setdiff(NLPModelsTest.nlp_problems,["LINCON"])
   @testset "Checking NLPModelsTest tests on problem $problem" begin
     nlp_ad = eval(Meta.parse(lowercase(problem) * "_autodiff"))()
     nlp_rad = eval(Meta.parse(lowercase(problem) * "_radnlp"))()
