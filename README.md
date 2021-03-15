@@ -1,4 +1,4 @@
-# ADNLPModelss
+# ADNLPModels
 
 This package provides a very simple model implement the [NLPModels](https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl) API.
 It uses [`ForwardDiff`](https://github.com/JuliaDiff/ForwardDiff.jl) to compute the derivatives, which produces dense matrices, so it isn't very efficient for larger problems.
@@ -21,3 +21,35 @@ If you use ADNLPModels.jl in your work, please cite using the format given in [C
 ```julia
 pkg> add ADNLPModels
 ```
+
+## TODO - sparse part
+- generic problems for ADNLPModel, RADNLPModel, etc...
+
+### Tests
+- get tests from NLPModels ✓
+- new test problems with funny structure ✓
+- pick matrix in a depot and generate quadratic problems
+### Benchmark
+- improve the output of benchmark function ✓
+- improve the benchmark or creation of models so that we can compare intra-RADNLP ✓
+- compare reversediff to compute the grad! -> add pre-allocations ✓
+- and zygote (bug?)
+### Code (1st goal is for unconstrained)
+- improve constructors ✓
+- compute nnzh, hess_structure! and hess_coord!
+- grad! ✓
+- hprod!
+- constructors for bound-constrained
+- Uncomment consistency.jl and runtests.jl lines as we get a first implementation.
+### Code (2nt goal is constrained)
+- compute nnzh and nnzj
+- cons!, jac_structure!, jac_coord!, jprod, jtprod, jac_op
+- hess_coord!, hprod!
+
+## Debate
+- Have different models or one with options ?
+  The advantage of having options is the possibility to easily change the behavior
+  of an NLPModels during the execution of an algorithms.
+
+  However, it should be slower ?
+- Is it an AbstractNLPModel or an AbstractADNLPModel?
