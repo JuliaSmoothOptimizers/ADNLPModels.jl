@@ -1,4 +1,6 @@
 using ADNLPModels, LinearAlgebra, NLPModels, NLPModelsModifiers, NLPModelsTest, Test
+using Zygote, ReverseDiff
+using ADNLPModels: ForwardDiffAD, ZygoteAD, ReverseDiffAD
 
 for problem in NLPModelsTest.nlp_problems ∪ ["GENROSE"]
   include("nlp/problems/$(lowercase(problem)).jl")
