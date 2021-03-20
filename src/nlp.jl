@@ -2,15 +2,15 @@ export ADNLPModel
 
 mutable struct ADNLPModel <: AbstractNLPModel
   meta :: NLPModelMeta
-
   counters :: Counters
+  adbackend :: ADBackend
 
   # Functions
   f
   c
 end
 
-ADNLPModels.show_header(io :: IO, nlp :: ADNLPModel) = println(io, "ADNLPModel - Model with automatic differentiation")
+ADNLPModels.show_header(io :: IO, nlp :: ADNLPModel) = println(io, "ADNLPModel - Model with automatic differentiation backend $(nlp.adbackend)")
 
 """
     ADNLPModel(f, x0)
@@ -18,7 +18,7 @@ ADNLPModels.show_header(io :: IO, nlp :: ADNLPModel) = println(io, "ADNLPModel -
     ADNLPModel(f, x0, c, lcon, ucon)
     ADNLPModel(f, x0, lvar, uvar, c, lcon, ucon)
 
-ADNLPModel is an AbstractNLPModel using ForwardDiff to compute the derivatives.
+ADNLPModel is an AbstractNLPModel using automatic differentiation to compute the derivatives.
 The problem is defined as
 
      min  f(x)
@@ -34,7 +34,7 @@ The following keyword arguments are available to the constructors for constraine
 - `lin`: An array of indexes of the linear constraints (default: `Int[]`)
 - `y0`: An inital estimate to the Lagrangian multipliers (default: zeros)
 """
-function ADNLPModel(f, x0::AbstractVector{T}; name::String = "Generic") where T
+function ADNLPModel(f, x0::AbstractVector{T}; name::String = "Generic", adbackend = ForwardDiffAD()) where T
   nvar = length(x0)
   @lencheck nvar x0
 
@@ -42,11 +42,11 @@ function ADNLPModel(f, x0::AbstractVector{T}; name::String = "Generic") where T
 
   meta = NLPModelMeta(nvar, x0=x0, nnzh=nnzh, minimize=true, islp=false, name=name)
 
-  return ADNLPModel(meta, Counters(), f, x->T[])
+  return ADNLPModel(meta, Counters(), adbackend, f, x->T[])
 end
 
 function ADNLPModel(f, x0::AbstractVector{T}, lvar::AbstractVector, uvar::AbstractVector;
-                    name::String = "Generic") where T
+                    name::String = "Generic", adbackend = ForwardDiffAD()) where T
   nvar = length(x0)
   @lencheck nvar x0 lvar uvar
 
@@ -54,12 +54,12 @@ function ADNLPModel(f, x0::AbstractVector{T}, lvar::AbstractVector, uvar::Abstra
 
   meta = NLPModelMeta(nvar, x0=x0, lvar=lvar, uvar=uvar, nnzh=nnzh, minimize=true, islp=false, name=name)
 
-  return ADNLPModel(meta, Counters(), f, x->T[])
+  return ADNLPModel(meta, Counters(), adbackend, f, x->T[])
 end
 
 function ADNLPModel(f, x0::AbstractVector{T}, c, lcon::AbstractVector, ucon::AbstractVector;
                     y0::AbstractVector=fill!(similar(lcon), zero(T)),
-                    name::String = "Generic", lin::AbstractVector{<: Integer}=Int[]) where T
+                    name::String = "Generic", lin::AbstractVector{<: Integer}=Int[], adbackend = ForwardDiffAD()) where T
 
   nvar = length(x0)
   ncon = length(lcon)
@@ -74,13 +74,13 @@ function ADNLPModel(f, x0::AbstractVector{T}, c, lcon::AbstractVector, ucon::Abs
   meta = NLPModelMeta(nvar, x0=x0, ncon=ncon, y0=y0, lcon=lcon, ucon=ucon,
     nnzj=nnzj, nnzh=nnzh, lin=lin, nln=nln, minimize=true, islp=false, name=name)
 
-  return ADNLPModel(meta, Counters(), f, c)
+  return ADNLPModel(meta, Counters(), adbackend, f, c)
 end
 
 function ADNLPModel(f, x0::AbstractVector{T}, lvar::AbstractVector, uvar::AbstractVector,
                     c, lcon::AbstractVector, ucon::AbstractVector;
                     y0::AbstractVector=fill!(similar(lcon), zero(T)),
-                    name::String = "Generic", lin::AbstractVector{<: Integer}=Int[]) where T
+                    name::String = "Generic", lin::AbstractVector{<: Integer}=Int[], adbackend = ForwardDiffAD()) where T
 
   nvar = length(x0)
   ncon = length(lcon)
@@ -96,7 +96,7 @@ function ADNLPModel(f, x0::AbstractVector{T}, lvar::AbstractVector, uvar::Abstra
     lcon=lcon, ucon=ucon, nnzj=nnzj, nnzh=nnzh, lin=lin, nln=nln, minimize=true,
     islp=false, name=name)
 
-  return ADNLPModel(meta, Counters(), f, c)
+  return ADNLPModel(meta, Counters(), adbackend, f, c)
 end
 
 function NLPModels.obj(nlp :: ADNLPModel, x :: AbstractVector)
@@ -108,7 +108,7 @@ end
 function NLPModels.grad!(nlp :: ADNLPModel, x :: AbstractVector, g :: AbstractVector)
   @lencheck nlp.meta.nvar x g
   increment!(nlp, :neval_grad)
-  ForwardDiff.gradient!(g, nlp.f, x)
+  gradient!(nlp.adbackend, g, nlp.f, x)
   return g
 end
 
@@ -123,7 +123,7 @@ end
 function NLPModels.jac(nlp :: ADNLPModel, x :: AbstractVector)
   @lencheck nlp.meta.nvar x
   increment!(nlp, :neval_jac)
-  return ForwardDiff.jacobian(nlp.c, x)
+  return jacobian(nlp.adbackend, nlp.c, x)
 end
 
 function NLPModels.jac_structure!(nlp :: ADNLPModel, rows :: AbstractVector{<: Integer}, cols :: AbstractVector{<: Integer})
@@ -139,7 +139,7 @@ function NLPModels.jac_coord!(nlp :: ADNLPModel, x :: AbstractVector, vals :: Ab
   @lencheck nlp.meta.nvar x
   @lencheck nlp.meta.nnzj vals
   increment!(nlp, :neval_jac)
-  Jx = ForwardDiff.jacobian(nlp.c, x)
+  Jx = jacobian(nlp.adbackend, nlp.c, x)
   vals .= Jx[:]
   return vals
 end
@@ -148,7 +148,7 @@ function NLPModels.jprod!(nlp :: ADNLPModel, x :: AbstractVector, v :: AbstractV
   @lencheck nlp.meta.nvar x v
   @lencheck nlp.meta.ncon Jv
   increment!(nlp, :neval_jprod)
-  Jv .= ForwardDiff.derivative(t -> nlp.c(x + t * v), 0)
+  Jv .= directional_derivative(nlp.adbackend, nlp.c, x, v)
   return Jv
 end
 
@@ -156,7 +156,7 @@ function NLPModels.jtprod!(nlp :: ADNLPModel, x :: AbstractVector, v :: Abstract
   @lencheck nlp.meta.nvar x Jtv
   @lencheck nlp.meta.ncon v
   increment!(nlp, :neval_jtprod)
-  Jtv .= ForwardDiff.gradient(x -> dot(nlp.c(x), v), x)
+  Jtv .= pullback(nlp.adbackend, nlp.c, x, v)
   return Jtv
 end
 
@@ -164,7 +164,7 @@ function NLPModels.hess(nlp :: ADNLPModel, x :: AbstractVector; obj_weight :: Re
   @lencheck nlp.meta.nvar x
   increment!(nlp, :neval_hess)
   ℓ(x) = obj_weight * nlp.f(x)
-  Hx = ForwardDiff.hessian(ℓ, x)
+  Hx = hessian(nlp.adbackend, ℓ, x)
   return tril(Hx)
 end
 
@@ -173,7 +173,7 @@ function NLPModels.hess(nlp :: ADNLPModel, x :: AbstractVector, y :: AbstractVec
   @lencheck nlp.meta.ncon y
   increment!(nlp, :neval_hess)
   ℓ(x) = obj_weight * nlp.f(x) + dot(nlp.c(x), y)
-  Hx = ForwardDiff.hessian(ℓ, x)
+  Hx = hessian(nlp.adbackend, ℓ, x)
   return tril(Hx)
 end
 
@@ -191,7 +191,7 @@ function NLPModels.hess_coord!(nlp :: ADNLPModel, x :: AbstractVector, vals :: A
   @lencheck nlp.meta.nnzh vals
   increment!(nlp, :neval_hess)
   ℓ(x) = obj_weight * nlp.f(x)
-  Hx = ForwardDiff.hessian(ℓ, x)
+  Hx = hessian(nlp.adbackend, ℓ, x)
   k = 1
   for j = 1 : nlp.meta.nvar
     for i = j : nlp.meta.nvar
@@ -208,7 +208,7 @@ function NLPModels.hess_coord!(nlp :: ADNLPModel, x :: AbstractVector, y :: Abst
   @lencheck nlp.meta.nnzh vals
   increment!(nlp, :neval_hess)
   ℓ(x) = obj_weight * nlp.f(x) + dot(nlp.c(x), y)
-  Hx = ForwardDiff.hessian(ℓ, x)
+  Hx = hessian(nlp.adbackend, ℓ, x)
   k = 1
   for j = 1 : nlp.meta.nvar
     for i = j : nlp.meta.nvar
@@ -224,7 +224,7 @@ function NLPModels.hprod!(nlp :: ADNLPModel, x :: AbstractVector, v :: AbstractV
   @lencheck n x v Hv
   increment!(nlp, :neval_hprod)
   ℓ(x) = obj_weight * nlp.f(x)
-  Hv .= ForwardDiff.derivative(t -> ForwardDiff.gradient(ℓ, x + t * v), 0)
+  Hv .= pushforward(nlp.adbackend, ℓ, x, v)
   return Hv
 end
 
@@ -234,7 +234,7 @@ function NLPModels.hprod!(nlp :: ADNLPModel, x :: AbstractVector, y :: AbstractV
   @lencheck nlp.meta.ncon y
   increment!(nlp, :neval_hprod)
   ℓ(x) = obj_weight * nlp.f(x) + dot(nlp.c(x), y)
-  Hv .= ForwardDiff.derivative(t -> ForwardDiff.gradient(ℓ, x + t * v), 0)
+  Hv .= pushforward(nlp.adbackend, ℓ, x, v)
   return Hv
 end
 
@@ -242,6 +242,8 @@ function NLPModels.ghjvprod!(nlp :: ADNLPModel, x :: AbstractVector, g :: Abstra
   @lencheck nlp.meta.nvar x g v
   @lencheck nlp.meta.ncon gHv
   increment!(nlp, :neval_hprod)
-  gHv .= ForwardDiff.derivative(t -> ForwardDiff.derivative(s -> nlp.c(x + s * g + t * v), 0), 0)
+  gHv .= directional_second_derivative(
+    nlp.adbackend, nlp.c, x, v, g,
+  )
   return gHv
 end

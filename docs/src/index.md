@@ -1,7 +1,6 @@
 # ADNLPModelss
 
 This package provides a very simple model implement the [NLPModels](https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl) API.
-It uses [`ForwardDiff`](https://github.com/JuliaDiff/ForwardDiff.jl) to compute the derivatives, which produces dense matrices, so it isn't very efficient for larger problems.
 
 ## Install
 
