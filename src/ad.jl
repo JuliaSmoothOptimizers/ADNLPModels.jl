@@ -20,7 +20,7 @@ function directional_second_derivative(::ADBackend, f, x, v, w)
         ), 0,
     )
 end
-function hvprod(b::ADBackend, f, x, v)
+function Hvprod(b::ADBackend, f, x, v)
     return ForwardDiff.derivative(t -> gradient(b, f, x + t * v), 0)
 end
 
@@ -36,12 +36,23 @@ end
 
 @init begin
     @require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" begin
-        gradient(::ZygoteAD, f, x) = Zygote.gradient(f, x)[1]
-        gradient!(::ZygoteAD, g, f, x) = g .= Zygote.gradient(f, x)[1]
-        jacobian(::ZygoteAD, f, x) = Zygote.jacobian(f, x)[1]
-        hessian(::ZygoteAD, f, x) = Zygote.hessian(f, x)
+        function gradient(::ZygoteAD, f, x)
+            g = Zygote.gradient(f, x)[1]
+            return g === nothing ? zero(x) : g
+        end
+        function gradient!(::ZygoteAD, g, f, x)
+            _g = Zygote.gradient(f, x)[1]
+            g .= _g === nothing ? 0 : _g
+        end
+        function jacobian(::ZygoteAD, f, x)
+            return Zygote.jacobian(f, x)[1]
+        end
+        function hessian(b::ZygoteAD, f, x)
+            return jacobian(ForwardDiffAD(), x -> gradient(b, f, x), x)
+        end
         function pullback(::ZygoteAD, f, x, v)
-            return Zygote.gradient(x -> dot(f(x), v), x)[1]
+            g = Zygote.gradient(x -> dot(f(x), v), x)[1]
+            return g === nothing ? zero(x) : g
         end
     end
     @require ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267" begin
