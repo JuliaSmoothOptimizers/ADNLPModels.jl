@@ -241,7 +241,7 @@ function NLPModels.jprod!(nls :: ADNLSModel, x :: AbstractVector, v :: AbstractV
   @lencheck nls.meta.nvar x v
   @lencheck nls.meta.ncon Jv
   increment!(nls, :neval_jprod)
-  Jv .= directional_derivative(t -> nls.c(x + t * v), 0)
+  Jv .= directional_derivative(nls.adbackend, nls.c, x, v)
   return Jv
 end
 
