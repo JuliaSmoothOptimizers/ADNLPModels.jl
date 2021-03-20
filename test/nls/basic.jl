@@ -2,7 +2,7 @@ function autodiff_nls_test()
   for adbackend in [
     ForwardDiffAD(), ZygoteAD(), ReverseDiffAD(),
   ]
-    @testset "autodiff_nls_test" begin
+    @testset "autodiff_nls_test for $adbackend" begin
       F(x) = [x[1] - 1; x[2] - x[1]^2]
       nls = ADNLSModel(F, zeros(2), 2, adbackend = adbackend)
 
