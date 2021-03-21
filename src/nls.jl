@@ -202,7 +202,7 @@ end
 function NLPModels.hprod_residual!(nls :: ADNLSModel, x :: AbstractVector, i :: Int, v :: AbstractVector, Hiv :: AbstractVector)
   @lencheck nls.meta.nvar x v Hiv
   increment!(nls, :neval_hprod_residual)
-  Hiv .= hvprod(nls.adbackend, x -> nls.F(x)[i], x, v)
+  Hiv .= Hvprod(nls.adbackend, x -> nls.F(x)[i], x, v)
   return Hiv
 end
 
@@ -316,7 +316,7 @@ function NLPModels.hprod!(nls :: ADNLSModel, x :: AbstractVector, v :: AbstractV
   @lencheck nls.meta.nvar x v Hv
   increment!(nls, :neval_hprod)
   ℓ(x) = obj_weight * sum(nls.F(x).^2) / 2
-  Hv .= hvprod(nls.adbackend, ℓ, x, v)
+  Hv .= Hvprod(nls.adbackend, ℓ, x, v)
   return Hv
 end
 
@@ -326,7 +326,7 @@ function NLPModels.hprod!(nls :: ADNLSModel, x :: AbstractVector, y :: AbstractV
   @lencheck nls.meta.ncon y
   increment!(nls, :neval_hprod)
   ℓ(x) = obj_weight * sum(nls.F(x).^2) / 2 + dot(y, nls.c(x))
-  Hv .= hvprod(nls.adbackend, ℓ, x, v)
+  Hv .= Hvprod(nls.adbackend, ℓ, x, v)
   return Hv
 end
 

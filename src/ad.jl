@@ -8,11 +8,8 @@ gradient(b::ADBackend, ::Any, ::Any) = throw_error(b)
 gradient!(b::ADBackend, ::Any, ::Any, ::Any) = throw_error(b)
 jacobian(b::ADBackend, ::Any, ::Any) = throw_error(b)
 hessian(b::ADBackend, ::Any, ::Any) = throw_error(b)
+directional_derivative(b::ADBackend, ::Any, ::Any, ::Any) = throw_error(b)
 pullback(b::ADBackend, ::Any, ::Any, ::Any) = throw_error(b)
-# Use FD for these always
-function directional_derivative(::ADBackend, f, x, v)
-    return ForwardDiff.derivative(t -> f(x + t * v), 0)
-end
 function directional_second_derivative(::ADBackend, f, x, v, w)
     return ForwardDiff.derivative(
         t -> ForwardDiff.derivative(
@@ -30,6 +27,9 @@ function gradient!(::ForwardDiffAD, g, f, x)
 end
 jacobian(::ForwardDiffAD, f, x) = ForwardDiff.jacobian(f, x)
 hessian(::ForwardDiffAD, f, x) = ForwardDiff.hessian(f, x)
+function directional_derivative(::ForwardDiffAD, f, x, v)
+    return ForwardDiff.derivative(t -> f(x + t * v), 0)
+end
 function pullback(::ForwardDiffAD, f, x, v)
     return ForwardDiff.gradient(x -> dot(f(x), v), x)
 end
@@ -50,6 +50,9 @@ end
         function hessian(b::ZygoteAD, f, x)
             return jacobian(ForwardDiffAD(), x -> gradient(b, f, x), x)
         end
+        function directional_derivative(::ZygoteAD, f, x, v)
+            return Zygote.jacobian(t -> f(x + t * v), 0)[1]
+        end
         function pullback(::ZygoteAD, f, x, v)
             g = Zygote.gradient(x -> dot(f(x), v), x)[1]
             return g === nothing ? zero(x) : g
@@ -62,6 +65,9 @@ end
         end
         jacobian(::ReverseDiffAD, f, x) = ReverseDiff.jacobian(f, x)
         hessian(::ReverseDiffAD, f, x) = ReverseDiff.hessian(f, x)
+        function directional_derivative(::ReverseDiffAD, f, x, v)
+            return ReverseDiff.derivative(t -> f(x + t * v), 0)
+        end
         function pullback(::ReverseDiffAD, f, x, v)
             return ReverseDiff.gradient(x -> dot(f(x), v), x)
         end
