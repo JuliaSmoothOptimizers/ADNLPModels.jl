@@ -165,7 +165,8 @@ function NLPModels.hess_residual(nls :: ADNLSModel, x :: AbstractVector, v :: Ab
   @lencheck nls.meta.nvar x
   @lencheck nls.nls_meta.nequ v
   increment!(nls, :neval_hess_residual)
-  return tril(hessian(nls.adbackend, x -> dot(nls.F(x), v), x))
+  ϕ(x) = dot(nls.F(x), v)
+  return tril(hessian(nls.adbackend, ϕ, x))
 end
 
 function NLPModels.hess_structure_residual!(nls :: ADNLSModel, rows :: AbstractVector{<: Integer}, cols :: AbstractVector{<: Integer})
