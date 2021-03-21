@@ -165,7 +165,7 @@ function NLPModels.hess_residual(nls :: ADNLSModel, x :: AbstractVector, v :: Ab
   @lencheck nls.meta.nvar x
   @lencheck nls.nls_meta.nequ v
   increment!(nls, :neval_hess_residual)
-  return tril(jacobian(nls.adbackend, x -> pullback(nls.adbackend, nls.F, x, v), x))
+  return tril(hessian(nls.adbackend, x -> dot(nls.F(x), v), x))
 end
 
 function NLPModels.hess_structure_residual!(nls :: ADNLSModel, rows :: AbstractVector{<: Integer}, cols :: AbstractVector{<: Integer})
@@ -182,7 +182,7 @@ function NLPModels.hess_coord_residual!(nls :: ADNLSModel, x :: AbstractVector, 
   @lencheck nls.nls_meta.nequ v
   @lencheck nls.nls_meta.nnzh vals
   increment!(nls, :neval_hess_residual)
-  Hx = jacobian(nls.adbackend, x -> pullback(nls.adbackend, nls.F, x, v), x)
+  Hx = hessian(nls.adbackend, x -> dot(nls.F(x), v), x)
   k = 1
   for j = 1:nls.meta.nvar
     for i = j:nls.meta.nvar
