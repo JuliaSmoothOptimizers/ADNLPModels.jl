@@ -66,7 +66,7 @@ end
         jacobian(::ReverseDiffAD, f, x) = ReverseDiff.jacobian(f, x)
         hessian(::ReverseDiffAD, f, x) = ReverseDiff.hessian(f, x)
         function directional_derivative(::ReverseDiffAD, f, x, v)
-            return ReverseDiff.derivative(t -> f(x + t * v), 0)
+            return ReverseDiff.gradient(t -> f(x + t[1] * v), [0.0])[1]
         end
         function pullback(::ReverseDiffAD, f, x, v)
             return ReverseDiff.gradient(x -> dot(f(x), v), x)
