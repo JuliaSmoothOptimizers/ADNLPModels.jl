@@ -149,7 +149,7 @@ function NLPModels.jprod_residual!(nls :: ADNLSModel, x :: AbstractVector, v :: 
   @lencheck nls.meta.nvar x v
   @lencheck nls.nls_meta.nequ Jv
   increment!(nls, :neval_jprod_residual)
-  Jv .= directional_derivative(nls.adbackend, nls.F, x, v)
+  Jv .= pushforward(nls.adbackend, nls.F, x, v)
   return Jv
 end
 
@@ -241,7 +241,7 @@ function NLPModels.jprod!(nls :: ADNLSModel, x :: AbstractVector, v :: AbstractV
   @lencheck nls.meta.nvar x v
   @lencheck nls.meta.ncon Jv
   increment!(nls, :neval_jprod)
-  Jv .= directional_derivative(nls.adbackend, nls.c, x, v)
+  Jv .= pushforward(nls.adbackend, nls.c, x, v)
   return Jv
 end
 
