@@ -1,5 +1,5 @@
 @testset "AD backend - $(adbackend)" for adbackend in [
-  ForwardDiffAD(), ZygoteAD(), ReverseDiffAD(),
+  ForwardDiffAD(), ReverseDiffAD(),
 ]
   for problem in NLPModelsTest.nls_problems
     @testset "Checking NLPModelsTest tests on problem $problem" begin
