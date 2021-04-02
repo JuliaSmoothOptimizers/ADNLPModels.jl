@@ -148,7 +148,7 @@ function NLPModels.jprod!(nlp :: ADNLPModel, x :: AbstractVector, v :: AbstractV
   @lencheck nlp.meta.nvar x v
   @lencheck nlp.meta.ncon Jv
   increment!(nlp, :neval_jprod)
-  Jv .= pushforward(nlp.adbackend, nlp.c, x, v)
+  Jv .= Jprod(nlp.adbackend, nlp.c, x, v)
   return Jv
 end
 
@@ -156,7 +156,7 @@ function NLPModels.jtprod!(nlp :: ADNLPModel, x :: AbstractVector, v :: Abstract
   @lencheck nlp.meta.nvar x Jtv
   @lencheck nlp.meta.ncon v
   increment!(nlp, :neval_jtprod)
-  Jtv .= pullback(nlp.adbackend, nlp.c, x, v)
+  Jtv .= Jtprod(nlp.adbackend, nlp.c, x, v)
   return Jtv
 end
 

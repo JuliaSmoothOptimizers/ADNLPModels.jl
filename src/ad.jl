@@ -8,8 +8,8 @@ gradient(b::ADBackend, ::Any, ::Any) = throw_error(b)
 gradient!(b::ADBackend, ::Any, ::Any, ::Any) = throw_error(b)
 jacobian(b::ADBackend, ::Any, ::Any) = throw_error(b)
 hessian(b::ADBackend, ::Any, ::Any) = throw_error(b)
-pushforward(b::ADBackend, ::Any, ::Any, ::Any) = throw_error(b)
-pullback(b::ADBackend, ::Any, ::Any, ::Any) = throw_error(b)
+Jprod(b::ADBackend, ::Any, ::Any, ::Any) = throw_error(b)
+Jtprod(b::ADBackend, ::Any, ::Any, ::Any) = throw_error(b)
 function directional_second_derivative(::ADBackend, f, x, v, w)
     return ForwardDiff.derivative(
         t -> ForwardDiff.derivative(
@@ -27,10 +27,10 @@ function gradient!(::ForwardDiffAD, g, f, x)
 end
 jacobian(::ForwardDiffAD, f, x) = ForwardDiff.jacobian(f, x)
 hessian(::ForwardDiffAD, f, x) = ForwardDiff.hessian(f, x)
-function pushforward(::ForwardDiffAD, f, x, v)
+function Jprod(::ForwardDiffAD, f, x, v)
     return ForwardDiff.derivative(t -> f(x + t * v), 0)
 end
-function pullback(::ForwardDiffAD, f, x, v)
+function Jtprod(::ForwardDiffAD, f, x, v)
     return ForwardDiff.gradient(x -> dot(f(x), v), x)
 end
 
@@ -50,10 +50,10 @@ end
         function hessian(b::ZygoteAD, f, x)
             return jacobian(ForwardDiffAD(), x -> gradient(b, f, x), x)
         end
-        function pushforward(::ZygoteAD, f, x, v)
+        function Jprod(::ZygoteAD, f, x, v)
             return vec(Zygote.jacobian(t -> f(x + t * v), 0)[1])
         end
-        function pullback(::ZygoteAD, f, x, v)
+        function Jtprod(::ZygoteAD, f, x, v)
             g = Zygote.gradient(x -> dot(f(x), v), x)[1]
             return g === nothing ? zero(x) : g
         end
@@ -65,10 +65,10 @@ end
         end
         jacobian(::ReverseDiffAD, f, x) = ReverseDiff.jacobian(f, x)
         hessian(::ReverseDiffAD, f, x) = ReverseDiff.hessian(f, x)
-        function pushforward(::ReverseDiffAD, f, x, v)
+        function Jprod(::ReverseDiffAD, f, x, v)
             return vec(ReverseDiff.jacobian(t -> f(x + t[1] * v), [0.0]))
         end
-        function pullback(::ReverseDiffAD, f, x, v)
+        function Jtprod(::ReverseDiffAD, f, x, v)
             return ReverseDiff.gradient(x -> dot(f(x), v), x)
         end
     end
