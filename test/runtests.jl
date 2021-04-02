@@ -1,13 +1,7 @@
 using ADNLPModels, LinearAlgebra, NLPModels, NLPModelsModifiers, NLPModelsTest, Test
-using Zygote, ReverseDiff
-using ADNLPModels: ForwardDiffAD, ZygoteAD, ReverseDiffAD
-
-function switch_adbackend(nlp::ADNLPModel, adbackend)
-  ADNLPModel(nlp.meta, nlp.counters, adbackend, nlp.f, nlp.c)
-end
-function switch_adbackend(nls::ADNLSModel, adbackend)
-  ADNLSModel(nls.meta, nls.nls_meta, nls.counters, adbackend, nls.F, nls.c)
-end
+using ADNLPModels:  ForwardDiffAD, ZygoteAD, ReverseDiffAD,
+                    gradient, gradient!, jacobian, hessian, Jprod,
+                    Jtprod, directional_second_derivative, Hvprod
 
 for problem in NLPModelsTest.nlp_problems ∪ ["GENROSE"]
   include("nlp/problems/$(lowercase(problem)).jl")

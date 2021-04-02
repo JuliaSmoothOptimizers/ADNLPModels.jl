@@ -149,7 +149,7 @@ function NLPModels.jprod_residual!(nls :: ADNLSModel, x :: AbstractVector, v :: 
   @lencheck nls.meta.nvar x v
   @lencheck nls.nls_meta.nequ Jv
   increment!(nls, :neval_jprod_residual)
-  Jv .= pushforward(nls.adbackend, nls.F, x, v)
+  Jv .= Jprod(nls.adbackend, nls.F, x, v)
   return Jv
 end
 
@@ -157,7 +157,7 @@ function NLPModels.jtprod_residual!(nls :: ADNLSModel, x :: AbstractVector, v ::
   @lencheck nls.meta.nvar x Jtv
   @lencheck nls.nls_meta.nequ v
   increment!(nls, :neval_jtprod_residual)
-  Jtv .= pullback(nls.adbackend, nls.F, x, v)
+  Jtv .= Jtprod(nls.adbackend, nls.F, x, v)
   return Jtv
 end
 
@@ -242,7 +242,7 @@ function NLPModels.jprod!(nls :: ADNLSModel, x :: AbstractVector, v :: AbstractV
   @lencheck nls.meta.nvar x v
   @lencheck nls.meta.ncon Jv
   increment!(nls, :neval_jprod)
-  Jv .= pushforward(nls.adbackend, nls.c, x, v)
+  Jv .= Jprod(nls.adbackend, nls.c, x, v)
   return Jv
 end
 
@@ -250,7 +250,7 @@ function NLPModels.jtprod!(nls :: ADNLSModel, x :: AbstractVector, v :: Abstract
   @lencheck nls.meta.nvar x Jtv
   @lencheck nls.meta.ncon v
   increment!(nls, :neval_jtprod)
-  Jtv .= pullback(nls.adbackend, nls.c, x, v)
+  Jtv .= Jtprod(nls.adbackend, nls.c, x, v)
   return Jtv
 end
 
