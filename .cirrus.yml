@@ -3,7 +3,7 @@ freebsd_instance:
 task:
   name: FreeBSD
   container:
-    cpu: 2
+    cpu: 8
     memory: 32G
   env:
     matrix:
