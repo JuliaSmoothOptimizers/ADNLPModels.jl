@@ -2,7 +2,7 @@ freebsd_instance:
   image: freebsd-12-1-release-amd64
 task:
   name: FreeBSD
-  cpu: 2
+  cpu: 32
   memory: 32G
   env:
     matrix:
