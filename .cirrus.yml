@@ -1,9 +1,10 @@
 freebsd_instance:
   image: freebsd-12-1-release-amd64
+container:
+  cpu: 2
+  memory: 32G
 task:
   name: FreeBSD
-  cpu: 32
-  memory: 32G
   env:
     matrix:
       - JULIA_VERSION: 1.3
