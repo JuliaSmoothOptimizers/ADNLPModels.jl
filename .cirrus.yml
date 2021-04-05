@@ -3,6 +3,7 @@ freebsd_instance:
 task:
   name: FreeBSD
   container:
+    image: freebsd-12-1-release-amd64
     cpu: 8
     memory: 32G
   env:
