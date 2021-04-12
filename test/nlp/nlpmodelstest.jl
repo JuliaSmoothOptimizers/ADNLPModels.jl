@@ -11,19 +11,19 @@
 
       nlps = [nlp_ad, nlp_man]
       @testset "Check Consistency" begin
-        consistent_nlps(nlps)
+        consistent_nlps(nlps, exclude = [])
       end
       @testset "Check dimensions" begin
-        check_nlp_dimensions(nlp_ad)
+        check_nlp_dimensions(nlp_ad, exclude = [])
       end
       @testset "Check multiple precision" begin
-        multiple_precision_nlp(nlp_ad)
+        multiple_precision_nlp(nlp_ad, exclude = [])
       end
       @testset "Check view subarray" begin
-        view_subarray_nlp(nlp_ad)
+        view_subarray_nlp(nlp_ad, exclude = [])
       end
       @testset "Check coordinate memory" begin
-        coord_memory_nlp(nlp_ad)
+        coord_memory_nlp(nlp_ad, exclude = [])
       end
     end
   end

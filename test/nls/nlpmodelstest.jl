@@ -14,24 +14,32 @@
         push!(nlss, eval(Meta.parse(spc))())
       end
 
+      exclude = if problem == "LLS" 
+        [hess_coord, hess]
+      elseif problem == "MGH01"
+        [hess_coord, hess, ghjvprod]
+      else
+        []
+      end
+
       for nls in nlss
         show(IOBuffer(), nls)
       end
 
       @testset "Check Consistency" begin
-        consistent_nlss([nlss; nls_man])
+        consistent_nlss([nlss; nls_man], exclude = exclude)
       end
       @testset "Check dimensions" begin
-        check_nls_dimensions.(nlss)
-        check_nlp_dimensions.(nlss, exclude_hess=true)
+        check_nls_dimensions.(nlss, exclude = exclude)
+        check_nlp_dimensions.(nlss, exclude = exclude)
       end
       @testset "Check multiple precision" begin
         for nls in nlss
-          multiple_precision_nls(nls)
+          multiple_precision_nls(nls, exclude = exclude)
         end
       end
       @testset "Check view subarray" begin
-        view_subarray_nls.(nlss)
+        view_subarray_nls.(nlss, exclude = exclude)
       end
     end
   end
