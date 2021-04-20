@@ -472,6 +472,41 @@ function NLPModels.hprod!(
   return Hv
 end
 
+function NLPModels.jth_hess_coord!(
+  nls::ADNLSModel,
+  x::AbstractVector,
+  j::Integer,
+  vals::AbstractVector
+)
+  @lencheck nls.meta.nnzh vals
+  @lencheck nls.meta.nvar x
+  @rangecheck 1 nls.meta.ncon j
+  increment!(nls, :neval_jhess)
+  Hx = hessian(nls.adbackend, x -> nls.c(x)[j], x)
+  k = 1
+  for j = 1 : nls.meta.nvar
+    for i = j : nls.meta.nvar
+      vals[k] = Hx[i, j]
+      k += 1
+    end
+  end
+  return vals
+end
+
+function NLPModels.jth_hprod!(
+  nls::ADNLSModel,
+  x::AbstractVector,
+  v::AbstractVector,
+  j::Integer,
+  Hv::AbstractVector
+)
+  @lencheck nls.meta.nvar x v Hv
+  @rangecheck 1 nls.meta.ncon j
+  increment!(nls, :neval_jhprod)
+  Hv .= Hvprod(nls.adbackend, x -> nls.c(x)[j], x, v)
+  return Hv
+end
+
 function NLPModels.ghjvprod!(
   nls::ADNLSModel,
   x::AbstractVector,
