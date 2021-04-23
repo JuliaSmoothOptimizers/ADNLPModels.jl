@@ -1,6 +1,4 @@
-@testset "AD backend - $(adbackend)" for adbackend in [
-  ForwardDiffAD(), ZygoteAD(), ReverseDiffAD(),
-]
+@testset "AD backend - $(adbackend)" for adbackend in [ForwardDiffAD(), ZygoteAD(), ReverseDiffAD()]
   for problem in NLPModelsTest.nls_problems
     @testset "Checking NLPModelsTest tests on problem $problem" begin
       nls_ad = eval(Meta.parse(lowercase(problem) * "_autodiff"))()
@@ -14,7 +12,7 @@
         push!(nlss, eval(Meta.parse(spc))())
       end
 
-      exclude = if problem == "LLS" 
+      exclude = if problem == "LLS"
         [hess_coord, hess]
       elseif problem == "MGH01"
         [hess_coord, hess, ghjvprod]

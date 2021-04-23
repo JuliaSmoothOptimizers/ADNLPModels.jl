@@ -1,7 +1,6 @@
 export lincon_autodiff
 
 function lincon_autodiff()
-
   A = [1 2; 3 4]
   b = [5; 6]
   B = diagm([3 * i for i = 3:5])
@@ -11,16 +10,18 @@ function lincon_autodiff()
 
   x0 = zeros(15)
   f(x) = sum(i + x[i]^4 for i = 1:15)
-  con(x) = [15 * x[15];
-            c' * x[10:12];
-            d' * x[13:14];
-            b' * x[8:9];
-            C * x[6:7];
-            A * x[1:2];
-            B * x[3:5]]
+  con(x) = [
+    15 * x[15]
+    c' * x[10:12]
+    d' * x[13:14]
+    b' * x[8:9]
+    C * x[6:7]
+    A * x[1:2]
+    B * x[3:5]
+  ]
 
-  lcon = [22.0; 1.0; -Inf; -11.0; -d;            -b; -Inf * ones(3)]
-  ucon = [22.0; Inf; 16.0;   9.0; -d; Inf * ones(2);              c]
+  lcon = [22.0; 1.0; -Inf; -11.0; -d; -b; -Inf * ones(3)]
+  ucon = [22.0; Inf; 16.0; 9.0; -d; Inf * ones(2); c]
 
-  return ADNLPModel(f, x0, con, lcon, ucon, name="lincon_autodiff")
+  return ADNLPModel(f, x0, con, lcon, ucon, name = "lincon_autodiff")
 end

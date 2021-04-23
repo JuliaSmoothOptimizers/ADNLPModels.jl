@@ -39,18 +39,17 @@ export genrose_autodiff
 # D. Orban, Montreal, 08/2015.
 
 "Generalized Rosenbrock model in size `n`"
-function genrose_autodiff(n :: Int=500)
-
+function genrose_autodiff(n::Int = 500)
   n < 2 && error("genrose: number of variables must be ≥ 2")
 
-  x0 = [i/(n+1) for i = 1:n]
+  x0 = [i / (n + 1) for i = 1:n]
   f(x::AbstractVector) = begin
     s = 1.0
-    for i = 1:n-1
-      s += 100 * (x[i+1]-x[i]^2)^2 + (x[i]-1)^2
+    for i = 1:(n - 1)
+      s += 100 * (x[i + 1] - x[i]^2)^2 + (x[i] - 1)^2
     end
     return s
   end
 
-  return ADNLPModel(f, x0, name="genrose_autodiff")
+  return ADNLPModel(f, x0, name = "genrose_autodiff")
 end
