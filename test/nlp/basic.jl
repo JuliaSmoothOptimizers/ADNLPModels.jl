@@ -1,6 +1,6 @@
 mutable struct LinearRegression
-  x :: Vector
-  y :: Vector
+  x::Vector
+  y::Vector
 end
 
 function (regr::LinearRegression)(beta)
@@ -9,9 +9,8 @@ function (regr::LinearRegression)(beta)
 end
 
 function test_autodiff_backend_error()
-  @testset "Error without loading package - $adbackend" for adbackend in [
-    ZygoteAD(), ReverseDiffAD(),
-  ]
+  @testset "Error without loading package - $adbackend" for adbackend in
+                                                            [ZygoteAD(), ReverseDiffAD()]
     @test_throws ArgumentError gradient(adbackend, sum, [1.0])
     @test_throws ArgumentError gradient!(adbackend, [1.0], sum, [1.0])
     @test_throws ArgumentError jacobian(adbackend, identity, [1.0])
@@ -23,18 +22,16 @@ function test_autodiff_backend_error()
 end
 
 function test_autodiff_model()
-  for adbackend in [
-    ForwardDiffAD(), ZygoteAD(), ReverseDiffAD(),
-  ]
+  for adbackend in [ForwardDiffAD(), ZygoteAD(), ReverseDiffAD()]
     x0 = zeros(2)
-    f(x) = dot(x,x)
+    f(x) = dot(x, x)
     nlp = ADNLPModel(f, x0, adbackend = adbackend)
 
     c(x) = [sum(x) - 1]
     nlp = ADNLPModel(f, x0, c, [0], [0], adbackend = adbackend)
     @test obj(nlp, x0) == f(x0)
 
-    x = range(-1, stop=1, length=100)
+    x = range(-1, stop = 1, length = 100)
     y = 2x .+ 3 + randn(100) * 0.1
     regr = LinearRegression(x, y)
     nlp = ADNLPModel(regr, ones(2), adbackend = adbackend)
@@ -48,19 +45,73 @@ function test_autodiff_model()
       nlp = ADNLPModel(f, x0, adbackend = adbackend)
       nlp = ADNLPModel(f, x0, lvar, uvar, adbackend = adbackend)
       nlp = ADNLPModel(f, x0, c, lcon, ucon, adbackend = adbackend)
-      nlp = ADNLPModel(f, x0, c, lcon, ucon, y0=y0, adbackend = adbackend)
+      nlp = ADNLPModel(f, x0, c, lcon, ucon, y0 = y0, adbackend = adbackend)
       nlp = ADNLPModel(f, x0, lvar, uvar, c, lcon, ucon, adbackend = adbackend)
-      nlp = ADNLPModel(f, x0, lvar, uvar, c, lcon, ucon, y0=y0, adbackend = adbackend)
+      nlp = ADNLPModel(f, x0, lvar, uvar, c, lcon, ucon, y0 = y0, adbackend = adbackend)
       @test_throws DimensionError ADNLPModel(f, x0, badlvar, uvar, adbackend = adbackend)
       @test_throws DimensionError ADNLPModel(f, x0, lvar, baduvar, adbackend = adbackend)
       @test_throws DimensionError ADNLPModel(f, x0, c, badlcon, ucon, adbackend = adbackend)
       @test_throws DimensionError ADNLPModel(f, x0, c, lcon, baducon, adbackend = adbackend)
-      @test_throws DimensionError ADNLPModel(f, x0, c, lcon, ucon, y0=bady0, adbackend = adbackend)
-      @test_throws DimensionError ADNLPModel(f, x0, badlvar, uvar, c, lcon, ucon, adbackend = adbackend)
-      @test_throws DimensionError ADNLPModel(f, x0, lvar, baduvar, c, lcon, ucon, adbackend = adbackend)
-      @test_throws DimensionError ADNLPModel(f, x0, lvar, uvar, c, badlcon, ucon, adbackend = adbackend)
-      @test_throws DimensionError ADNLPModel(f, x0, lvar, uvar, c, lcon, baducon, adbackend = adbackend)
-      @test_throws DimensionError ADNLPModel(f, x0, lvar, uvar, c, lcon, ucon, y0=bady0, adbackend = adbackend)
+      @test_throws DimensionError ADNLPModel(
+        f,
+        x0,
+        c,
+        lcon,
+        ucon,
+        y0 = bady0,
+        adbackend = adbackend,
+      )
+      @test_throws DimensionError ADNLPModel(
+        f,
+        x0,
+        badlvar,
+        uvar,
+        c,
+        lcon,
+        ucon,
+        adbackend = adbackend,
+      )
+      @test_throws DimensionError ADNLPModel(
+        f,
+        x0,
+        lvar,
+        baduvar,
+        c,
+        lcon,
+        ucon,
+        adbackend = adbackend,
+      )
+      @test_throws DimensionError ADNLPModel(
+        f,
+        x0,
+        lvar,
+        uvar,
+        c,
+        badlcon,
+        ucon,
+        adbackend = adbackend,
+      )
+      @test_throws DimensionError ADNLPModel(
+        f,
+        x0,
+        lvar,
+        uvar,
+        c,
+        lcon,
+        baducon,
+        adbackend = adbackend,
+      )
+      @test_throws DimensionError ADNLPModel(
+        f,
+        x0,
+        lvar,
+        uvar,
+        c,
+        lcon,
+        ucon,
+        y0 = bady0,
+        adbackend = adbackend,
+      )
     end
   end
 end
