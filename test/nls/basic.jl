@@ -1,8 +1,8 @@
 function autodiff_nls_test()
-  for adbackend in [ForwardDiffAD(), ZygoteAD(), ReverseDiffAD()]
+  for adbackend in (:ForwardDiffAD, :ZygoteAD, :ReverseDiffAD)
     @testset "autodiff_nls_test for $adbackend" begin
       F(x) = [x[1] - 1; x[2] - x[1]^2]
-      nls = ADNLSModel(F, zeros(2), 2, adbackend = adbackend)
+      nls = ADNLSModel(F, zeros(2), 2, adbackend = eval(adbackend)(F, zeros(2)))
 
       @test isapprox(residual(nls, ones(2)), zeros(2), rtol = 1e-8)
     end
@@ -13,16 +13,18 @@ function autodiff_nls_test()
       c(x) = [sum(x) - 1]
       lvar, uvar, lcon, ucon, y0 = -ones(2), ones(2), -ones(1), ones(1), zeros(1)
       badlvar, baduvar, badlcon, baducon, bady0 = -ones(3), ones(3), -ones(2), ones(2), zeros(2)
-      nlp = ADNLSModel(F, x0, 3, adbackend = adbackend)
-      nlp = ADNLSModel(F, x0, 3, lvar, uvar, adbackend = adbackend)
-      nlp = ADNLSModel(F, x0, 3, c, lcon, ucon, adbackend = adbackend)
-      nlp = ADNLSModel(F, x0, 3, c, lcon, ucon, y0 = y0, adbackend = adbackend)
-      nlp = ADNLSModel(F, x0, 3, lvar, uvar, c, lcon, ucon, adbackend = adbackend)
-      nlp = ADNLSModel(F, x0, 3, lvar, uvar, c, lcon, ucon, y0 = y0, adbackend = adbackend)
-      @test_throws DimensionError ADNLSModel(F, x0, 3, badlvar, uvar, adbackend = adbackend)
-      @test_throws DimensionError ADNLSModel(F, x0, 3, lvar, baduvar, adbackend = adbackend)
-      @test_throws DimensionError ADNLSModel(F, x0, 3, c, badlcon, ucon, adbackend = adbackend)
-      @test_throws DimensionError ADNLSModel(F, x0, 3, c, lcon, baducon, adbackend = adbackend)
+      unc_adbackend = eval(adbackend)(F, x0)
+      con_adbackend = eval(adbackend)(F, c, x0, 1)
+      nlp = ADNLSModel(F, x0, 3, adbackend = unc_adbackend)
+      nlp = ADNLSModel(F, x0, 3, lvar, uvar, adbackend = unc_adbackend)
+      nlp = ADNLSModel(F, x0, 3, c, lcon, ucon, adbackend = con_adbackend)
+      nlp = ADNLSModel(F, x0, 3, c, lcon, ucon, y0 = y0, adbackend = con_adbackend)
+      nlp = ADNLSModel(F, x0, 3, lvar, uvar, c, lcon, ucon, adbackend = con_adbackend)
+      nlp = ADNLSModel(F, x0, 3, lvar, uvar, c, lcon, ucon, y0 = y0, adbackend = con_adbackend)
+      @test_throws DimensionError ADNLSModel(F, x0, 3, badlvar, uvar, adbackend = unc_adbackend)
+      @test_throws DimensionError ADNLSModel(F, x0, 3, lvar, baduvar, adbackend = unc_adbackend)
+      @test_throws DimensionError ADNLSModel(F, x0, 3, c, badlcon, ucon, adbackend = con_adbackend)
+      @test_throws DimensionError ADNLSModel(F, x0, 3, c, lcon, baducon, adbackend = con_adbackend)
       @test_throws DimensionError ADNLSModel(
         F,
         x0,
@@ -31,7 +33,7 @@ function autodiff_nls_test()
         lcon,
         ucon,
         y0 = bady0,
-        adbackend = adbackend,
+        adbackend = con_adbackend,
       )
       @test_throws DimensionError ADNLSModel(
         F,
@@ -42,7 +44,7 @@ function autodiff_nls_test()
         c,
         lcon,
         ucon,
-        adbackend = adbackend,
+        adbackend = con_adbackend,
       )
       @test_throws DimensionError ADNLSModel(
         F,
@@ -53,7 +55,7 @@ function autodiff_nls_test()
         c,
         lcon,
         ucon,
-        adbackend = adbackend,
+        adbackend = con_adbackend,
       )
       @test_throws DimensionError ADNLSModel(
         F,
@@ -64,7 +66,7 @@ function autodiff_nls_test()
         c,
         badlcon,
         ucon,
-        adbackend = adbackend,
+        adbackend = con_adbackend,
       )
       @test_throws DimensionError ADNLSModel(
         F,
@@ -75,7 +77,7 @@ function autodiff_nls_test()
         c,
         lcon,
         baducon,
-        adbackend = adbackend,
+        adbackend = con_adbackend,
       )
       @test_throws DimensionError ADNLSModel(
         F,
@@ -87,7 +89,7 @@ function autodiff_nls_test()
         lcon,
         ucon,
         y0 = bady0,
-        adbackend = adbackend,
+        adbackend = con_adbackend,
       )
     end
   end
