@@ -46,7 +46,7 @@ function ADNLSModel(
   nequ::Integer;
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
-  adbackend = ForwardDiffAD(),
+  adbackend = ForwardDiffAD(F, x0),
 ) where {T}
   nvar = length(x0)
 
@@ -72,7 +72,7 @@ function ADNLSModel(
   uvar::AbstractVector;
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
-  adbackend = ForwardDiffAD(),
+  adbackend = ForwardDiffAD(F, x0),
 ) where {T}
   nvar = length(x0)
   @lencheck nvar lvar uvar
@@ -102,7 +102,7 @@ function ADNLSModel(
   lin::AbstractVector{<:Integer} = Int[],
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
-  adbackend = ForwardDiffAD(),
+  adbackend = ForwardDiffAD(F, c, x0, length(lcon)),
 ) where {T}
   nvar = length(x0)
   ncon = length(lcon)
@@ -148,7 +148,7 @@ function ADNLSModel(
   lin::AbstractVector{<:Integer} = Int[],
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
-  adbackend = ForwardDiffAD(),
+  adbackend = ForwardDiffAD(F, c, x0, length(lcon)),
 ) where {T}
   nvar = length(x0)
   ncon = length(lcon)
@@ -327,19 +327,13 @@ function NLPModels.jac_structure!(
   cols::AbstractVector{<:Integer},
 )
   @lencheck nls.meta.nnzj rows cols
-  m, n = nls.meta.ncon, nls.meta.nvar
-  I = ((i, j) for i = 1:m, j = 1:n)
-  rows .= getindex.(I, 1)[:]
-  cols .= getindex.(I, 2)[:]
-  return rows, cols
+  return jac_structure!(nls.adbackend, nls, rows, cols)
 end
 
 function NLPModels.jac_coord!(nls::ADNLSModel, x::AbstractVector, vals::AbstractVector)
   @lencheck nls.meta.nvar x
   @lencheck nls.meta.nnzj vals
-  Jx = jacobian(nls.adbackend, nls.c, x)
-  vals .= Jx[:]
-  return vals
+  return jac_coord!(nls.adbackend, nls, x, vals)
 end
 
 function NLPModels.jprod!(nls::ADNLSModel, x::AbstractVector, v::AbstractVector, Jv::AbstractVector)
@@ -391,11 +385,7 @@ function NLPModels.hess_structure!(
   cols::AbstractVector{<:Integer},
 )
   @lencheck nls.meta.nnzh rows cols
-  n = nls.meta.nvar
-  I = ((i, j) for i = 1:n, j = 1:n if i ≥ j)
-  rows .= getindex.(I, 1)
-  cols .= getindex.(I, 2)
-  return rows, cols
+  return hess_structure!(nls.adbackend, nls, rows, cols)
 end
 
 function NLPModels.hess_coord!(
@@ -408,15 +398,7 @@ function NLPModels.hess_coord!(
   @lencheck nls.meta.nnzh vals
   increment!(nls, :neval_hess)
   ℓ(x) = obj_weight * sum(nls.F(x) .^ 2) / 2
-  Hx = hessian(nls.adbackend, ℓ, x)
-  k = 1
-  for j = 1:(nls.meta.nvar)
-    for i = j:(nls.meta.nvar)
-      vals[k] = Hx[i, j]
-      k += 1
-    end
-  end
-  return vals
+  return hess_coord!(nls.adbackend, nls, x, ℓ, vals)
 end
 
 function NLPModels.hess_coord!(
@@ -431,15 +413,7 @@ function NLPModels.hess_coord!(
   @lencheck nls.meta.nnzh vals
   increment!(nls, :neval_hess)
   ℓ(x) = obj_weight * sum(nls.F(x) .^ 2) / 2 + dot(y, nls.c(x))
-  Hx = hessian(nls.adbackend, ℓ, x)
-  k = 1
-  for j = 1:(nls.meta.nvar)
-    for i = j:(nls.meta.nvar)
-      vals[k] = Hx[i, j]
-      k += 1
-    end
-  end
-  return vals
+  return hess_coord!(nls.adbackend, nls, x, ℓ, vals)
 end
 
 function NLPModels.hprod!(
