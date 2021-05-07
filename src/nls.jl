@@ -456,15 +456,7 @@ function NLPModels.jth_hess_coord!(
   @lencheck nls.meta.nvar x
   @rangecheck 1 nls.meta.ncon j
   increment!(nls, :neval_jhess)
-  Hx = hessian(nls.adbackend, x -> nls.c(x)[j], x)
-  k = 1
-  for j = 1:(nls.meta.nvar)
-    for i = j:(nls.meta.nvar)
-      vals[k] = Hx[i, j]
-      k += 1
-    end
-  end
-  return vals
+  return hess_coord!(nls.adbackend, nls, x, x -> nls.c(x)[j], vals)
 end
 
 function NLPModels.jth_hprod!(
