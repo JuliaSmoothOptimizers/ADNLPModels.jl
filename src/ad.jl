@@ -3,14 +3,12 @@ struct ForwardDiffAD <: ADBackend
   nnzh::Int
   nnzj::Int
 end
-function ForwardDiffAD(f, c, x0::AbstractVector, ncon::Integer)
-  nvar = length(x0)
+function ForwardDiffAD(nvar::Integer, ncon::Integer)
   nnzh = nvar * (nvar + 1) / 2
   nnzj = nvar * ncon
   return ForwardDiffAD(nnzh, nnzj)
 end
-function ForwardDiffAD(f, x0::AbstractVector)
-  nvar = length(x0)
+function ForwardDiffAD(nvar::Integer)
   nnzh = nvar * (nvar + 1) / 2
   return ForwardDiffAD(nnzh, 0)
 end
@@ -18,14 +16,12 @@ struct ZygoteAD <: ADBackend
   nnzh::Int
   nnzj::Int
 end
-function ZygoteAD(f, c, x0::AbstractVector, ncon::Integer)
-  nvar = length(x0)
+function ZygoteAD(nvar::Integer, ncon::Integer)
   nnzh = nvar * (nvar + 1) / 2
   nnzj = nvar * ncon
   return ZygoteAD(nnzh, nnzj)
 end
-function ZygoteAD(f, x0::AbstractVector)
-  nvar = length(x0)
+function ZygoteAD(nvar::Integer)
   nnzh = nvar * (nvar + 1) / 2
   return ZygoteAD(nnzh, 0)
 end
@@ -33,14 +29,12 @@ struct ReverseDiffAD <: ADBackend
   nnzh::Int
   nnzj::Int
 end
-function ReverseDiffAD(f, c, x0::AbstractVector, ncon::Integer)
-  nvar = length(x0)
+function ReverseDiffAD(nvar::Integer, ncon::Integer)
   nnzh = nvar * (nvar + 1) / 2
   nnzj = nvar * ncon
   return ReverseDiffAD(nnzh, nnzj)
 end
-function ReverseDiffAD(f, x0::AbstractVector)
-  nvar = length(x0)
+function ReverseDiffAD(nvar::Integer)
   nnzh = nvar * (nvar + 1) / 2
   return ReverseDiffAD(nnzh, 0)
 end
@@ -127,7 +121,7 @@ end
       return Zygote.jacobian(f, x)[1]
     end
     function hessian(b::ZygoteAD, f, x)
-      return jacobian(ForwardDiffAD(f, x), x -> gradient(b, f, x), x)
+      return jacobian(ForwardDiffAD(length(x)), x -> gradient(b, f, x), x)
     end
     function Jprod(::ZygoteAD, f, x, v)
       return vec(Zygote.jacobian(t -> f(x + t * v), 0)[1])
