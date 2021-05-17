@@ -46,7 +46,7 @@ function ADNLSModel(
   nequ::Integer;
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
-  adbackend = ForwardDiffAD(F, x0),
+  adbackend = ForwardDiffAD(length(x0)),
 ) where {T}
   nvar = length(x0)
 
@@ -72,7 +72,7 @@ function ADNLSModel(
   uvar::AbstractVector;
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
-  adbackend = ForwardDiffAD(F, x0),
+  adbackend = ForwardDiffAD(length(x0)),
 ) where {T}
   nvar = length(x0)
   @lencheck nvar lvar uvar
@@ -102,7 +102,7 @@ function ADNLSModel(
   lin::AbstractVector{<:Integer} = Int[],
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
-  adbackend = ForwardDiffAD(F, c, x0, length(lcon)),
+  adbackend = ForwardDiffAD(length(x0), length(lcon)),
 ) where {T}
   nvar = length(x0)
   ncon = length(lcon)
@@ -148,7 +148,7 @@ function ADNLSModel(
   lin::AbstractVector{<:Integer} = Int[],
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
-  adbackend = ForwardDiffAD(F, c, x0, length(lcon)),
+  adbackend = ForwardDiffAD(length(x0), length(lcon)),
 ) where {T}
   nvar = length(x0)
   ncon = length(lcon)
