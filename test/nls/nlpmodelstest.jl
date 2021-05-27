@@ -36,9 +36,6 @@
           multiple_precision_nls(nls, exclude = exclude)
         end
       end
-      @testset "Check view subarray" begin
-        view_subarray_nls.(nlss, exclude = exclude)
-      end
     end
   end
 end

@@ -18,12 +18,6 @@
       @testset "Check multiple precision" begin
         multiple_precision_nlp(nlp_ad, exclude = [])
       end
-      @testset "Check view subarray" begin
-        view_subarray_nlp(nlp_ad, exclude = [])
-      end
-      @testset "Check coordinate memory" begin
-        coord_memory_nlp(nlp_ad, exclude = [])
-      end
     end
   end
 end
