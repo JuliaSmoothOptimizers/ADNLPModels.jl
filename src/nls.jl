@@ -1,8 +1,8 @@
 export ADNLSModel
 
-mutable struct ADNLSModel <: AbstractNLSModel
-  meta::NLPModelMeta
-  nls_meta::NLSMeta
+mutable struct ADNLSModel{T, S} <: AbstractNLSModel{T, S}
+  meta::NLPModelMeta{T, S}
+  nls_meta::NLSMeta{T, S}
   counters::NLSCounters
   adbackend::ADBackend
 
@@ -42,17 +42,18 @@ The following keyword arguments are available to the constructors for constraine
 """
 function ADNLSModel(
   F,
-  x0::AbstractVector{T},
+  x0::S,
   nequ::Integer;
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
   adbackend = ForwardDiffAD(length(x0)),
-) where {T}
+) where {S}
+  T = eltype(S)
   nvar = length(x0)
 
-  meta = NLPModelMeta(nvar, x0 = x0, name = name)
+  meta = NLPModelMeta{T, S}(nvar, x0 = x0, name = name)
   nlnequ = setdiff(1:nequ, linequ)
-  nls_meta = NLSMeta(
+  nls_meta = NLSMeta{T, S}(
     nequ,
     nvar,
     nnzj = nequ * nvar,
@@ -66,20 +67,21 @@ end
 
 function ADNLSModel(
   F,
-  x0::AbstractVector{T},
+  x0::S,
   nequ::Integer,
-  lvar::AbstractVector,
-  uvar::AbstractVector;
+  lvar::S,
+  uvar::S;
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
   adbackend = ForwardDiffAD(length(x0)),
-) where {T}
+) where {S}
+  T = eltype(S)
   nvar = length(x0)
   @lencheck nvar lvar uvar
 
-  meta = NLPModelMeta(nvar, x0 = x0, lvar = lvar, uvar = uvar, name = name)
+  meta = NLPModelMeta{T, S}(nvar, x0 = x0, lvar = lvar, uvar = uvar, name = name)
   nlnequ = setdiff(1:nequ, linequ)
-  nls_meta = NLSMeta(
+  nls_meta = NLSMeta{T, S}(
     nequ,
     nvar,
     nnzj = nequ * nvar,
@@ -93,24 +95,25 @@ end
 
 function ADNLSModel(
   F,
-  x0::AbstractVector{T},
+  x0::S,
   nequ::Integer,
   c,
-  lcon::AbstractVector,
-  ucon::AbstractVector;
-  y0::AbstractVector = fill!(similar(lcon), zero(T)),
+  lcon::S,
+  ucon::S;
+  y0::S = fill!(similar(lcon), zero(eltype(S))),
   lin::AbstractVector{<:Integer} = Int[],
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
   adbackend = ForwardDiffAD(length(x0), length(lcon)),
-) where {T}
+) where {S}
+  T = eltype(S)
   nvar = length(x0)
   ncon = length(lcon)
   @lencheck ncon ucon y0
   nnzj = nvar * ncon
 
   nln = setdiff(1:ncon, lin)
-  meta = NLPModelMeta(
+  meta = NLPModelMeta{T, S}(
     nvar,
     x0 = x0,
     ncon = ncon,
@@ -123,7 +126,7 @@ function ADNLSModel(
     nln = nln,
   )
   nlnequ = setdiff(1:nequ, linequ)
-  nls_meta = NLSMeta(
+  nls_meta = NLSMeta{T, S}(
     nequ,
     nvar,
     nnzj = nequ * nvar,
@@ -137,19 +140,20 @@ end
 
 function ADNLSModel(
   F,
-  x0::AbstractVector{T},
+  x0::S,
   nequ::Integer,
-  lvar::AbstractVector,
-  uvar::AbstractVector,
+  lvar::S,
+  uvar::S,
   c,
-  lcon::AbstractVector,
-  ucon::AbstractVector;
-  y0::AbstractVector = fill!(similar(lcon), zero(T)),
+  lcon::S,
+  ucon::S;
+  y0::S = fill!(similar(lcon), zero(eltype(S))),
   lin::AbstractVector{<:Integer} = Int[],
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
   adbackend = ForwardDiffAD(length(x0), length(lcon)),
-) where {T}
+) where {S}
+  T = eltype(S)
   nvar = length(x0)
   ncon = length(lcon)
   @lencheck nvar lvar uvar
@@ -157,7 +161,7 @@ function ADNLSModel(
   nnzj = nvar * ncon
 
   nln = setdiff(1:ncon, lin)
-  meta = NLPModelMeta(
+  meta = NLPModelMeta{T, S}(
     nvar,
     x0 = x0,
     lvar = lvar,
@@ -172,7 +176,7 @@ function ADNLSModel(
     nln = nln,
   )
   nlnequ = setdiff(1:nequ, linequ)
-  nls_meta = NLSMeta(
+  nls_meta = NLSMeta{T, S}(
     nequ,
     nvar,
     nnzj = nequ * nvar,
