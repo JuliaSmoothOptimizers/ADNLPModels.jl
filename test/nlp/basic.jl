@@ -28,7 +28,7 @@ function test_autodiff_model()
     nlp = ADNLPModel(f, x0, adbackend = eval(adbackend)(length(x0)))
 
     c(x) = [sum(x) - 1]
-    nlp = ADNLPModel(f, x0, c, [0], [0], adbackend = eval(adbackend)(length(x0), 1))
+    nlp = ADNLPModel(f, x0, c, [0.0], [0.0], adbackend = eval(adbackend)(length(x0), 1))
     @test obj(nlp, x0) == f(x0)
 
     x = range(-1, stop = 1, length = 100)

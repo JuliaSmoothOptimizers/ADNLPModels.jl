@@ -1,7 +1,7 @@
 export ADNLPModel
 
-mutable struct ADNLPModel <: AbstractNLPModel
-  meta::NLPModelMeta
+mutable struct ADNLPModel{T, S} <: AbstractNLPModel{T, S}
+  meta::NLPModelMeta{T, S}
   counters::Counters
   adbackend::ADBackend
 
@@ -37,34 +37,36 @@ The following keyword arguments are available to the constructors for constraine
 """
 function ADNLPModel(
   f,
-  x0::AbstractVector{T};
+  x0::S;
   name::String = "Generic",
   adbackend = ForwardDiffAD(length(x0)),
-) where {T}
+) where {S}
+  T = eltype(S)
   nvar = length(x0)
   @lencheck nvar x0
 
   nnzh = nvar * (nvar + 1) / 2
 
-  meta = NLPModelMeta(nvar, x0 = x0, nnzh = nnzh, minimize = true, islp = false, name = name)
+  meta = NLPModelMeta{T, S}(nvar, x0 = x0, nnzh = nnzh, minimize = true, islp = false, name = name)
 
   return ADNLPModel(meta, Counters(), adbackend, f, x -> T[])
 end
 
 function ADNLPModel(
   f,
-  x0::AbstractVector{T},
-  lvar::AbstractVector,
-  uvar::AbstractVector;
+  x0::S,
+  lvar::S,
+  uvar::S;
   name::String = "Generic",
   adbackend = ForwardDiffAD(length(x0)),
-) where {T}
+) where {S}
+  T = eltype(S)
   nvar = length(x0)
   @lencheck nvar x0 lvar uvar
 
   nnzh = nvar * (nvar + 1) / 2
 
-  meta = NLPModelMeta(
+  meta = NLPModelMeta{T, S}(
     nvar,
     x0 = x0,
     lvar = lvar,
@@ -80,15 +82,16 @@ end
 
 function ADNLPModel(
   f,
-  x0::AbstractVector{T},
+  x0::S,
   c,
-  lcon::AbstractVector,
-  ucon::AbstractVector;
-  y0::AbstractVector = fill!(similar(lcon), zero(T)),
+  lcon::S,
+  ucon::S;
+  y0::S = fill!(similar(lcon), zero(eltype(S))),
   name::String = "Generic",
   lin::AbstractVector{<:Integer} = Int[],
   adbackend = ForwardDiffAD(length(x0), length(lcon)),
-) where {T}
+) where {S}
+  T = eltype(S)
   nvar = length(x0)
   ncon = length(lcon)
   @lencheck nvar x0
@@ -99,7 +102,7 @@ function ADNLPModel(
 
   nln = setdiff(1:ncon, lin)
 
-  meta = NLPModelMeta(
+  meta = NLPModelMeta{T, S}(
     nvar,
     x0 = x0,
     ncon = ncon,
@@ -120,17 +123,18 @@ end
 
 function ADNLPModel(
   f,
-  x0::AbstractVector{T},
-  lvar::AbstractVector,
-  uvar::AbstractVector,
+  x0::S,
+  lvar::S,
+  uvar::S,
   c,
-  lcon::AbstractVector,
-  ucon::AbstractVector;
-  y0::AbstractVector = fill!(similar(lcon), zero(T)),
+  lcon::S,
+  ucon::S;
+  y0::S = fill!(similar(lcon), zero(eltype(S))),
   name::String = "Generic",
   lin::AbstractVector{<:Integer} = Int[],
   adbackend = ForwardDiffAD(length(x0), length(lcon)),
-) where {T}
+) where {S}
+  T = eltype(S)
   nvar = length(x0)
   ncon = length(lcon)
   @lencheck nvar x0 lvar uvar
@@ -141,7 +145,7 @@ function ADNLPModel(
 
   nln = setdiff(1:ncon, lin)
 
-  meta = NLPModelMeta(
+  meta = NLPModelMeta{T, S}(
     nvar,
     x0 = x0,
     lvar = lvar,
