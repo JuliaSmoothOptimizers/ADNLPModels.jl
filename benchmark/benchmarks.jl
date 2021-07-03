@@ -6,7 +6,7 @@ using NLPModels, BenchmarkProfiles, SolverBenchmark, NLPModelsJuMP
 #This package
 using ADNLPModels, ReverseDiff, Zygote, ForwardDiff
 
-include("problems/problems.jl")
+include("problems.jl")
 
 models = [:reverse, :zygote, :autodiff, :jump]
 fun    = Dict(:obj => (nlp, x) -> obj(nlp, x), 
