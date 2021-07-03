@@ -1,15 +1,15 @@
 using Pkg
 bmark_dir = @__DIR__
+println(@__DIR__)
 Pkg.activate(bmark_dir)
 Pkg.instantiate()
-bmarkname = "ADNLPModels"
-using Git
+repo_name = string(split(ARGS[1], ".")[1])
+bmarkname = lowercase(repo_name)
 
 # if we are running these benchmarks from the git repository
 # we want to develop the package instead of using the release
 if isdir(joinpath(bmark_dir, "..", ".git"))
-  Pkg.develop(PackageSpec(url = joinpath(bmark_dir, "..")))
-  bmarkname = Git.head()  # sha of HEAD
+  Pkg.develop(PackageSpec(url=joinpath(bmark_dir, "..")))
 end
 
 using DataFrames
@@ -22,8 +22,8 @@ using Plots
 using SolverBenchmark
 
 # NB: benchmarkpkg will run benchmarks/benchmarks.jl by default
-commit = benchmarkpkg("ADNLPModels")  # current state of repository
-master = benchmarkpkg("ADNLPModels", "master")
+commit = benchmarkpkg(repo_name)  # current state of repository
+master = benchmarkpkg(repo_name, "master")
 judgement = judge(commit, master)
 
 commit_stats = bmark_results_to_dataframes(commit)
@@ -34,10 +34,9 @@ export_markdown("judgement_$(bmarkname).md", judgement)
 export_markdown("master.md", master)
 export_markdown("$(bmarkname).md", commit)
 
-function profile_solvers_from_pkgbmark(stats::Dict{Symbol, DataFrame})
+function profile_solvers_from_pkgbmark(stats::Dict{Symbol,DataFrame})
   # guard against zero gctimes
-  costs =
-    [df -> df[!, :time], df -> df[!, :memory], df -> df[!, :gctime] .+ 1, df -> df[!, :allocations]]
+  costs = [df -> df[!, :time], df -> df[!, :memory], df -> df[!, :gctime] .+ 1, df -> df[!, :allocations]]
   profile_solvers(stats, costs, ["time", "memory", "gctime+1", "allocations"])
 end
 
@@ -47,8 +46,9 @@ files_dict = Dict{String, Any}()
 file_num = 1
 for k ∈ keys(judgement_stats)
   global file_num
-  k_stats = Dict{Symbol, DataFrame}(:commit => commit_stats[k], :master => master_stats[k])
-  save_stats(k_stats, "ADNLPModels_$(bmarkname)_vs_master_$(k).jld2", force = true)
+  k_stats = Dict{Symbol,DataFrame}(:commit => commit_stats[k],
+                                   :master => master_stats[k])
+  save_stats(k_stats, "ldl_$(bmarkname)_vs_master_$(k).jld2", force=true)
 
   k_profile = profile_solvers_from_pkgbmark(k_stats)
   savefig("profiles_commit_vs_master_$(k).svg")
@@ -57,28 +57,25 @@ for k ∈ keys(judgement_stats)
     readlines(fd)
   end
   # file_num makes sure svg files appear before md files (added below)
-  files_dict["$(file_num)_$(k).svg"] = Dict{String, Any}("content" => join(k_svgfile))
+  files_dict["$(file_num)_$(k).svg"] = Dict{String,Any}("content" => join(k_svgfile))
   file_num += 1
 end
 
 for mdfile ∈ [:judgement, :master, :commit]
   global file_num
-  files_dict["$(file_num)_$(mdfile).md"] =
-    Dict{String, Any}("content" => "$(sprint(export_markdown, eval(mdfile)))")
+  files_dict["$(file_num)_$(mdfile).md"] = Dict{String,Any}("content" => "$(sprint(export_markdown, eval(mdfile)))")
   file_num += 1
 end
 
-jldopen("ADNLPModels_$(bmarkname)_vs_master_judgement.jld2", "w") do file
+jldopen("ldl_$(bmarkname)_vs_master_judgement.jld2", "w") do file
   file["jstats"] = judgement_stats
 end
 
 # json description of gist
-json_dict = Dict{String, Any}(
-  "description" => "ADNLPModels repository benchmark",
-  "public" => true,
-  "files" => files_dict,
-)
+json_dict = Dict{String,Any}("description" => "$(repo_name) repository benchmark",
+                             "public" => true,
+                             "files" => files_dict)
 
 open("gist.json", "w") do f
-  JSON.print(f, json_dict)
+    JSON.print(f, json_dict)
 end
