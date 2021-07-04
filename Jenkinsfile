@@ -1,4 +1,4 @@
-def bmarkFile = 'benchmarks.jl'
+def bmarkFile = 'run_benchmarks.jl'
 pipeline {
   agent any
   environment {
@@ -78,7 +78,7 @@ pipeline {
           git pull origin master
           git fetch origin
           git branch -D $BRANCH_NAME || true
-          git checkout -b $BRANCH_NAME origin/$BRANCH_NAME
+          git checkout -b $BRANCH_NAME origin/$BRANCH_NAME || true
           '''
         }
       }
@@ -107,9 +107,7 @@ pipeline {
         sh 'printenv'
         sh '''
         git clean -fd
-        git reset --hard
         git checkout master
-        git branch -D $BRANCH_NAME || true
         '''
       }
     }
