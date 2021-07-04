@@ -235,7 +235,7 @@ function NLPModels.hess(nlp::ADNLPModel, x::AbstractVector; obj_weight::Real = o
   increment!(nlp, :neval_hess)
   ℓ(x) = obj_weight * nlp.f(x)
   Hx = hessian(nlp.adbackend, ℓ, x)
-  return tril(Hx)
+  return Symmetric(Hx, :L)
 end
 
 function NLPModels.hess(
@@ -249,7 +249,7 @@ function NLPModels.hess(
   increment!(nlp, :neval_hess)
   ℓ(x) = obj_weight * nlp.f(x) + dot(nlp.c(x), y)
   Hx = hessian(nlp.adbackend, ℓ, x)
-  return tril(Hx)
+  return Symmetric(Hx, :L)
 end
 
 function NLPModels.hess_structure!(
