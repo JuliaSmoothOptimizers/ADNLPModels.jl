@@ -49,7 +49,7 @@ pipeline {
 
      causeString: 'Triggered on $comment',
 
-     token: "",
+     token: "ADNLPModels",
 
      printContributedVariables: true,
      printPostContent: true,
