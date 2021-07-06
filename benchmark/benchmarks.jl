@@ -4,9 +4,7 @@ using BenchmarkTools, DataFrames, JuMP, Plots
 #JSO packages
 using NLPModels, BenchmarkProfiles, SolverBenchmark, NLPModelsJuMP
 #This package
-using ADNLPModels, ReverseDiff, Zygote, ForwardDiff
-
-using ADNLPModelProblems, NLPModelsJuMP
+using ADNLPModels, ADNLPModelProblems, ReverseDiff, Zygote, ForwardDiff
 
 # Scalable problems from ADNLPModelProblems.jl
 const problems = ["clnlbeam", "controlinvestment", "hovercraft1d", "polygon1", "polygon2", "polygon3"]
@@ -38,7 +36,7 @@ for f in keys(fun)
 end
 
 for pb in problems, m in models
-  npb = eval(Meta.parse("$(pb)_$(m)()")) # we should add a kwargs n=(size_of_problem) to modify the size
+  npb = eval(Meta.parse("ADNLPModelProblems.$(pb)_$(m)()")) # we should add a kwargs n=(size_of_problem) to modify the size
   for (fs, f) in fun
     x = npb.meta.x0
     SUITE[fs][m][string(pb)] = @benchmarkable eval($f)($npb, $x)
