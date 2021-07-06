@@ -6,8 +6,6 @@ using NLPModels, BenchmarkProfiles, SolverBenchmark, NLPModelsJuMP
 #This package
 using ADNLPModels, ReverseDiff, Zygote, ForwardDiff
 
-using Pkg
-Pkg.add(url="https://github.com/tmigot/ADNLPModelProblems")
 using ADNLPModelProblems, NLPModelsJuMP
 
 # Scalable problems from ADNLPModelProblems.jl
