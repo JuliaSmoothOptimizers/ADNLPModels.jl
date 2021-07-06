@@ -1,5 +1,6 @@
 using Pkg
 Pkg.activate("./benchmark/")
+Pkg.add(url="https://github.com/tmigot/ADNLPModelProblems")
 Pkg.instantiate()
 
 using ArgParse
