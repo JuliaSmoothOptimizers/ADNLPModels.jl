@@ -48,7 +48,7 @@ for k ∈ keys(judgement_stats)
   global file_num
   k_stats = Dict{Symbol,DataFrame}(:commit => commit_stats[k],
                                    :master => master_stats[k])
-  save_stats(k_stats, "ldl_$(bmarkname)_vs_master_$(k).jld2", force=true)
+  save_stats(k_stats, "$(bmarkname)_vs_master_$(k).jld2", force=true)
 
   k_profile = profile_solvers_from_pkgbmark(k_stats)
   savefig("profiles_commit_vs_master_$(k).svg")
@@ -67,7 +67,7 @@ for mdfile ∈ [:judgement, :master, :commit]
   file_num += 1
 end
 
-jldopen("ldl_$(bmarkname)_vs_master_judgement.jld2", "w") do file
+jldopen("$(bmarkname)_vs_master_judgement.jld2", "w") do file
   file["jstats"] = judgement_stats
 end
 
