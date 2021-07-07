@@ -33,7 +33,7 @@
       end
       @testset "Check multiple precision" begin
         for nls in nlss
-          multiple_precision_nls(nls, exclude = exclude)
+          multiple_precision_nls(problem, exclude = exclude)
         end
       end
       @testset "Check view subarray" begin

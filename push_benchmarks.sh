@@ -1,6 +1,4 @@
 #!/bin/bash
-
-
 git checkout $BRANCH_NAME --
 
 if [ "$?" -ne "0" ] ; then
