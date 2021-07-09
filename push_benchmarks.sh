@@ -18,6 +18,6 @@ else
     julia benchmark/send_comment_to_pr.jl -o $org -r $repo -p $pullrequest -c "**An error has occured while running the benchmark script: $1** "
 fi
 
-git checkout master
+git checkout main
 
 git branch -D $LOCAL_BRANCH_NAME
