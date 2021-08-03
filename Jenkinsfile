@@ -74,8 +74,8 @@ pipeline {
         dir(WORKSPACE + "/$repo") {
           sh '''
           git clean -fd
-          git checkout master
-          git pull origin master
+          git checkout main
+          git pull origin main
           git fetch origin
           git branch -D $BRANCH_NAME || true
           git checkout -b $BRANCH_NAME origin/$BRANCH_NAME || true
@@ -107,7 +107,7 @@ pipeline {
         sh 'printenv'
         sh '''
         git clean -fd
-        git checkout master
+        git checkout main
         '''
       }
     }
