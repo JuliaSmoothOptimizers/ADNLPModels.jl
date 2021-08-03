@@ -255,7 +255,7 @@ function NLPModels.hess_residual(nls::ADNLSModel, x::AbstractVector, v::Abstract
   @lencheck nls.nls_meta.nequ v
   increment!(nls, :neval_hess_residual)
   ϕ(x) = dot(nls.F(x), v)
-  return tril(hessian(nls.adbackend, ϕ, x))
+  return Symmetric(hessian(nls.adbackend, ϕ, x), :L)
 end
 
 function NLPModels.hess_structure_residual!(
@@ -295,7 +295,7 @@ end
 function NLPModels.jth_hess_residual(nls::ADNLSModel, x::AbstractVector, i::Int)
   @lencheck nls.meta.nvar x
   increment!(nls, :neval_jhess_residual)
-  return tril(hessian(nls.adbackend, x -> nls.F(x)[i], x))
+  return Symmetric(hessian(nls.adbackend, x -> nls.F(x)[i], x), :L)
 end
 
 function NLPModels.hprod_residual!(
@@ -366,7 +366,7 @@ function NLPModels.hess(nls::ADNLSModel, x::AbstractVector; obj_weight::Real = o
   increment!(nls, :neval_hess)
   ℓ(x) = obj_weight * sum(nls.F(x) .^ 2) / 2
   Hx = hessian(nls.adbackend, ℓ, x)
-  return tril(Hx)
+  return Symmetric(Hx, :L)
 end
 
 function NLPModels.hess(
@@ -380,7 +380,7 @@ function NLPModels.hess(
   increment!(nls, :neval_hess)
   ℓ(x) = obj_weight * sum(nls.F(x) .^ 2) / 2 + dot(y, nls.c(x))
   Hx = hessian(nls.adbackend, ℓ, x)
-  return tril(Hx)
+  return Symmetric(Hx, :L)
 end
 
 function NLPModels.hess_structure!(
