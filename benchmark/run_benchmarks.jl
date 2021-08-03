@@ -24,15 +24,15 @@ using SolverBenchmark
 
 # NB: benchmarkpkg will run benchmarks/benchmarks.jl by default
 commit = benchmarkpkg(repo_name)  # current state of repository
-master = benchmarkpkg(repo_name, "master")
-judgement = judge(commit, master)
+main = benchmarkpkg(repo_name, "main")
+judgement = judge(commit, main)
 
 commit_stats = bmark_results_to_dataframes(commit)
-master_stats = bmark_results_to_dataframes(master)
+main_stats = bmark_results_to_dataframes(main)
 judgement_stats = judgement_results_to_dataframes(judgement)
 
 export_markdown("judgement_$(bmarkname).md", judgement)
-export_markdown("master.md", master)
+export_markdown("main.md", main)
 export_markdown("$(bmarkname).md", commit)
 
 function profile_solvers_from_pkgbmark(stats::Dict{Symbol,DataFrame})
@@ -48,13 +48,13 @@ file_num = 1
 for k ∈ keys(judgement_stats)
   global file_num
   k_stats = Dict{Symbol,DataFrame}(:commit => commit_stats[k],
-                                   :master => master_stats[k])
-  save_stats(k_stats, "$(bmarkname)_vs_master_$(k).jld2", force=true)
+                                   :main => main_stats[k])
+  save_stats(k_stats, "$(bmarkname)_vs_main_$(k).jld2", force=true)
 
   k_profile = profile_solvers_from_pkgbmark(k_stats)
-  savefig("profiles_commit_vs_master_$(k).svg")
+  savefig("profiles_commit_vs_main_$(k).svg")
   # read contents of svg file to add to gist
-  k_svgfile = open("profiles_commit_vs_master_$(k).svg", "r") do fd
+  k_svgfile = open("profiles_commit_vs_main_$(k).svg", "r") do fd
     readlines(fd)
   end
   # file_num makes sure svg files appear before md files (added below)
@@ -62,13 +62,13 @@ for k ∈ keys(judgement_stats)
   file_num += 1
 end
 
-for mdfile ∈ [:judgement, :master, :commit]
+for mdfile ∈ [:judgement, :main, :commit]
   global file_num
   files_dict["$(file_num)_$(mdfile).md"] = Dict{String,Any}("content" => "$(sprint(export_markdown, eval(mdfile)))")
   file_num += 1
 end
 
-jldopen("$(bmarkname)_vs_master_judgement.jld2", "w") do file
+jldopen("$(bmarkname)_vs_main_judgement.jld2", "w") do file
   file["jstats"] = judgement_stats
 end
 
