@@ -1,7 +1,4 @@
 #!/bin/bash
-
-julia benchmark/send_comment_to_pr.jl -o $org -r $repo -p $pullrequest -c '**Starting benchmarks!**'
-
 git checkout $BRANCH_NAME --
 
 if [ "$?" -ne "0" ] ; then
@@ -9,6 +6,7 @@ if [ "$?" -ne "0" ] ; then
     git fetch origin pull/$pullrequest/head:$LOCAL_BRANCH_NAME
     git checkout $LOCAL_BRANCH_NAME --
 fi
+julia benchmark/send_comment_to_pr.jl -o $org -r $repo -p $pullrequest -c '**Starting benchmarks!**'
 
 julia benchmark/$1 $repo
 
