@@ -5,7 +5,7 @@ pipeline {
     REPO_EXISTS = fileExists "$repo"
   }
   options {
-    skipDefaultCheckout true
+    skipDefaultCheckout false
   }
   triggers {
     GenericTrigger(
