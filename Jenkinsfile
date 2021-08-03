@@ -74,8 +74,8 @@ pipeline {
         dir(WORKSPACE + "/$repo") {
           sh '''
           git clean -fd
-          git checkout master
-          git pull origin master
+          git checkout main
+          git pull origin main
           git fetch origin
           git branch -D $BRANCH_NAME || true
           git checkout -b $BRANCH_NAME origin/$BRANCH_NAME || true
@@ -93,7 +93,7 @@ pipeline {
         }
         dir(WORKSPACE + "/$repo") {
           sh "mkdir -p $HOME/benchmarks/${org}/${repo}"
-          sh "qsub -N ${repo}_${pullrequest} -V -cwd -o $HOME/benchmarks/${org}/${repo}/${pullrequest}_bmark_output.log -e $HOME/benchmarks/${org}/${repo}/${pullrequest}_bmark_error.log push_benchmarks.sh $bmarkFile"
+          sh "qsub -N ${repo}_${pullrequest} -V -cwd -o $HOME/benchmarks/${org}/${repo}/${pullrequest}_${JOB_ID}_bmark_output.log -e $HOME/benchmarks/${org}/${repo}/${pullrequest}_${JOB_ID}_bmark_error.log push_benchmarks.sh $bmarkFile"
         }   
       }
     }
@@ -107,7 +107,7 @@ pipeline {
         sh 'printenv'
         sh '''
         git clean -fd
-        git checkout master
+        git checkout main
         '''
       }
     }
