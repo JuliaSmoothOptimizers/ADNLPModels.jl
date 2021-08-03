@@ -16,7 +16,7 @@
         check_nlp_dimensions(nlp_ad, exclude = [])
       end
       @testset "Check multiple precision" begin
-        multiple_precision_nlp(nlp_ad, exclude = [])
+        multiple_precision_nlp(problem, exclude = [])
       end
       @testset "Check view subarray" begin
         view_subarray_nlp(nlp_ad, exclude = [])

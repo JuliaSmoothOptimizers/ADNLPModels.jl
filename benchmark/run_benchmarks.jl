@@ -2,6 +2,7 @@ using Pkg
 bmark_dir = @__DIR__
 println(@__DIR__)
 Pkg.activate(bmark_dir)
+Pkg.add(url="https://github.com/tmigot/ADNLPModelProblems")
 Pkg.instantiate()
 repo_name = string(split(ARGS[1], ".")[1])
 bmarkname = lowercase(repo_name)
