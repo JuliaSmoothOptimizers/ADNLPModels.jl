@@ -48,8 +48,8 @@ files_dict = Dict{String, Any}()
 file_num = 1
 for k ∈ keys(judgement_stats)
   global file_num
-  k_stats = Dict{Symbol, DataFrame}(:commit => commit_stats[k], :master => master_stats[k])
-  save_stats(k_stats, "$(bmarkname)_vs_master_$(k).jld2", force = true)
+  k_stats = Dict{Symbol, DataFrame}(:commit => commit_stats[k], :main => main_stats[k])
+  save_stats(k_stats, "$(bmarkname)_vs_main_$(k).jld2", force = true)
 
   k_profile = profile_solvers_from_pkgbmark(k_stats)
   savefig("profiles_commit_vs_main_$(k).svg")
