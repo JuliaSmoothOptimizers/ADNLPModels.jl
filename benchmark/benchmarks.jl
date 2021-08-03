@@ -7,7 +7,8 @@ using NLPModels, BenchmarkProfiles, SolverBenchmark, NLPModelsJuMP
 using ADNLPModels, ADNLPModelProblems, ReverseDiff, Zygote, ForwardDiff
 
 # Scalable problems from ADNLPModelProblems.jl
-const problems = ["clnlbeam", "controlinvestment", "hovercraft1d", "polygon1", "polygon2", "polygon3"]
+const problems =
+  ["clnlbeam", "controlinvestment", "hovercraft1d", "polygon1", "polygon2", "polygon3"]
 
 nn = ADNLPModelProblems.default_nvar # 100 # default parameter for scalable problems
 # available functions:
@@ -17,14 +18,15 @@ nn = ADNLPModelProblems.default_nvar # 100 # default parameter for scalable prob
 # $(pb)_jump(args... ; n=$(nn), kwargs...)
 
 models = [:reverse, :zygote, :autodiff, :jump]
-fun    = Dict(:obj => (nlp, x) -> obj(nlp, x), 
-              :grad => (nlp, x) -> grad(nlp, x),
-              :hess_coord => (nlp, x) -> hess_coord(nlp, x), 
-              :hess_structure => (nlp, x) -> hess_structure(nlp),
-              :jac_coord => (nlp, x) -> (nlp.meta.ncon > 0 ? jac_coord(nlp, x) : zero(eltype(x))),
-              :jac_structure => (nlp, x) -> (nlp.meta.ncon > 0 ? jac_structure(nlp) : zero(eltype(x))),
-              :hess_lag_coord => (nlp, x) -> hess_coord(nlp, x, ones(nlp.meta.ncon)),
-              )
+fun = Dict(
+  :obj => (nlp, x) -> obj(nlp, x),
+  :grad => (nlp, x) -> grad(nlp, x),
+  :hess_coord => (nlp, x) -> hess_coord(nlp, x),
+  :hess_structure => (nlp, x) -> hess_structure(nlp),
+  :jac_coord => (nlp, x) -> (nlp.meta.ncon > 0 ? jac_coord(nlp, x) : zero(eltype(x))),
+  :jac_structure => (nlp, x) -> (nlp.meta.ncon > 0 ? jac_structure(nlp) : zero(eltype(x))),
+  :hess_lag_coord => (nlp, x) -> hess_coord(nlp, x, ones(nlp.meta.ncon)),
+)
 funsym = keys(fun)
 
 const SUITE = BenchmarkGroup()
