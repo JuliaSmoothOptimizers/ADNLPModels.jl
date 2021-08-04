@@ -1,9 +1,9 @@
 def bmarkFile = 'run_benchmarks.jl'
 pipeline {
   agent any
-  environment {
-    REPO_EXISTS = fileExists "$repo"
-  }
+  // environment {
+  //   REPO_EXISTS = fileExists "$repo"
+  // }
   options {
     skipDefaultCheckout false
   }
