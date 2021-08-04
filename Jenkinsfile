@@ -1,11 +1,11 @@
 def bmarkFile = 'run_benchmarks.jl'
 pipeline {
   agent any
-  // environment {
-  //   REPO_EXISTS = fileExists "$repo"
-  // }
+  environment {
+    REPO_EXISTS = fileExists "$repo"
+  }
   options {
-    skipDefaultCheckout false
+    skipDefaultCheckout true
   }
   triggers {
     GenericTrigger(
@@ -61,28 +61,28 @@ pipeline {
     )
   }
   stages {
-  //   stage('clone repo') {
-  //     when {
-  //       expression { REPO_EXISTS == 'false' }
-  //     }
-  //     steps {
-  //       sh 'git clone https://${GITHUB_AUTH}@github.com/$org/$repo.git'
-  //     }
-  //   }
-  //   stage('checkout on new branch') {
-  //     steps {
-  //       dir(WORKSPACE + "/$repo") {
-  //         sh '''
-  //         git clean -fd
-  //         git checkout main
-  //         git pull origin main
-  //         git fetch origin
-  //         git branch -D $BRANCH_NAME || true
-  //         git checkout -b $BRANCH_NAME origin/$BRANCH_NAME || true
-  //         '''
-  //       }
-  //     }
-  //   }
+    stage('clone repo') {
+      when {
+        expression { REPO_EXISTS == 'false' }
+      }
+      steps {
+        sh 'git clone https://${GITHUB_AUTH}@github.com/$org/$repo.git'
+      }
+    }
+    stage('checkout on new branch') {
+      steps {
+        dir(WORKSPACE + "/$repo") {
+          sh '''
+          git clean -fd
+          git checkout main
+          git pull origin main
+          git fetch origin
+          git branch -D $BRANCH_NAME || true
+          git checkout -b $BRANCH_NAME origin/$BRANCH_NAME || true
+          '''
+        }
+      }
+    }
     stage('run benchmarks') {
       steps {
         script {
@@ -91,10 +91,10 @@ pipeline {
             bmarkFile = data.get(2);
           }
         }
-        // dir(WORKSPACE + "/$repo") {
+        dir(WORKSPACE + "/$repo") {
         sh "mkdir -p $HOME/benchmarks/${org}/${repo}"
         sh "qsub -N ${repo}_${pullrequest} -V -cwd -o $HOME/benchmarks/${org}/${repo}/${pullrequest}_bmark_output.log -e $HOME/benchmarks/${org}/${repo}/${pullrequest}_bmark_error.log push_benchmarks.sh $bmarkFile"
-        // }   
+        }   
       }
     }
   }
@@ -103,13 +103,13 @@ pipeline {
       echo "SUCCESS!"  
     }
     cleanup {
-      // dir(WORKSPACE + "/$repo") {
+      dir(WORKSPACE + "/$repo") {
       sh 'printenv'
       sh '''
       git clean -fd
       git checkout main
       '''
-      // }
+      }
     }
   }
 }
