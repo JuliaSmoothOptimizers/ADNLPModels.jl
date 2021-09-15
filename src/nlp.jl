@@ -39,7 +39,7 @@ function ADNLPModel(
   f,
   x0::S;
   name::String = "Generic",
-  adbackend = ForwardDiffAD(length(x0)),
+  adbackend = ForwardDiffAD(length(x0), f, x0),
 ) where {S}
   T = eltype(S)
   nvar = length(x0)
@@ -58,7 +58,7 @@ function ADNLPModel(
   lvar::S,
   uvar::S;
   name::String = "Generic",
-  adbackend = ForwardDiffAD(length(x0)),
+  adbackend = ForwardDiffAD(length(x0), f, x0),
 ) where {S}
   T = eltype(S)
   nvar = length(x0)
@@ -89,7 +89,7 @@ function ADNLPModel(
   y0::S = fill!(similar(lcon), zero(eltype(S))),
   name::String = "Generic",
   lin::AbstractVector{<:Integer} = Int[],
-  adbackend = ForwardDiffAD(length(x0), length(lcon)),
+  adbackend = ForwardDiffAD(length(x0), length(lcon), f, x0),
 ) where {S}
   T = eltype(S)
   nvar = length(x0)
@@ -132,7 +132,7 @@ function ADNLPModel(
   y0::S = fill!(similar(lcon), zero(eltype(S))),
   name::String = "Generic",
   lin::AbstractVector{<:Integer} = Int[],
-  adbackend = ForwardDiffAD(length(x0), length(lcon)),
+  adbackend = ForwardDiffAD(length(x0), length(lcon), f, x0),
 ) where {S}
   T = eltype(S)
   nvar = length(x0)

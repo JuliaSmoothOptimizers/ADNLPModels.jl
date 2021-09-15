@@ -46,7 +46,7 @@ function ADNLSModel(
   nequ::Integer;
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
-  adbackend = ForwardDiffAD(length(x0)),
+  adbackend = ForwardDiffAD(length(x0), x -> sum(F(x).^2), x0),
 ) where {S}
   T = eltype(S)
   nvar = length(x0)
@@ -73,7 +73,7 @@ function ADNLSModel(
   uvar::S;
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
-  adbackend = ForwardDiffAD(length(x0)),
+  adbackend = ForwardDiffAD(length(x0), x -> sum(F(x).^2), x0),
 ) where {S}
   T = eltype(S)
   nvar = length(x0)
@@ -104,7 +104,7 @@ function ADNLSModel(
   lin::AbstractVector{<:Integer} = Int[],
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
-  adbackend = ForwardDiffAD(length(x0), length(lcon)),
+  adbackend = ForwardDiffAD(length(x0), length(lcon), x -> sum(F(x).^2), x0),
 ) where {S}
   T = eltype(S)
   nvar = length(x0)
@@ -151,7 +151,7 @@ function ADNLSModel(
   lin::AbstractVector{<:Integer} = Int[],
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
-  adbackend = ForwardDiffAD(length(x0), length(lcon)),
+  adbackend = ForwardDiffAD(length(x0), length(lcon), x -> sum(F(x).^2), x0),
 ) where {S}
   T = eltype(S)
   nvar = length(x0)
