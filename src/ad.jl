@@ -81,9 +81,9 @@ function ForwardDiffAD(nvar::Integer, f, x0::AbstractVector)
   cfg = ForwardDiff.GradientConfig(f, x0)
   return ForwardDiffAD{typeof(cfg)}(nnzh, 0, cfg)
 end
-gradient(adbackend::ForwardDiffAD, f, x) = ForwardDiff.gradient(f, x) # , adbackend.cfg
+gradient(adbackend::ForwardDiffAD, f, x) = ForwardDiff.gradient(f, x, adbackend.cfg)
 function gradient!(adbackend::ForwardDiffAD, g, f, x)
-  return ForwardDiff.gradient!(g, f, x) # , adbackend.cfg
+  return ForwardDiff.gradient!(g, f, x, adbackend.cfg)
 end
 jacobian(::ForwardDiffAD, f, x) = ForwardDiff.jacobian(f, x)
 hessian(::ForwardDiffAD, f, x) = ForwardDiff.hessian(f, x)
