@@ -1,42 +1,18 @@
 abstract type ADBackend end
-struct ForwardDiffAD <: ADBackend
+
+struct ForwardDiffAD{T} <: ADBackend
   nnzh::Int
   nnzj::Int
-end
-function ForwardDiffAD(nvar::Integer, ncon::Integer)
-  nnzh = nvar * (nvar + 1) / 2
-  nnzj = nvar * ncon
-  return ForwardDiffAD(nnzh, nnzj)
-end
-function ForwardDiffAD(nvar::Integer)
-  nnzh = nvar * (nvar + 1) / 2
-  return ForwardDiffAD(nnzh, 0)
+  cfg::T
 end
 struct ZygoteAD <: ADBackend
   nnzh::Int
   nnzj::Int
 end
-function ZygoteAD(nvar::Integer, ncon::Integer)
-  nnzh = nvar * (nvar + 1) / 2
-  nnzj = nvar * ncon
-  return ZygoteAD(nnzh, nnzj)
-end
-function ZygoteAD(nvar::Integer)
-  nnzh = nvar * (nvar + 1) / 2
-  return ZygoteAD(nnzh, 0)
-end
-struct ReverseDiffAD <: ADBackend
+struct ReverseDiffAD{T} <: ADBackend
   nnzh::Int
   nnzj::Int
-end
-function ReverseDiffAD(nvar::Integer, ncon::Integer)
-  nnzh = nvar * (nvar + 1) / 2
-  nnzj = nvar * ncon
-  return ReverseDiffAD(nnzh, nnzj)
-end
-function ReverseDiffAD(nvar::Integer)
-  nnzh = nvar * (nvar + 1) / 2
-  return ReverseDiffAD(nnzh, 0)
+  cfg::T
 end
 
 throw_error(b) =
@@ -94,9 +70,20 @@ function Hvprod(b::ADBackend, f, x, v)
   return ForwardDiff.derivative(t -> gradient(b, f, x + t * v), 0)
 end
 
-gradient(::ForwardDiffAD, f, x) = ForwardDiff.gradient(f, x)
-function gradient!(::ForwardDiffAD, g, f, x)
-  return ForwardDiff.gradient!(g, f, x)
+function ForwardDiffAD(nvar::Integer, ncon::Integer, f, x0::AbstractVector)
+  nnzh = nvar * (nvar + 1) / 2
+  nnzj = nvar * ncon
+  cfg = ForwardDiff.GradientConfig(f, x0)
+  return ForwardDiffAD{typeof(cfg)}(nnzh, nnzj, cfg)
+end
+function ForwardDiffAD(nvar::Integer, f, x0::AbstractVector)
+  nnzh = nvar * (nvar + 1) / 2
+  cfg = ForwardDiff.GradientConfig(f, x0)
+  return ForwardDiffAD{typeof(cfg)}(nnzh, 0, cfg)
+end
+gradient(adbackend::ForwardDiffAD, f, x) = ForwardDiff.gradient(f, x) # , adbackend.cfg
+function gradient!(adbackend::ForwardDiffAD, g, f, x)
+  return ForwardDiff.gradient!(g, f, x) # , adbackend.cfg
 end
 jacobian(::ForwardDiffAD, f, x) = ForwardDiff.jacobian(f, x)
 hessian(::ForwardDiffAD, f, x) = ForwardDiff.hessian(f, x)
@@ -106,9 +93,21 @@ end
 function Jtprod(::ForwardDiffAD, f, x, v)
   return ForwardDiff.gradient(x -> dot(f(x), v), x)
 end
+function Hvprod(::ForwardDiffAD, f, x, v)
+  return ForwardDiff.derivative(t -> ForwardDiff.gradient(f, x + t * v), 0)
+end
 
 @init begin
   @require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" begin
+    function ZygoteAD(nvar::Integer, ncon::Integer, f, x0::AbstractVector)
+      nnzh = nvar * (nvar + 1) / 2
+      nnzj = nvar * ncon
+      return ZygoteAD(nnzh, nnzj)
+    end
+    function ZygoteAD(nvar::Integer, f, x0::AbstractVector)
+      nnzh = nvar * (nvar + 1) / 2
+      return ZygoteAD(nnzh, 0)
+    end
     function gradient(::ZygoteAD, f, x)
       g = Zygote.gradient(f, x)[1]
       return g === nothing ? zero(x) : g
@@ -121,7 +120,7 @@ end
       return Zygote.jacobian(f, x)[1]
     end
     function hessian(b::ZygoteAD, f, x)
-      return jacobian(ForwardDiffAD(length(x)), x -> gradient(b, f, x), x)
+      return jacobian(ForwardDiffAD(length(x), f, x), x -> gradient(b, f, x), x)
     end
     function Jprod(::ZygoteAD, f, x, v)
       return vec(Zygote.jacobian(t -> f(x + t * v), 0)[1])
@@ -132,9 +131,23 @@ end
     end
   end
   @require ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267" begin
-    gradient(::ReverseDiffAD, f, x) = ReverseDiff.gradient(f, x)
-    function gradient!(::ReverseDiffAD, g, f, x)
-      return ReverseDiff.gradient!(g, f, x)
+    function ReverseDiffAD(nvar::Integer, ncon::Integer, f, x0::AbstractVector)
+      nnzh = nvar * (nvar + 1) / 2
+      nnzj = nvar * ncon
+      f_tape = ReverseDiff.GradientTape(f, x0)
+      cfg = ReverseDiff.compile(f_tape)
+      return ReverseDiffAD{typeof(cfg)}(nnzh, nnzj, cfg)
+    end
+    function ReverseDiffAD(nvar::Integer, f, x0::AbstractVector)
+      nnzh = nvar * (nvar + 1) / 2
+      f_tape = ReverseDiff.GradientTape(f, x0)
+      cfg = ReverseDiff.compile(f_tape)
+      return ReverseDiffAD{typeof(cfg)}(nnzh, 0, cfg)
+    end
+
+    gradient(adbackend::ReverseDiffAD, f, x) = ReverseDiff.gradient(f, x, adbackend.cfg)
+    function gradient!(adbackend::ReverseDiffAD, g, f, x)
+      return ReverseDiff.gradient!(g, adbackend.cfg, x)
     end
     jacobian(::ReverseDiffAD, f, x) = ReverseDiff.jacobian(f, x)
     hessian(::ReverseDiffAD, f, x) = ReverseDiff.hessian(f, x)
@@ -143,6 +156,9 @@ end
     end
     function Jtprod(::ReverseDiffAD, f, x, v)
       return ReverseDiff.gradient(x -> dot(f(x), v), x)
+    end
+    function Hvprod(::ReverseDiffAD, f, x, v)
+      return ForwardDiff.derivative(t -> ReverseDiff.gradient(f, x + t * v), 0)
     end
   end
 end
