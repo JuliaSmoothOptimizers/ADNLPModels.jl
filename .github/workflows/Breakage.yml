@@ -14,10 +14,11 @@ jobs:
       matrix:
         pkg: [
           "JuliaSmoothOptimizers/CaNNOLeS.jl",
-          "JuliaSmoothOptimizers/DCI.jl",
+          "JuliaSmoothOptimizers/DCISolver.jl",
           "JuliaSmoothOptimizers/DerivativeFreeSolvers.jl",
           "JuliaSmoothOptimizers/JSOSolvers.jl",
           "JuliaSmoothOptimizers/NLPModelsIpopt.jl",
+          "JuliaSmoothOptimizers/OptimizationProblems.jl",
           "JuliaSmoothOptimizers/Percival.jl",
           "JuliaSmoothOptimizers/QuadraticModels.jl",
           "JuliaSmoothOptimizers/SolverBenchmark.jl",
