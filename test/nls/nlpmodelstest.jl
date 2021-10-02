@@ -2,7 +2,8 @@
   for problem in NLPModelsTest.nls_problems
     @testset "Checking NLPModelsTest tests on problem $problem" begin
       nls_ad = eval(Meta.parse(lowercase(problem) * "_autodiff"))()
-      nls_ad.adbackend = eval(adbackend)(length(nls_ad.meta.x0), x -> sum(nls_ad.F(x).^2), nls_ad.meta.x0)
+      nls_ad.adbackend =
+        eval(adbackend)(length(nls_ad.meta.x0), x -> sum(nls_ad.F(x) .^ 2), nls_ad.meta.x0)
       nls_man = eval(Meta.parse(problem))()
 
       nlss = AbstractNLSModel[nls_ad]
