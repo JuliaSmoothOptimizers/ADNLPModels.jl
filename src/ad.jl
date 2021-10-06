@@ -1,53 +1,133 @@
-abstract type ADBackend end
+abstract type GradientADBackend end
 
-struct ForwardDiffAD{T} <: ADBackend
-  nnzh::Int
-  nnzj::Int
+struct GradientForwardDiff{T} <: GradientADBackend
   cfg::T
 end
-struct ZygoteAD <: ADBackend
-  nnzh::Int
-  nnzj::Int
-end
-struct ReverseDiffAD{T} <: ADBackend
-  nnzh::Int
-  nnzj::Int
+struct GradientZygote <: GradientADBackend end
+struct GradientReverseDiff{T} <: GradientADBackend
   cfg::T
 end
 
-throw_error(b) =
-  throw(ArgumentError("The AD backend $b is not loaded. Please load the corresponding AD package."))
-gradient(b::ADBackend, ::Any, ::Any) = throw_error(b)
-gradient!(b::ADBackend, ::Any, ::Any, ::Any) = throw_error(b)
-jacobian(b::ADBackend, ::Any, ::Any) = throw_error(b)
-hessian(b::ADBackend, ::Any, ::Any) = throw_error(b)
-Jprod(b::ADBackend, ::Any, ::Any, ::Any) = throw_error(b)
-Jtprod(b::ADBackend, ::Any, ::Any, ::Any) = throw_error(b)
-function hess_structure!(
-  b::ADBackend,
-  nlp,
-  rows::AbstractVector{<:Integer},
-  cols::AbstractVector{<:Integer},
-)
-  n = nlp.meta.nvar
-  I = ((i, j) for i = 1:n, j = 1:n if i ≥ j)
-  rows .= getindex.(I, 1)
-  cols .= getindex.(I, 2)
-  return rows, cols
+gradient!(b::GradientADBackend, ::Any, ::Any, ::Any) = throw_error(b)
+function gradient!(adbackend::GradientForwardDiff, g, f, x)
+  return ForwardDiff.gradient!(g, f, x, adbackend.cfg)
 end
-function hess_coord!(b::ADBackend, nlp, x::AbstractVector, ℓ::Function, vals::AbstractVector)
-  Hx = hessian(b, ℓ, x)
-  k = 1
-  for j = 1:(nlp.meta.nvar)
-    for i = j:(nlp.meta.nvar)
-      vals[k] = Hx[i, j]
-      k += 1
+
+@init begin
+  @require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" begin
+    function gradient!(::GradientZygote, g, f, x)
+      _g = Zygote.gradient(f, x)[1]
+      g .= _g === nothing ? 0 : _g
     end
   end
-  return vals
 end
+@init begin
+  @require ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267" begin
+    function gradient!(adbackend::GradientReverseDiff, g, f, x)
+      return ReverseDiff.gradient!(g, adbackend.cfg, x)
+    end
+  end
+end
+
+abstract type HvADBackend end # use in-place gradient
+
+struct HvForwardDiff <: HvADBackend
+  _g
+end
+struct HvZygote <: HvADBackend end
+struct HvReverseDiff <: HvADBackend
+  _g
+end
+
+hvprod!(b::HvADBackend, ::Any, ::Any, ::Any, ::Any) = throw_error(b)
+function hvprod!(b::HvForwardDiff, f, x, v, Hv)
+  Hv .= ForwardDiff.derivative(t -> ForwardDiff.gradient(f, x + t * v), 0)  # use in-place derivative!
+  return Hv
+end
+@init begin
+  @require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" begin
+    function hvprod!(b::HvZygote, f, x, v, Hv)
+      Hv .= ForwardDiff.derivative(t -> Zygote.gradient(f, x + t * v), 0)
+      return Hv
+    end
+  end
+end
+@init begin
+  @require ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267" begin
+    function hvprod!(b::HvReverseDiff, f, x, v, Hv)
+      Hv .= ForwardDiff.derivative(t -> ReverseDiff.gradient(f, x + t * v), 0)  # use in-place derivative!
+      return Hv
+    end
+  end
+end
+
+abstract type JvADBackend end # use in-place c function
+
+struct JvForwardDiff <: JvADBackend end
+struct JvZygote <: JvADBackend end
+struct JvReverseDiff <: JvADBackend end
+
+jprod!(b::JvADBackend, ::Any, ::Any, ::Any, ::Any) = throw_error(b)
+function jprod!(::JvForwardDiff, c, x, v, Jv)
+  Jv .= ForwardDiff.derivative(t -> c(x + t * v), 0) # use in-place derivative!
+  return Jv
+end
+@init begin
+  @require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" begin
+    function jprod!(::JvZygote, c, x, v, Jv)
+      Jv .= vec(Zygote.jacobian(t -> c(x + t * v), 0)[1])
+      return Jv
+    end
+  end
+end
+@init begin
+  @require ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267" begin
+    function jprod!(::JvReverseDiff, c, x, v, Jv)
+      T = eltype(x)
+      return ReverseDiff.jacobian!(Jv, t -> c(x + t[1] * v), [T(0)])
+    end
+  end
+end
+
+abstract type JtvADBackend end # use in-place c function
+
+struct JtvForwardDiff <: JtvADBackend end
+struct JtvZygote <: JtvADBackend end
+struct JtvReverseDiff <: JtvADBackend end
+
+jtprod!(b::JtvADBackend, ::Any, ::Any, ::Any, ::Any) = throw_error(b)
+function jtprod!(::JtvForwardDiff, c, x, v, Jtv)
+  return ForwardDiff.gradient!(Jtv, x -> dot(c(x), v), x)
+end
+@init begin
+  @require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" begin
+    function jtprod!(::JtvZygote, c, x, v, Jtv)
+      g = Zygote.gradient(x -> dot(c(x), v), x)[1]
+      if g === nothing
+        return zero(x)
+      else
+        Jtv .= g
+      end
+      return Jtv
+    end
+  end
+end
+@init begin
+  @require ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267" begin
+    function jtprod!(::JtvReverseDiff, c, x, v, Jtv)
+      return ReverseDiff.gradient!(Jtv, x -> dot(c(x), v), x)
+    end
+  end
+end
+
+abstract type JacobianADBackend end
+
+struct JacobianForwardDiff <: JacobianADBackend end
+struct JacobianZygote <: JacobianADBackend end
+struct JacobianReverseDiff <: JacobianADBackend end
+
 function jac_structure!(
-  b::ADBackend,
+  b::JacobianADBackend,
   nlp,
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
@@ -58,107 +138,123 @@ function jac_structure!(
   cols .= getindex.(I, 2)[:]
   return rows, cols
 end
-function jac_coord!(b::ADBackend, nlp, x::AbstractVector, vals::AbstractVector)
+function jac_coord!(b::JacobianADBackend, nlp, x::AbstractVector, vals::AbstractVector)
   Jx = jacobian(b, nlp.c, x)
   vals .= Jx[:]
   return vals
 end
-function directional_second_derivative(::ADBackend, f, x, v, w)
-  return ForwardDiff.derivative(t -> ForwardDiff.derivative(s -> f(x + s * w + t * v), 0), 0)
-end
-function Hvprod(b::ADBackend, f, x, v)
-  return ForwardDiff.derivative(t -> gradient(b, f, x + t * v), 0)
-end
 
-function ForwardDiffAD(nvar::Integer, ncon::Integer, f, x0::AbstractVector)
-  nnzh = nvar * (nvar + 1) / 2
-  nnzj = nvar * ncon
-  cfg = ForwardDiff.GradientConfig(f, x0)
-  return ForwardDiffAD{typeof(cfg)}(nnzh, nnzj, cfg)
-end
-function ForwardDiffAD(nvar::Integer, f, x0::AbstractVector)
-  nnzh = nvar * (nvar + 1) / 2
-  cfg = ForwardDiff.GradientConfig(f, x0)
-  return ForwardDiffAD{typeof(cfg)}(nnzh, 0, cfg)
-end
-gradient(adbackend::ForwardDiffAD, f, x) = ForwardDiff.gradient(f, x, adbackend.cfg)
-function gradient!(adbackend::ForwardDiffAD, g, f, x)
-  return ForwardDiff.gradient!(g, f, x, adbackend.cfg)
-end
-jacobian(::ForwardDiffAD, f, x) = ForwardDiff.jacobian(f, x)
-hessian(::ForwardDiffAD, f, x) = ForwardDiff.hessian(f, x)
-function Jprod(::ForwardDiffAD, f, x, v)
-  return ForwardDiff.derivative(t -> f(x + t * v), 0)
-end
-function Jtprod(::ForwardDiffAD, f, x, v)
-  return ForwardDiff.gradient(x -> dot(f(x), v), x)
-end
-function Hvprod(::ForwardDiffAD, f, x, v)
-  return ForwardDiff.derivative(t -> ForwardDiff.gradient(f, x + t * v), 0)
-end
-
+jacobian(b::JacobianADBackend, ::Any, ::Any) = throw_error(b)
+jacobian(::JacobianForwardDiff, c, x) = ForwardDiff.jacobian(c, x)
 @init begin
   @require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" begin
-    function ZygoteAD(nvar::Integer, ncon::Integer, f, x0::AbstractVector)
-      nnzh = nvar * (nvar + 1) / 2
-      nnzj = nvar * ncon
-      return ZygoteAD(nnzh, nnzj)
-    end
-    function ZygoteAD(nvar::Integer, f, x0::AbstractVector)
-      nnzh = nvar * (nvar + 1) / 2
-      return ZygoteAD(nnzh, 0)
-    end
-    function gradient(::ZygoteAD, f, x)
-      g = Zygote.gradient(f, x)[1]
-      return g === nothing ? zero(x) : g
-    end
-    function gradient!(::ZygoteAD, g, f, x)
-      _g = Zygote.gradient(f, x)[1]
-      g .= _g === nothing ? 0 : _g
-    end
-    function jacobian(::ZygoteAD, f, x)
-      return Zygote.jacobian(f, x)[1]
-    end
-    function hessian(b::ZygoteAD, f, x)
-      return jacobian(ForwardDiffAD(length(x), f, x), x -> gradient(b, f, x), x)
-    end
-    function Jprod(::ZygoteAD, f, x, v)
-      return vec(Zygote.jacobian(t -> f(x + t * v), 0)[1])
-    end
-    function Jtprod(::ZygoteAD, f, x, v)
-      g = Zygote.gradient(x -> dot(f(x), v), x)[1]
-      return g === nothing ? zero(x) : g
-    end
+    jacobian(::JacobianZygote, c, x) = Zygote.jacobian(c, x)[1]
   end
+end
+@init begin
   @require ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267" begin
-    function ReverseDiffAD(nvar::Integer, ncon::Integer, f, x0::AbstractVector)
-      nnzh = nvar * (nvar + 1) / 2
-      nnzj = nvar * ncon
-      f_tape = ReverseDiff.GradientTape(f, x0)
-      cfg = ReverseDiff.compile(f_tape)
-      return ReverseDiffAD{typeof(cfg)}(nnzh, nnzj, cfg)
-    end
-    function ReverseDiffAD(nvar::Integer, f, x0::AbstractVector)
-      nnzh = nvar * (nvar + 1) / 2
-      f_tape = ReverseDiff.GradientTape(f, x0)
-      cfg = ReverseDiff.compile(f_tape)
-      return ReverseDiffAD{typeof(cfg)}(nnzh, 0, cfg)
-    end
+    jacobian(::JacobianReverseDiff, c, x) = ReverseDiff.jacobian(c, x)
+  end
+end
 
-    gradient(adbackend::ReverseDiffAD, f, x) = ReverseDiff.gradient(f, x, adbackend.cfg)
-    function gradient!(adbackend::ReverseDiffAD, g, f, x)
-      return ReverseDiff.gradient!(g, adbackend.cfg, x)
-    end
-    jacobian(::ReverseDiffAD, f, x) = ReverseDiff.jacobian(f, x)
-    hessian(::ReverseDiffAD, f, x) = ReverseDiff.hessian(f, x)
-    function Jprod(::ReverseDiffAD, f, x, v)
-      return vec(ReverseDiff.jacobian(t -> f(x + t[1] * v), [0.0]))
-    end
-    function Jtprod(::ReverseDiffAD, f, x, v)
-      return ReverseDiff.gradient(x -> dot(f(x), v), x)
-    end
-    function Hvprod(::ReverseDiffAD, f, x, v)
-      return ForwardDiff.derivative(t -> ReverseDiff.gradient(f, x + t * v), 0)
+abstract type HessianADBackend end
+
+struct HessianForwardDiff <: HessianADBackend end
+struct HessianZygote <: HessianADBackend end
+struct HessianReverseDiff <: HessianADBackend end
+
+function hess_structure!(
+  b::HessianADBackend,
+  nlp,
+  rows::AbstractVector{<:Integer},
+  cols::AbstractVector{<:Integer},
+)
+  n = nlp.meta.nvar
+  I = ((i, j) for i = 1:n, j = 1:n if i ≥ j)
+  rows .= getindex.(I, 1)
+  cols .= getindex.(I, 2)
+  return rows, cols
+end
+function hess_coord!(b::HessianADBackend, nlp, x::AbstractVector, ℓ::Function, vals::AbstractVector)
+  Hx = hessian(b, ℓ, x)
+  k = 1
+  for j = 1:(nlp.meta.nvar)
+    for i = j:(nlp.meta.nvar)
+      vals[k] = Hx[i, j]
+      k += 1
     end
   end
+  return vals
+end
+
+hessian(b::HessianADBackend, ::Any, ::Any) = throw_error(b)
+hessian(::HessianForwardDiff, f, x) = ForwardDiff.hessian(f, x)
+@init begin
+  @require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" begin
+    hessian(::HessianZygote, f, x) = Zygote.hessian(f, x)
+  end
+end
+@init begin
+  @require ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267" begin
+    hessian(::HessianReverseDiff, f, x) = ReverseDiff.hessian(f, x)
+  end
+end
+
+# TODO:
+function directional_second_derivative(::HessianADBackend, f, x, v, w)
+  return ForwardDiff.derivative(t -> ForwardDiff.derivative(s -> f(x + s * w + t * v), 0), 0)
+end
+
+export ADModelBackend
+
+abstract type AbstractADModelBackend end
+
+struct ADModelBackend{
+  GB <: GradientADBackend,
+  HvB <: HvADBackend,
+  JvB <: JvADBackend,
+  JtvB <: JtvADBackend,
+  JB <: JacobianADBackend,
+  HB <: HessianADBackend,
+} <: AbstractADModelBackend
+
+  nnzh::Int
+  nnzj::Int
+
+  gradient_backend::GB
+  hprod_backend::HvB
+  jprod_backend::JvB
+  jtprod_backend::JtvB
+  jacobian_backend::JB
+  hessian_backend::HB
+end
+
+ADModelBackend(n, f, x0) = ADModelBackend(n, 0, f, x -> eltype(x0)[], x0)
+
+function ADModelBackend(
+  nvar::Integer,
+  ncon::Integer,
+  f,
+  c,
+  x0::AbstractVector;
+  gradient_backend::GB = GradientForwardDiff(ForwardDiff.GradientConfig(f, x0)),
+  hprod_backend::HvB = HvForwardDiff(similar(x0, nvar)),
+  jprod_backend::JvB = JvForwardDiff(),
+  jtprod_backend::JtvB = JtvForwardDiff(),
+  jacobian_backend::JB = JacobianForwardDiff(),
+  hessian_backend::HB = HessianForwardDiff(),
+) where {GB, HvB, JvB, JtvB, JB, HB}
+  nnzh = nvar * (nvar + 1) / 2
+  nnzj = nvar * ncon
+  
+  return ADModelBackend{GB, HvB, JvB, JtvB, JB, HB}(
+    nnzh,
+    nnzj,
+    gradient_backend,
+    hprod_backend,
+    jprod_backend,
+    jtprod_backend,
+    jacobian_backend,
+    hessian_backend,
+  )
 end
