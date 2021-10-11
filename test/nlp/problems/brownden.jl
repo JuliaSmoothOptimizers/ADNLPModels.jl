@@ -1,9 +1,8 @@
 export brownden_autodiff
 
-function brownden_autodiff()
-  x0 = [25.0; 5.0; -5.0; -1.0]
+function brownden_autodiff(::Type{T} = Float64) where {T}
+  x0 = T[25.0; 5.0; -5.0; -1.0]
   f(x) = begin
-    T = eltype(x)
     s = zero(T)
     for i = 1:20
       s +=
