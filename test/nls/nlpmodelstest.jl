@@ -1,4 +1,4 @@
-@testset "AD backend - $(adbackend)" for adbackend in (:ForwardDiffAD, :ZygoteAD, :ReverseDiffAD)
+@testset "AD backend - $(adbackend)" for adbackend in backends()
   for problem in NLPModelsTest.nls_problems
     @testset "Checking NLPModelsTest tests on problem $problem" begin
       nls_from_T = eval(Meta.parse(lowercase(problem) * "_autodiff"))
@@ -37,9 +37,6 @@
         for nls in nlss
           multiple_precision_nls(nls_from_T, exclude = exclude)
         end
-      end
-      @testset "Check view subarray" begin
-        view_subarray_nls.(nlss, exclude = exclude)
       end
     end
   end

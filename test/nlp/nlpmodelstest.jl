@@ -1,5 +1,5 @@
 
-@testset "AD backend - $(adbackend)" for adbackend in (:ForwardDiffAD, :ZygoteAD, :ReverseDiffAD)
+@testset "AD backend - $(adbackend)" for adbackend in backends()
   for problem in NLPModelsTest.nlp_problems
     @testset "Checking NLPModelsTest tests on problem $problem" begin
       nlp_from_T = eval(Meta.parse(lowercase(problem) * "_autodiff"))
@@ -18,12 +18,6 @@
       end
       @testset "Check multiple precision" begin
         multiple_precision_nlp(nlp_from_T, exclude = [])
-      end
-      @testset "Check view subarray" begin
-        view_subarray_nlp(nlp_ad, exclude = [])
-      end
-      @testset "Check coordinate memory" begin
-        coord_memory_nlp(nlp_ad, exclude = [])
       end
     end
   end
