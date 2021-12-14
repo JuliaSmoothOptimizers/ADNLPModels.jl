@@ -52,14 +52,12 @@ function ADNLSModel(
   nvar = length(x0)
 
   meta = NLPModelMeta{T, S}(nvar, x0 = x0, name = name)
-  nlnequ = setdiff(1:nequ, linequ)
   nls_meta = NLSMeta{T, S}(
     nequ,
     nvar,
     nnzj = nequ * nvar,
     nnzh = div(nvar * (nvar + 1), 2),
     lin = linequ,
-    nln = nlnequ,
   )
 
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, x -> T[])
@@ -80,14 +78,12 @@ function ADNLSModel(
   @lencheck nvar lvar uvar
 
   meta = NLPModelMeta{T, S}(nvar, x0 = x0, lvar = lvar, uvar = uvar, name = name)
-  nlnequ = setdiff(1:nequ, linequ)
   nls_meta = NLSMeta{T, S}(
     nequ,
     nvar,
     nnzj = nequ * nvar,
     nnzh = div(nvar * (nvar + 1), 2),
     lin = linequ,
-    nln = nlnequ,
   )
 
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, x -> T[])
@@ -112,7 +108,6 @@ function ADNLSModel(
   @lencheck ncon ucon y0
   nnzj = nvar * ncon
 
-  nln = setdiff(1:ncon, lin)
   meta = NLPModelMeta{T, S}(
     nvar,
     x0 = x0,
@@ -123,16 +118,13 @@ function ADNLSModel(
     nnzj = nnzj,
     name = name,
     lin = lin,
-    nln = nln,
   )
-  nlnequ = setdiff(1:nequ, linequ)
   nls_meta = NLSMeta{T, S}(
     nequ,
     nvar,
     nnzj = nequ * nvar,
     nnzh = div(nvar * (nvar + 1), 2),
     lin = linequ,
-    nln = nlnequ,
   )
 
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, c)
@@ -160,7 +152,6 @@ function ADNLSModel(
   @lencheck ncon ucon y0
   nnzj = nvar * ncon
 
-  nln = setdiff(1:ncon, lin)
   meta = NLPModelMeta{T, S}(
     nvar,
     x0 = x0,
@@ -173,16 +164,13 @@ function ADNLSModel(
     nnzj = nnzj,
     name = name,
     lin = lin,
-    nln = nln,
   )
-  nlnequ = setdiff(1:nequ, linequ)
   nls_meta = NLSMeta{T, S}(
     nequ,
     nvar,
     nnzj = nequ * nvar,
     nnzh = div(nvar * (nvar + 1), 2),
     lin = linequ,
-    nln = nlnequ,
   )
 
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, c)

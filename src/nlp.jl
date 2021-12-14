@@ -100,8 +100,6 @@ function ADNLPModel(
   nnzh = nvar * (nvar + 1) / 2
   nnzj = nvar * ncon
 
-  nln = setdiff(1:ncon, lin)
-
   meta = NLPModelMeta{T, S}(
     nvar,
     x0 = x0,
@@ -112,7 +110,6 @@ function ADNLPModel(
     nnzj = nnzj,
     nnzh = nnzh,
     lin = lin,
-    nln = nln,
     minimize = true,
     islp = false,
     name = name,
@@ -143,8 +140,6 @@ function ADNLPModel(
   nnzh = nvar * (nvar + 1) / 2
   nnzj = nvar * ncon
 
-  nln = setdiff(1:ncon, lin)
-
   meta = NLPModelMeta{T, S}(
     nvar,
     x0 = x0,
@@ -157,7 +152,6 @@ function ADNLPModel(
     nnzj = nnzj,
     nnzh = nnzh,
     lin = lin,
-    nln = nln,
     minimize = true,
     islp = false,
     name = name,
