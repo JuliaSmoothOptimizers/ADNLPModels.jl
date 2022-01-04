@@ -12,7 +12,7 @@ function test_autodiff_model()
   for adbackend in (:ForwardDiffAD, :ReverseDiffAD)
     x0 = zeros(2)
     f(x) = dot(x, x)
-    nlp = ADNLPModel(f, x0, adbackend = eval(adbackend)(2, 0, f, x -> [], x0))
+    nlp = ADNLPModel(f, x0, adbackend = eval(adbackend)(2, f, x0))
 
     c(x) = [sum(x) - 1]
     nlp = ADNLPModel(f, x0, c, [0.0], [0.0], adbackend = eval(adbackend)(2, 1, f, c, x0))
@@ -21,7 +21,7 @@ function test_autodiff_model()
     x = range(-1, stop = 1, length = 100)
     y = 2x .+ 3 + randn(100) * 0.1
     regr = LinearRegression(x, y)
-    nlp = ADNLPModel(regr, ones(2), adbackend = eval(adbackend)(2, 0, regr, x -> [], ones(2)))
+    nlp = ADNLPModel(regr, ones(2), adbackend = eval(adbackend)(2, regr, ones(2)))
     β = [ones(100) x] \ y
     @test abs(obj(nlp, β) - norm(y .- β[1] - β[2] * x)^2 / 2) < 1e-12
     @test norm(grad(nlp, β)) < 1e-12

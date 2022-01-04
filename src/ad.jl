@@ -3,28 +3,23 @@ abstract type GradientADBackend end
 struct GradientForwardDiff{T} <: GradientADBackend
   cfg::T
 end
-struct GradientZygote <: GradientADBackend end
 struct GradientReverseDiff{T} <: GradientADBackend
   cfg::T
 end
+struct GradientZygote <: GradientADBackend end
 
 gradient!(b::GradientADBackend, ::Any, ::Any, ::Any) = throw_error(b)
 function gradient!(adbackend::GradientForwardDiff, g, f, x)
   return ForwardDiff.gradient!(g, f, x, adbackend.cfg)
 end
-
+function gradient!(adbackend::GradientReverseDiff, g, f, x)
+  return ReverseDiff.gradient!(g, adbackend.cfg, x)
+end
 @init begin
   @require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" begin
     function gradient!(::GradientZygote, g, f, x)
       _g = Zygote.gradient(f, x)[1]
       g .= _g === nothing ? 0 : _g
-    end
-  end
-end
-@init begin
-  @require ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267" begin
-    function gradient!(adbackend::GradientReverseDiff, g, f, x)
-      return ReverseDiff.gradient!(g, adbackend.cfg, x)
     end
   end
 end
@@ -34,14 +29,18 @@ abstract type HvADBackend end # use in-place gradient
 struct HvForwardDiff <: HvADBackend
   _g
 end
-struct HvZygote <: HvADBackend end
 struct HvReverseDiff <: HvADBackend
   _g
 end
+struct HvZygote <: HvADBackend end
 
 hvprod!(b::HvADBackend, ::Any, ::Any, ::Any, ::Any) = throw_error(b)
 function hvprod!(b::HvForwardDiff, f, x, v, Hv)
   Hv .= ForwardDiff.derivative(t -> ForwardDiff.gradient(f, x + t * v), 0)  # use in-place derivative!
+  return Hv
+end
+function hvprod!(b::HvReverseDiff, f, x, v, Hv)
+  Hv .= ForwardDiff.derivative(t -> ReverseDiff.gradient(f, x + t * v), 0)  # use in-place derivative!
   return Hv
 end
 @init begin
@@ -52,25 +51,21 @@ end
     end
   end
 end
-@init begin
-  @require ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267" begin
-    function hvprod!(b::HvReverseDiff, f, x, v, Hv)
-      Hv .= ForwardDiff.derivative(t -> ReverseDiff.gradient(f, x + t * v), 0)  # use in-place derivative!
-      return Hv
-    end
-  end
-end
 
 abstract type JvADBackend end # use in-place c function
 
 struct JvForwardDiff <: JvADBackend end
-struct JvZygote <: JvADBackend end
 struct JvReverseDiff <: JvADBackend end
+struct JvZygote <: JvADBackend end
 
 jprod!(b::JvADBackend, ::Any, ::Any, ::Any, ::Any) = throw_error(b)
 function jprod!(::JvForwardDiff, c, x, v, Jv)
   Jv .= ForwardDiff.derivative(t -> c(x + t * v), 0) # use in-place derivative!
   return Jv
+end
+function jprod!(::JvReverseDiff, c, x, v, Jv)
+  T = eltype(x)
+  return ReverseDiff.jacobian!(Jv, t -> c(x + t[1] * v), [T(0)])
 end
 @init begin
   @require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" begin
@@ -80,24 +75,19 @@ end
     end
   end
 end
-@init begin
-  @require ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267" begin
-    function jprod!(::JvReverseDiff, c, x, v, Jv)
-      T = eltype(x)
-      return ReverseDiff.jacobian!(Jv, t -> c(x + t[1] * v), [T(0)])
-    end
-  end
-end
 
 abstract type JtvADBackend end # use in-place c function
 
 struct JtvForwardDiff <: JtvADBackend end
-struct JtvZygote <: JtvADBackend end
 struct JtvReverseDiff <: JtvADBackend end
+struct JtvZygote <: JtvADBackend end
 
 jtprod!(b::JtvADBackend, ::Any, ::Any, ::Any, ::Any) = throw_error(b)
 function jtprod!(::JtvForwardDiff, c, x, v, Jtv)
   return ForwardDiff.gradient!(Jtv, x -> dot(c(x), v), x)
+end
+function jtprod!(::JtvReverseDiff, c, x, v, Jtv)
+  return ReverseDiff.gradient!(Jtv, x -> dot(c(x), v), x)
 end
 @init begin
   @require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" begin
@@ -112,19 +102,12 @@ end
     end
   end
 end
-@init begin
-  @require ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267" begin
-    function jtprod!(::JtvReverseDiff, c, x, v, Jtv)
-      return ReverseDiff.gradient!(Jtv, x -> dot(c(x), v), x)
-    end
-  end
-end
 
 abstract type JacobianADBackend end
 
 struct JacobianForwardDiff <: JacobianADBackend end
-struct JacobianZygote <: JacobianADBackend end
 struct JacobianReverseDiff <: JacobianADBackend end
+struct JacobianZygote <: JacobianADBackend end
 
 function jac_structure!(
   b::JacobianADBackend,
@@ -146,22 +129,18 @@ end
 
 jacobian(b::JacobianADBackend, ::Any, ::Any) = throw_error(b)
 jacobian(::JacobianForwardDiff, c, x) = ForwardDiff.jacobian(c, x)
+jacobian(::JacobianReverseDiff, c, x) = ReverseDiff.jacobian(c, x)
 @init begin
   @require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" begin
     jacobian(::JacobianZygote, c, x) = Zygote.jacobian(c, x)[1]
-  end
-end
-@init begin
-  @require ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267" begin
-    jacobian(::JacobianReverseDiff, c, x) = ReverseDiff.jacobian(c, x)
   end
 end
 
 abstract type HessianADBackend end
 
 struct HessianForwardDiff <: HessianADBackend end
-struct HessianZygote <: HessianADBackend end
 struct HessianReverseDiff <: HessianADBackend end
+struct HessianZygote <: HessianADBackend end
 
 function hess_structure!(
   b::HessianADBackend,
@@ -189,14 +168,10 @@ end
 
 hessian(b::HessianADBackend, ::Any, ::Any) = throw_error(b)
 hessian(::HessianForwardDiff, f, x) = ForwardDiff.hessian(f, x)
+hessian(::HessianReverseDiff, f, x) = ReverseDiff.hessian(f, x)
 @init begin
   @require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" begin
     hessian(::HessianZygote, f, x) = Zygote.hessian(f, x)
-  end
-end
-@init begin
-  @require ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267" begin
-    hessian(::HessianReverseDiff, f, x) = ReverseDiff.hessian(f, x)
   end
 end
 

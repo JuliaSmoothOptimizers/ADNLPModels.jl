@@ -189,7 +189,7 @@ function NLPModels.jac_coord_residual!(nls::ADNLSModel, x::AbstractVector, vals:
   increment!(nls, :neval_jac_residual)
   Jx = jacobian(nls.adbackend.jacobian_backend, nls.F, x)
   vals .= Jx[:]
-  return vals # jac_coord!(nlp.adbackend.jacobian_backend, nlp, x, vals)
+  return vals
 end
 
 function NLPModels.jprod_residual!(
@@ -250,7 +250,7 @@ function NLPModels.hess_coord_residual!(
   @lencheck nls.nls_meta.nequ v
   @lencheck nls.nls_meta.nnzh vals
   increment!(nls, :neval_hess_residual)
-  Hx = hessian(nls.adbackend.hessian_backend, x -> dot(nls.F(x), v), x) # hess_coord!(nlp.adbackend.hessian_backend, nlp, x, ℓ, vals)
+  Hx = hessian(nls.adbackend.hessian_backend, x -> dot(nls.F(x), v), x)
   k = 1
   for j = 1:(nls.meta.nvar)
     for i = j:(nls.meta.nvar)

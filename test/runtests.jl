@@ -1,4 +1,4 @@
-using ADNLPModels, ForwardDiff, LinearAlgebra, NLPModels, NLPModelsModifiers, NLPModelsTest, Test
+using ADNLPModels, ForwardDiff, LinearAlgebra, NLPModels, NLPModelsModifiers, NLPModelsTest, ReverseDiff, Test
 
 for problem in NLPModelsTest.nlp_problems ∪ ["GENROSE"]
   include("nlp/problems/$(lowercase(problem)).jl")
@@ -7,9 +7,8 @@ for problem in NLPModelsTest.nls_problems
   include("nls/problems/$(lowercase(problem)).jl")
 end
 
-# Automatically loads the code for Zygote and ReverseDiff with Requires
-import Zygote, ReverseDiff
-using ADNLPModels: ForwardDiffAD, ZygoteAD, ReverseDiffAD
+# Automatically loads the code for Zygote with Requires
+import Zygote
 
 include("nlp/basic.jl")
 include("nls/basic.jl")
