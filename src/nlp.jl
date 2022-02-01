@@ -34,6 +34,46 @@ The following keyword arguments are available to the constructors for constraine
 
 - `lin`: An array of indexes of the linear constraints (default: `Int[]`)
 - `y0`: An inital estimate to the Lagrangian multipliers (default: zeros)
+
+`ADNLPModel` uses `ForwardDiff` for the automatic differentiation by default.
+One can specify a new backend with the keyword arguments `adbackend::ADNLPModels.ADBackend`.
+There are three pre-coded backends:
+- the default `ForwardDiffAD`.
+- `ReverseDiffAD` accessible after loading `ReverseDiff.jl` in your environment.
+- `ZygoteDiffAD` accessible after loading `Zygote.jl` in your environment.
+For an advanced usage, one can define its own backend and redefine the API as done in [ADNLPModels.jl/src/ad.jl](https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl/blob/main/src/ad.jl).
+
+# Examples
+```julia
+using ADNLPModels
+f(x) = sum(x)
+x0 = ones(3)
+nvar = 3
+ADNLPModel(f, x0) # uses the default ForwardDiffAD backend.
+
+using ReverseDiff
+ADNLPModel(f, x0; adbackend = ADNLPModels.ReverseDiffAD(nvar, f, x0))
+
+using Zygote
+ADNLPModel(f, x0; adbackend = ADNLPModels.ZygoteAD(nvar, f, x0))
+```
+
+```julia
+using ADNLPModels
+f(x) = sum(x)
+x0 = ones(3)
+c(x) = [1x[1] + x[2]; x[2]]
+nvar, ncon = 3, 2
+ADNLPModel(f, x0, c, zeros(ncon), zeros(ncon)) # uses the default ForwardDiffAD backend.
+
+using ReverseDiff
+reversediff_backend = ADNLPModels.ReverseDiffAD(nvar, ncon, f, x0)
+ADNLPModel(f, x0, c, zeros(ncon), zeros(ncon); adbackend = reversediff_backend)
+
+using Zygote
+zygote_backend = ADNLPModels.ZygoteAD(nvar, ncon, f, x0)
+ADNLPModel(f, x0, c, zeros(ncon), zeros(ncon); adbackend = zygote_backend)
+```
 """
 function ADNLPModel(
   f,
