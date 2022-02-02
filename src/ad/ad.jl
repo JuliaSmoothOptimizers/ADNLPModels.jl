@@ -1,37 +1,12 @@
+export ADBackend
+
 abstract type ADBackend end
 
-struct ForwardDiffAD{T} <: ADBackend
-  cfg::T
-end
-
-function ForwardDiffAD(f, x0::AbstractVector)
-  cfg = ForwardDiff.GradientConfig(f, x0)
-  return ForwardDiffAD{typeof(cfg)}(cfg)
-end
-
-struct ReverseDiffAD{T} <: ADBackend
-  cfg::T
-end
-
-function ReverseDiffAD(f, x0::AbstractVector)
-  f_tape = ReverseDiff.GradientTape(f, x0)
-  cfg = ReverseDiff.compile(f_tape)
-  return ReverseDiffAD{typeof(cfg)}(cfg)
-end
-
-function gradient!(adbackend::ForwardDiffAD, g, f, x)
-  return ForwardDiff.gradient!(g, f, x, adbackend.cfg)
-end
+include("forward.jl")
+include("reverse.jl")
 
 # gradient(adbackend::ForwardDiffAD, f, x) = ForwardDiff.gradient(f, x, adbackend.cfg)
-
-function gradient!(adbackend::ReverseDiffAD, g, f, x)
-  return ReverseDiff.gradient!(g, adbackend.cfg, x)
-end
-
 # gradient(adbackend::ReverseDiffAD, f, x) = ReverseDiff.gradient(f, x, adbackend.cfg)
-
-
 
 # function hess_structure!(
 #   b::ADBackend,

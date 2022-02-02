@@ -8,25 +8,8 @@ function (regr::LinearRegression)(beta)
   return dot(r, r) / 2
 end
 
-function test_autodiff_backend_error()
-  @testset "Error without loading package - $adbackend" for adbackend in (:ZygoteAD, :ReverseDiffAD)
-    adbackend = if adbackend == :ZygoteAD
-      eval(adbackend)(0, 0)
-    else
-      eval(adbackend){Nothing}(0, 0, nothing)
-    end
-    @test_throws ArgumentError gradient(adbackend, sum, [1.0])
-    @test_throws ArgumentError gradient!(adbackend, [1.0], sum, [1.0])
-    @test_throws ArgumentError jacobian(adbackend, identity, [1.0])
-    @test_throws ArgumentError hessian(adbackend, sum, [1.0])
-    @test_throws ArgumentError Jprod(adbackend, [1.0], identity, [1.0])
-    @test_throws ArgumentError Jtprod(adbackend, [1.0], identity, [1.0])
-    @test_throws ArgumentError Hvprod(adbackend, sum, [1.0], [1.0])
-  end
-end
-
 function test_autodiff_model()
-  for adbackend in (:ForwardDiffAD, :ZygoteAD, :ReverseDiffAD)
+  for adbackend in (:ForwardDiffAD, :ReverseDiffAD)
     x0 = zeros(2)
     f(x) = dot(x, x)
     nlp = ADNLPModel(f, x0, adbackend = eval(adbackend)(length(x0), 0, f, x0))
@@ -121,11 +104,5 @@ function test_autodiff_model()
     end
   end
 end
-
-# Test the argument error without loading the packages
-test_autodiff_backend_error()
-
-# Automatically loads the code for Zygote and ReverseDiff with Requires
-import Zygote, ReverseDiff
 
 test_autodiff_model()
