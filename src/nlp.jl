@@ -254,11 +254,14 @@ function NLPModels.jac_structure!(
   return rows, cols
 end
 
-function NLPModels.jac_coord!(nlp::ADNLPModel, x::AbstractVector, vals::AbstractVector)
+function NLPModels.jac_coord!(nlp::ADNLPModel, x::AbstractVector{T}, vals::AbstractVector, ::Type{AD} = ReverseDiffAD) where {T, AD}
   @lencheck nlp.meta.nvar x
   @lencheck nlp.meta.nnzj vals
   increment!(nlp, :neval_jac)
-  return jac_coord!(nlp.adbackend, nlp, x, vals)
+  ad = get_backend(nlp, x, AD)
+  Jx = jacobian(ad, nlp.c, x)
+  vals .= Jx[:]
+  return vals
 end
 
 function NLPModels.jprod!(
@@ -266,7 +269,7 @@ function NLPModels.jprod!(
   x::AbstractVector{T},
   v::AbstractVector,
   Jv::AbstractVector,
-  ::Type{AD} = ADBackend,
+  ::Type{AD} = ReverseDiffAD,
 ) where {T, AD <: ADBackend}
   @lencheck nlp.meta.nvar x v
   @lencheck nlp.meta.ncon Jv
@@ -281,13 +284,13 @@ function NLPModels.jtprod!(
   x::AbstractVector{T},
   v::AbstractVector,
   Jtv::AbstractVector,
-  ::Type{AD} = ADBackend,
+  ::Type{AD} = ReverseDiffAD,
 ) where {T, AD <: ADBackend}
   @lencheck nlp.meta.nvar x Jtv
   @lencheck nlp.meta.ncon v
   increment!(nlp, :neval_jtprod)
   ad= get_backend(nlp, x, AD)
-  Jtv .= Jtprod(nlp.adbackend, nlp.c, x, v)
+  Jtv .= Jtprod(ad, nlp.c, x, v)
   return Jtv
 end
 
