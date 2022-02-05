@@ -7,7 +7,7 @@ using ForwardDiff, ReverseDiff
 # JSO
 using NLPModels
 
-include("ad/ad.jl")
+include("ad.jl")
 include("nlp.jl")
 # include("nls.jl")
 
