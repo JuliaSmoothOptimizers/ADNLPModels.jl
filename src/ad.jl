@@ -70,16 +70,19 @@ function Hvprod(b::ADBackend, f, x, v)
   return ForwardDiff.derivative(t -> gradient(b, f, x + t * v), 0)
 end
 
-function ForwardDiffAD(nvar::Integer, ncon::Integer, f, x0::AbstractVector)
+function ForwardDiffAD(;
+  nvar::Integer = 0,
+  ncon::Integer = 0,
+  f = x -> sum(x),
+  x0::AbstractVector = rand(0),
+  kwargs...,
+)
+  @assert nvar > 0
+  @lencheck nvar x0
   nnzh = nvar * (nvar + 1) / 2
   nnzj = nvar * ncon
   cfg = ForwardDiff.GradientConfig(f, x0)
   return ForwardDiffAD{typeof(cfg)}(nnzh, nnzj, cfg)
-end
-function ForwardDiffAD(nvar::Integer, f, x0::AbstractVector)
-  nnzh = nvar * (nvar + 1) / 2
-  cfg = ForwardDiff.GradientConfig(f, x0)
-  return ForwardDiffAD{typeof(cfg)}(nnzh, 0, cfg)
 end
 gradient(adbackend::ForwardDiffAD, f, x) = ForwardDiff.gradient(f, x, adbackend.cfg)
 function gradient!(adbackend::ForwardDiffAD, g, f, x)
@@ -99,14 +102,15 @@ end
 
 @init begin
   @require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" begin
-    function ZygoteAD(nvar::Integer, ncon::Integer, f, x0::AbstractVector)
+    function ZygoteAD(;
+      nvar::Integer = 0,
+      ncon::Integer = 0,
+      kwargs...,
+    )
+      @assert nvar > 0
       nnzh = nvar * (nvar + 1) / 2
       nnzj = nvar * ncon
       return ZygoteAD(nnzh, nnzj)
-    end
-    function ZygoteAD(nvar::Integer, f, x0::AbstractVector)
-      nnzh = nvar * (nvar + 1) / 2
-      return ZygoteAD(nnzh, 0)
     end
     function gradient(::ZygoteAD, f, x)
       g = Zygote.gradient(f, x)[1]
@@ -120,7 +124,7 @@ end
       return Zygote.jacobian(f, x)[1]
     end
     function hessian(b::ZygoteAD, f, x)
-      return jacobian(ForwardDiffAD(length(x), f, x), x -> gradient(b, f, x), x)
+      return jacobian(ForwardDiffAD(nvar = length(x), f = f, x0 = x), x -> gradient(b, f, x), x)
     end
     function Jprod(::ZygoteAD, f, x, v)
       return vec(Zygote.jacobian(t -> f(x + t * v), 0)[1])
@@ -131,18 +135,20 @@ end
     end
   end
   @require ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267" begin
-    function ReverseDiffAD(nvar::Integer, ncon::Integer, f, x0::AbstractVector)
+    function ReverseDiffAD(;
+      nvar::Integer = 0,
+      ncon::Integer = 0,
+      f = x -> sum(x),
+      x0::AbstractVector = rand(0),
+      kwargs...,
+    )
+      @assert nvar > 0
+      @lencheck nvar x0
       nnzh = nvar * (nvar + 1) / 2
       nnzj = nvar * ncon
       f_tape = ReverseDiff.GradientTape(f, x0)
       cfg = ReverseDiff.compile(f_tape)
       return ReverseDiffAD{typeof(cfg)}(nnzh, nnzj, cfg)
-    end
-    function ReverseDiffAD(nvar::Integer, f, x0::AbstractVector)
-      nnzh = nvar * (nvar + 1) / 2
-      f_tape = ReverseDiff.GradientTape(f, x0)
-      cfg = ReverseDiff.compile(f_tape)
-      return ReverseDiffAD{typeof(cfg)}(nnzh, 0, cfg)
     end
 
     gradient(adbackend::ReverseDiffAD, f, x) = ReverseDiff.gradient(f, x, adbackend.cfg)

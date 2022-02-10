@@ -39,8 +39,9 @@ function ADNLPModel(
   f,
   x0::S;
   name::String = "Generic",
-  adbackend = ForwardDiffAD(length(x0), f, x0),
-) where {S}
+  backend::Type{AD} = ForwardDiffAD,
+  kwargs...,
+) where {S, AD}
   T = eltype(S)
   nvar = length(x0)
   @lencheck nvar x0
@@ -48,6 +49,7 @@ function ADNLPModel(
   nnzh = nvar * (nvar + 1) / 2
 
   meta = NLPModelMeta{T, S}(nvar, x0 = x0, nnzh = nnzh, minimize = true, islp = false, name = name)
+  adbackend = AD(;nvar = nvar, f = f, x0 = x0, kwargs...)
 
   return ADNLPModel(meta, Counters(), adbackend, f, x -> T[])
 end
@@ -58,8 +60,9 @@ function ADNLPModel(
   lvar::S,
   uvar::S;
   name::String = "Generic",
-  adbackend = ForwardDiffAD(length(x0), f, x0),
-) where {S}
+  backend::Type{AD} = ForwardDiffAD,
+  kwargs...,
+) where {S, AD}
   T = eltype(S)
   nvar = length(x0)
   @lencheck nvar x0 lvar uvar
@@ -76,6 +79,7 @@ function ADNLPModel(
     islp = false,
     name = name,
   )
+  adbackend = AD(;nvar = nvar, f = f, x0 = x0, kwargs...)
 
   return ADNLPModel(meta, Counters(), adbackend, f, x -> T[])
 end
@@ -89,8 +93,9 @@ function ADNLPModel(
   y0::S = fill!(similar(lcon), zero(eltype(S))),
   name::String = "Generic",
   lin::AbstractVector{<:Integer} = Int[],
-  adbackend = ForwardDiffAD(length(x0), length(lcon), f, x0),
-) where {S}
+  backend::Type{AD} = ForwardDiffAD,
+  kwargs...,
+) where {S, AD}
   T = eltype(S)
   nvar = length(x0)
   ncon = length(lcon)
@@ -114,6 +119,7 @@ function ADNLPModel(
     islp = false,
     name = name,
   )
+  adbackend = AD(;nvar = nvar, ncon = ncon, f = f, x0 = x0, kwargs...)
 
   return ADNLPModel(meta, Counters(), adbackend, f, c)
 end
@@ -129,8 +135,9 @@ function ADNLPModel(
   y0::S = fill!(similar(lcon), zero(eltype(S))),
   name::String = "Generic",
   lin::AbstractVector{<:Integer} = Int[],
-  adbackend = ForwardDiffAD(length(x0), length(lcon), f, x0),
-) where {S}
+  backend::Type{AD} = ForwardDiffAD,
+  kwargs...,
+) where {S, AD}
   T = eltype(S)
   nvar = length(x0)
   ncon = length(lcon)
@@ -156,6 +163,7 @@ function ADNLPModel(
     islp = false,
     name = name,
   )
+  adbackend = AD(;nvar = nvar, ncon = ncon, f = f, x0 = x0, kwargs...)
 
   return ADNLPModel(meta, Counters(), adbackend, f, c)
 end

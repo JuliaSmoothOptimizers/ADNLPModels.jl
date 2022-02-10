@@ -39,7 +39,7 @@ export genrose_autodiff
 # D. Orban, Montreal, 08/2015.
 
 "Generalized Rosenbrock model in size `n`"
-function genrose_autodiff(n::Int = 500)
+function genrose_autodiff(n::Int = 500; kwargs...)
   n < 2 && error("genrose: number of variables must be ≥ 2")
 
   x0 = [i / (n + 1) for i = 1:n]
@@ -51,5 +51,5 @@ function genrose_autodiff(n::Int = 500)
     return s
   end
 
-  return ADNLPModel(f, x0, name = "genrose_autodiff")
+  return ADNLPModel(f, x0, name = "genrose_autodiff"; kwargs...)
 end
