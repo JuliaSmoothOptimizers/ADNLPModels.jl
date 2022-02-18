@@ -40,13 +40,33 @@ The following keyword arguments are available to the constructors for constraine
 - `lin`: An array of indexes of the linear constraints (default: `Int[]`)
 - `y0`: An inital estimate to the Lagrangian multipliers (default: zeros)
 """
+function ADNLSModel(F, x0::S, nequ; backend::Type{AD} = ForwardDiffAD, kwargs...) where {AD, S}
+  backend = AD(length(x0), x -> sum(F(x) .^ 2), x0)
+  return ADNLSModel(F, x0, nequ, backend; kwargs...)
+end
+
+function ADNLSModel(F, x0::S, nequ, lvar::S, uvar::S; backend::Type{AD} = ForwardDiffAD, kwargs...) where {AD, S}
+  backend = AD(length(x0), x -> sum(F(x) .^ 2), x0)
+  return ADNLSModel(F, x0, nequ, lvar, uvar, backend; kwargs...)
+end
+
+function ADNLSModel(F, x0::S, nequ, c, lcon::S, ucon::S; backend::Type{AD} = ForwardDiffAD, kwargs...) where {AD, S}
+  backend = AD(length(x0), length(lcon), x -> sum(F(x) .^ 2), x0)
+  return ADNLSModel(F, x0, nequ, c, lcon, ucon, backend; kwargs...)
+end
+
+function ADNLSModel(F, x0::S, nequ, lvar::S, uvar::S, c, lcon::S, ucon::S; backend::Type{AD} = ForwardDiffAD, kwargs...) where {AD, S}
+  backend = AD(length(x0), length(lcon), x -> sum(F(x) .^ 2), x0)
+  return ADNLSModel(F, x0, nequ, lvar, uvar, c, lcon, ucon, backend; kwargs...)
+end
+
 function ADNLSModel(
   F,
   x0::S,
-  nequ::Integer;
+  nequ::Integer,
+  adbackend;
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
-  adbackend = ForwardDiffAD(length(x0), x -> sum(F(x) .^ 2), x0),
 ) where {S}
   T = eltype(S)
   nvar = length(x0)
@@ -63,10 +83,10 @@ function ADNLSModel(
   x0::S,
   nequ::Integer,
   lvar::S,
-  uvar::S;
+  uvar::S,
+  adbackend;
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
-  adbackend = ForwardDiffAD(length(x0), x -> sum(F(x) .^ 2), x0),
 ) where {S}
   T = eltype(S)
   nvar = length(x0)
@@ -85,12 +105,12 @@ function ADNLSModel(
   nequ::Integer,
   c,
   lcon::S,
-  ucon::S;
+  ucon::S,
+  adbackend;
   y0::S = fill!(similar(lcon), zero(eltype(S))),
   lin::AbstractVector{<:Integer} = Int[],
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
-  adbackend = ForwardDiffAD(length(x0), length(lcon), x -> sum(F(x) .^ 2), x0),
 ) where {S}
   T = eltype(S)
   nvar = length(x0)
@@ -123,12 +143,12 @@ function ADNLSModel(
   uvar::S,
   c,
   lcon::S,
-  ucon::S;
+  ucon::S,
+  adbackend;
   y0::S = fill!(similar(lcon), zero(eltype(S))),
   lin::AbstractVector{<:Integer} = Int[],
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
-  adbackend = ForwardDiffAD(length(x0), length(lcon), x -> sum(F(x) .^ 2), x0),
 ) where {S}
   T = eltype(S)
   nvar = length(x0)
