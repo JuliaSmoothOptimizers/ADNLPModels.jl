@@ -55,7 +55,7 @@ function ADNLSModel(
   meta = NLPModelMeta{T, S}(nvar, x0 = x0, name = name)
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
-  adbackend = AD(;nvar = nvar, f = x -> sum(F(x) .^ 2), x0 = x0, kwargs...)
+  adbackend = AD(nvar, x -> sum(F(x) .^ 2); x0 = x0, kwargs...)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, x -> T[])
 end
 
@@ -77,7 +77,7 @@ function ADNLSModel(
   meta = NLPModelMeta{T, S}(nvar, x0 = x0, lvar = lvar, uvar = uvar, name = name)
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
-  adbackend = AD(;nvar = nvar, f = x -> sum(F(x) .^ 2), x0 = x0, kwargs...)
+  adbackend = AD(nvar, x -> sum(F(x) .^ 2); x0 = x0, kwargs...)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, x -> T[])
 end
 
@@ -114,7 +114,7 @@ function ADNLSModel(
   )
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
-  adbackend = AD(;nvar = nvar, ncon = ncon, f = x -> sum(F(x) .^ 2), x0 = x0, kwargs...)
+  adbackend = AD(nvar, x -> sum(F(x) .^ 2), ncon; x0 = x0, kwargs...)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, c)
 end
 
@@ -156,7 +156,7 @@ function ADNLSModel(
   )
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
-  adbackend = AD(;nvar = nvar, ncon = ncon, f = x -> sum(F(x) .^ 2), x0 = x0, kwargs...)
+  adbackend = AD(nvar, x -> sum(F(x) .^ 2), ncon; x0 = x0, kwargs...)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, c)
 end
 

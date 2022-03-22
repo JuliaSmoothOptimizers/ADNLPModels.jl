@@ -49,7 +49,7 @@ function ADNLPModel(
   nnzh = nvar * (nvar + 1) / 2
 
   meta = NLPModelMeta{T, S}(nvar, x0 = x0, nnzh = nnzh, minimize = true, islp = false, name = name)
-  adbackend = AD(;nvar = nvar, f = f, x0 = x0, kwargs...)
+  adbackend = AD(nvar, f; x0 = x0, kwargs...)
 
   return ADNLPModel(meta, Counters(), adbackend, f, x -> T[])
 end
@@ -79,7 +79,7 @@ function ADNLPModel(
     islp = false,
     name = name,
   )
-  adbackend = AD(;nvar = nvar, f = f, x0 = x0, kwargs...)
+  adbackend = AD(nvar, f; x0 = x0, kwargs...)
 
   return ADNLPModel(meta, Counters(), adbackend, f, x -> T[])
 end
@@ -119,7 +119,7 @@ function ADNLPModel(
     islp = false,
     name = name,
   )
-  adbackend = AD(;nvar = nvar, ncon = ncon, f = f, x0 = x0, kwargs...)
+  adbackend = AD(nvar, f, ncon; x0 = x0, kwargs...)
 
   return ADNLPModel(meta, Counters(), adbackend, f, c)
 end
@@ -163,7 +163,7 @@ function ADNLPModel(
     islp = false,
     name = name,
   )
-  adbackend = AD(;nvar = nvar, ncon = ncon, f = f, x0 = x0, kwargs...)
+  adbackend = AD(nvar, f, ncon; x0 = x0, kwargs...)
 
   return ADNLPModel(meta, Counters(), adbackend, f, c)
 end

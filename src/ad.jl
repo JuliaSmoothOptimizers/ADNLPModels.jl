@@ -70,11 +70,11 @@ function Hvprod(b::ADBackend, f, x, v)
   return ForwardDiff.derivative(t -> gradient(b, f, x + t * v), 0)
 end
 
-function ForwardDiffAD(;
+function ForwardDiffAD(
   nvar::Integer = 0,
-  ncon::Integer = 0,
   f = x -> sum(x),
-  x0::AbstractVector = rand(0),
+  ncon::Integer = 0;
+  x0::AbstractVector = rand(nvar),
   kwargs...,
 )
   @assert nvar > 0
@@ -102,9 +102,10 @@ end
 
 @init begin
   @require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" begin
-    function ZygoteAD(;
+    function ZygoteAD(
       nvar::Integer = 0,
-      ncon::Integer = 0,
+      f = x -> sum(x),
+      ncon::Integer = 0;
       kwargs...,
     )
       @assert nvar > 0
@@ -124,7 +125,7 @@ end
       return Zygote.jacobian(f, x)[1]
     end
     function hessian(b::ZygoteAD, f, x)
-      return jacobian(ForwardDiffAD(nvar = length(x), f = f, x0 = x), x -> gradient(b, f, x), x)
+      return jacobian(ForwardDiffAD(length(x), f, x0 = x), x -> gradient(b, f, x), x)
     end
     function Jprod(::ZygoteAD, f, x, v)
       return vec(Zygote.jacobian(t -> f(x + t * v), 0)[1])
@@ -135,11 +136,11 @@ end
     end
   end
   @require ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267" begin
-    function ReverseDiffAD(;
+    function ReverseDiffAD(
       nvar::Integer = 0,
-      ncon::Integer = 0,
       f = x -> sum(x),
-      x0::AbstractVector = rand(0),
+      ncon::Integer = 0;
+      x0::AbstractVector = rand(nvar),
       kwargs...,
     )
       @assert nvar > 0
