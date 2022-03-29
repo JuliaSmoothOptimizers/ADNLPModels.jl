@@ -102,12 +102,7 @@ end
 
 @init begin
   @require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" begin
-    function ZygoteAD(
-      nvar::Integer,
-      f,
-      ncon::Integer = 0;
-      kwargs...,
-    )
+    function ZygoteAD(nvar::Integer, f, ncon::Integer = 0; kwargs...)
       @assert nvar > 0
       nnzh = nvar * (nvar + 1) / 2
       nnzj = nvar * ncon
