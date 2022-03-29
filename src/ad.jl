@@ -71,8 +71,8 @@ function Hvprod(b::ADBackend, f, x, v)
 end
 
 function ForwardDiffAD(
-  nvar::Integer = 0,
-  f = x -> sum(x),
+  nvar::Integer,
+  f,
   ncon::Integer = 0;
   x0::AbstractVector = rand(nvar),
   kwargs...,
@@ -103,8 +103,8 @@ end
 @init begin
   @require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" begin
     function ZygoteAD(
-      nvar::Integer = 0,
-      f = x -> sum(x),
+      nvar::Integer,
+      f,
       ncon::Integer = 0;
       kwargs...,
     )
@@ -137,8 +137,8 @@ end
   end
   @require ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267" begin
     function ReverseDiffAD(
-      nvar::Integer = 0,
-      f = x -> sum(x),
+      nvar::Integer,
+      f,
       ncon::Integer = 0;
       x0::AbstractVector = rand(nvar),
       kwargs...,
