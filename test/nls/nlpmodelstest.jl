@@ -1,10 +1,8 @@
-@testset "AD backend - $(adbackend)" for adbackend in (:ForwardDiffAD, :ZygoteAD, :ReverseDiffAD)
+@testset "AD backend - $(adbackend)" for adbackend in (ForwardDiffAD, ZygoteAD, ReverseDiffAD)
   for problem in NLPModelsTest.nls_problems
     @testset "Checking NLPModelsTest tests on problem $problem" begin
       nls_from_T = eval(Meta.parse(lowercase(problem) * "_autodiff"))
-      nls_ad = nls_from_T()
-      nls_ad.adbackend =
-        eval(adbackend)(length(nls_ad.meta.x0), x -> sum(nls_ad.F(x) .^ 2), nls_ad.meta.x0)
+      nls_ad = nls_from_T(backend = adbackend)
       nls_man = eval(Meta.parse(problem))()
 
       nlss = AbstractNLSModel[nls_ad]

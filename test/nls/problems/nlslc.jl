@@ -1,6 +1,6 @@
 export nlslc_autodiff
 
-function nlslc_autodiff(::Type{T} = Float64) where {T}
+function nlslc_autodiff(::Type{T} = Float64; kwargs...) where {T}
   A = T[1 2; 3 4]
   b = T[5; 6]
   B = diagm(T[3 * i for i = 3:5])
@@ -23,5 +23,5 @@ function nlslc_autodiff(::Type{T} = Float64) where {T}
   lcon = T[22.0; 1.0; -Inf; -11.0; -d; -b; -Inf * ones(3)]
   ucon = T[22.0; Inf; 16.0; 9.0; -d; Inf * ones(2); c]
 
-  return ADNLSModel(F, x0, 15, con, lcon, ucon, name = "nlslincon_autodiff")
+  return ADNLSModel(F, x0, 15, con, lcon, ucon, name = "nlslincon_autodiff"; kwargs...)
 end

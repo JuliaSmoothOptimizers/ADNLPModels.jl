@@ -1,6 +1,6 @@
 export brownden_autodiff
 
-function brownden_autodiff(::Type{T} = Float64) where {T}
+function brownden_autodiff(::Type{T} = Float64; kwargs...) where {T}
   x0 = T[25.0; 5.0; -5.0; -1.0]
   f(x) = begin
     s = zero(T)
@@ -14,5 +14,5 @@ function brownden_autodiff(::Type{T} = Float64) where {T}
     return s
   end
 
-  return ADNLPModel(f, x0, name = "brownden_autodiff")
+  return ADNLPModel(f, x0, name = "brownden_autodiff"; kwargs...)
 end
