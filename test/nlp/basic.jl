@@ -56,15 +56,7 @@ function test_autodiff_model()
       @test_throws DimensionError ADNLPModel(f, x0, lvar, baduvar, backend = adbackend)
       @test_throws DimensionError ADNLPModel(f, x0, c, badlcon, ucon, backend = adbackend)
       @test_throws DimensionError ADNLPModel(f, x0, c, lcon, baducon, backend = adbackend)
-      @test_throws DimensionError ADNLPModel(
-        f,
-        x0,
-        c,
-        lcon,
-        ucon,
-        backend = adbackend,
-        y0 = bady0,
-      )
+      @test_throws DimensionError ADNLPModel(f, x0, c, lcon, ucon, backend = adbackend, y0 = bady0)
       @test_throws DimensionError ADNLPModel(
         f,
         x0,
