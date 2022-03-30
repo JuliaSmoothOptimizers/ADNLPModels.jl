@@ -4,7 +4,7 @@ mutable struct ADNLSModel{T, S} <: AbstractNLSModel{T, S}
   meta::NLPModelMeta{T, S}
   nls_meta::NLSMeta{T, S}
   counters::NLSCounters
-  adbackend::ADBackend
+  adbackend::ADModelBackend
 
   # Function
   F
@@ -46,7 +46,6 @@ function ADNLSModel(
   nequ::Integer;
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
-  backend::Type{AD} = ForwardDiffAD,
   kwargs...,
 ) where {S, AD}
   T = eltype(S)
@@ -55,7 +54,7 @@ function ADNLSModel(
   meta = NLPModelMeta{T, S}(nvar, x0 = x0, name = name)
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
-  adbackend = AD(nvar, x -> sum(F(x) .^ 2); x0 = x0, kwargs...)
+  adbackend = ADModelBackend(nvar, x -> sum(F(x) .^ 2); x0 = x0, kwargs...)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, x -> T[])
 end
 
@@ -67,9 +66,8 @@ function ADNLSModel(
   uvar::S;
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
-  backend::Type{AD} = ForwardDiffAD,
   kwargs...,
-) where {S, AD}
+) where {S}
   T = eltype(S)
   nvar = length(x0)
   @lencheck nvar lvar uvar
@@ -77,7 +75,7 @@ function ADNLSModel(
   meta = NLPModelMeta{T, S}(nvar, x0 = x0, lvar = lvar, uvar = uvar, name = name)
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
-  adbackend = AD(nvar, x -> sum(F(x) .^ 2); x0 = x0, kwargs...)
+  adbackend = ADModelBackend(nvar, x -> sum(F(x) .^ 2); x0 = x0, kwargs...)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, x -> T[])
 end
 
@@ -92,9 +90,8 @@ function ADNLSModel(
   lin::AbstractVector{<:Integer} = Int[],
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
-  backend::Type{AD} = ForwardDiffAD,
   kwargs...,
-) where {S, AD}
+) where {S}
   T = eltype(S)
   nvar = length(x0)
   ncon = length(lcon)
@@ -114,7 +111,7 @@ function ADNLSModel(
   )
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
-  adbackend = AD(nvar, x -> sum(F(x) .^ 2), ncon; x0 = x0, kwargs...)
+  adbackend = ADModelBackend(nvar, x -> sum(F(x) .^ 2), ncon; x0 = x0, kwargs...)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, c)
 end
 
@@ -131,7 +128,6 @@ function ADNLSModel(
   lin::AbstractVector{<:Integer} = Int[],
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
-  backend::Type{AD} = ForwardDiffAD,
   kwargs...,
 ) where {S, AD}
   T = eltype(S)
@@ -156,7 +152,7 @@ function ADNLSModel(
   )
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
-  adbackend = AD(nvar, x -> sum(F(x) .^ 2), ncon; x0 = x0, kwargs...)
+  adbackend = ADModelBackend(nvar, x -> sum(F(x) .^ 2), ncon; x0 = x0, kwargs...)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, c)
 end
 
@@ -171,7 +167,7 @@ end
 function NLPModels.jac_residual(nls::ADNLSModel, x::AbstractVector)
   @lencheck nls.meta.nvar x
   increment!(nls, :neval_jac_residual)
-  return jacobian(nls.adbackend, nls.F, x)
+  return jacobian(nls.adbackend.jacobian_backend, nls.F, x)
 end
 
 function NLPModels.jac_structure_residual!(
@@ -191,7 +187,7 @@ function NLPModels.jac_coord_residual!(nls::ADNLSModel, x::AbstractVector, vals:
   @lencheck nls.meta.nvar x
   @lencheck nls.nls_meta.nnzj vals
   increment!(nls, :neval_jac_residual)
-  Jx = jacobian(nls.adbackend, nls.F, x)
+  Jx = jacobian(nls.adbackend.jacobian_backend, nls.F, x)
   vals .= Jx[:]
   return vals
 end
@@ -205,7 +201,7 @@ function NLPModels.jprod_residual!(
   @lencheck nls.meta.nvar x v
   @lencheck nls.nls_meta.nequ Jv
   increment!(nls, :neval_jprod_residual)
-  Jv .= Jprod(nls.adbackend, nls.F, x, v)
+  Jv .= Jprod(nls.adbackend.jprod_backend, nls.F, x, v)
   return Jv
 end
 
@@ -218,7 +214,7 @@ function NLPModels.jtprod_residual!(
   @lencheck nls.meta.nvar x Jtv
   @lencheck nls.nls_meta.nequ v
   increment!(nls, :neval_jtprod_residual)
-  Jtv .= Jtprod(nls.adbackend, nls.F, x, v)
+  Jtv .= Jtprod(nls.adbackend.jtprod_backend, nls.F, x, v)
   return Jtv
 end
 
@@ -227,7 +223,7 @@ function NLPModels.hess_residual(nls::ADNLSModel, x::AbstractVector, v::Abstract
   @lencheck nls.nls_meta.nequ v
   increment!(nls, :neval_hess_residual)
   ϕ(x) = dot(nls.F(x), v)
-  return Symmetric(hessian(nls.adbackend, ϕ, x), :L)
+  return Symmetric(hessian(nls.adbackend.hessian_backend, ϕ, x), :L)
 end
 
 function NLPModels.hess_structure_residual!(
@@ -253,7 +249,7 @@ function NLPModels.hess_coord_residual!(
   @lencheck nls.nls_meta.nequ v
   @lencheck nls.nls_meta.nnzh vals
   increment!(nls, :neval_hess_residual)
-  Hx = hessian(nls.adbackend, x -> dot(nls.F(x), v), x)
+  Hx = hessian(nls.adbackend.hessian_backend, x -> dot(nls.F(x), v), x)
   k = 1
   for j = 1:(nls.meta.nvar)
     for i = j:(nls.meta.nvar)
@@ -267,7 +263,7 @@ end
 function NLPModels.jth_hess_residual(nls::ADNLSModel, x::AbstractVector, i::Int)
   @lencheck nls.meta.nvar x
   increment!(nls, :neval_jhess_residual)
-  return Symmetric(hessian(nls.adbackend, x -> nls.F(x)[i], x), :L)
+  return Symmetric(hessian(nls.adbackend.hessian_backend, x -> nls.F(x)[i], x), :L)
 end
 
 function NLPModels.hprod_residual!(
@@ -279,7 +275,7 @@ function NLPModels.hprod_residual!(
 )
   @lencheck nls.meta.nvar x v Hiv
   increment!(nls, :neval_hprod_residual)
-  Hiv .= Hvprod(nls.adbackend, x -> nls.F(x)[i], x, v)
+  Hiv .= Hvprod(nls.adbackend.hprod_backend, x -> nls.F(x)[i], x, v)
   return Hiv
 end
 
@@ -294,7 +290,7 @@ end
 function NLPModels.jac(nls::ADNLSModel, x::AbstractVector)
   @lencheck nls.meta.nvar x
   increment!(nls, :neval_jac)
-  return jacobian(nls.adbackend, nls.c, x)
+  return jacobian(nls.adbackend.jacobian_backend, nls.c, x)
 end
 
 function NLPModels.jac_structure!(
@@ -303,20 +299,20 @@ function NLPModels.jac_structure!(
   cols::AbstractVector{<:Integer},
 )
   @lencheck nls.meta.nnzj rows cols
-  return jac_structure!(nls.adbackend, nls, rows, cols)
+  return jac_structure!(nls.adbackend.jacobian_backend, nls, rows, cols)
 end
 
 function NLPModels.jac_coord!(nls::ADNLSModel, x::AbstractVector, vals::AbstractVector)
   @lencheck nls.meta.nvar x
   @lencheck nls.meta.nnzj vals
-  return jac_coord!(nls.adbackend, nls, x, vals)
+  return jac_coord!(nls.adbackend.jacobian_backend, nls, x, vals)
 end
 
 function NLPModels.jprod!(nls::ADNLSModel, x::AbstractVector, v::AbstractVector, Jv::AbstractVector)
   @lencheck nls.meta.nvar x v
   @lencheck nls.meta.ncon Jv
   increment!(nls, :neval_jprod)
-  Jv .= Jprod(nls.adbackend, nls.c, x, v)
+  Jv .= Jprod(nls.adbackend.jprod_backend, nls.c, x, v)
   return Jv
 end
 
@@ -329,7 +325,7 @@ function NLPModels.jtprod!(
   @lencheck nls.meta.nvar x Jtv
   @lencheck nls.meta.ncon v
   increment!(nls, :neval_jtprod)
-  Jtv .= Jtprod(nls.adbackend, nls.c, x, v)
+  Jtv .= Jtprod(nls.adbackend.jtprod_backend, nls.c, x, v)
   return Jtv
 end
 
@@ -337,7 +333,7 @@ function NLPModels.hess(nls::ADNLSModel, x::AbstractVector; obj_weight::Real = o
   @lencheck nls.meta.nvar x
   increment!(nls, :neval_hess)
   ℓ(x) = obj_weight * sum(nls.F(x) .^ 2) / 2
-  Hx = hessian(nls.adbackend, ℓ, x)
+  Hx = hessian(nls.adbackend.hessian_backend, ℓ, x)
   return Symmetric(Hx, :L)
 end
 
@@ -351,7 +347,7 @@ function NLPModels.hess(
   @lencheck nls.meta.ncon y
   increment!(nls, :neval_hess)
   ℓ(x) = obj_weight * sum(nls.F(x) .^ 2) / 2 + dot(y, nls.c(x))
-  Hx = hessian(nls.adbackend, ℓ, x)
+  Hx = hessian(nls.adbackend.hessian_backend, ℓ, x)
   return Symmetric(Hx, :L)
 end
 
@@ -361,7 +357,7 @@ function NLPModels.hess_structure!(
   cols::AbstractVector{<:Integer},
 )
   @lencheck nls.meta.nnzh rows cols
-  return hess_structure!(nls.adbackend, nls, rows, cols)
+  return hess_structure!(nls.adbackend.hessian_backend, nls, rows, cols)
 end
 
 function NLPModels.hess_coord!(
@@ -374,7 +370,7 @@ function NLPModels.hess_coord!(
   @lencheck nls.meta.nnzh vals
   increment!(nls, :neval_hess)
   ℓ(x) = obj_weight * sum(nls.F(x) .^ 2) / 2
-  return hess_coord!(nls.adbackend, nls, x, ℓ, vals)
+  return hess_coord!(nls.adbackend.hessian_backend, nls, x, ℓ, vals)
 end
 
 function NLPModels.hess_coord!(
@@ -389,7 +385,7 @@ function NLPModels.hess_coord!(
   @lencheck nls.meta.nnzh vals
   increment!(nls, :neval_hess)
   ℓ(x) = obj_weight * sum(nls.F(x) .^ 2) / 2 + dot(y, nls.c(x))
-  return hess_coord!(nls.adbackend, nls, x, ℓ, vals)
+  return hess_coord!(nls.adbackend.hessian_backend, nls, x, ℓ, vals)
 end
 
 function NLPModels.hprod!(
@@ -402,7 +398,7 @@ function NLPModels.hprod!(
   @lencheck nls.meta.nvar x v Hv
   increment!(nls, :neval_hprod)
   ℓ(x) = obj_weight * sum(nls.F(x) .^ 2) / 2
-  Hv .= Hvprod(nls.adbackend, ℓ, x, v)
+  Hv .= Hvprod(nls.adbackend.hprod_backend, ℓ, x, v)
   return Hv
 end
 
@@ -418,7 +414,7 @@ function NLPModels.hprod!(
   @lencheck nls.meta.ncon y
   increment!(nls, :neval_hprod)
   ℓ(x) = obj_weight * sum(nls.F(x) .^ 2) / 2 + dot(y, nls.c(x))
-  Hv .= Hvprod(nls.adbackend, ℓ, x, v)
+  Hv .= Hvprod(nls.adbackend.hprod_backend, ℓ, x, v)
   return Hv
 end
 
@@ -432,7 +428,7 @@ function NLPModels.jth_hess_coord!(
   @lencheck nls.meta.nvar x
   @rangecheck 1 nls.meta.ncon j
   increment!(nls, :neval_jhess)
-  return hess_coord!(nls.adbackend, nls, x, x -> nls.c(x)[j], vals)
+  return hess_coord!(nls.adbackend.hessian_backend, nls, x, x -> nls.c(x)[j], vals)
 end
 
 function NLPModels.jth_hprod!(
@@ -445,7 +441,7 @@ function NLPModels.jth_hprod!(
   @lencheck nls.meta.nvar x v Hv
   @rangecheck 1 nls.meta.ncon j
   increment!(nls, :neval_jhprod)
-  Hv .= Hvprod(nls.adbackend, x -> nls.c(x)[j], x, v)
+  Hv .= Hvprod(nls.adbackend.hprod_backend , x -> nls.c(x)[j], x, v)
   return Hv
 end
 
@@ -459,6 +455,6 @@ function NLPModels.ghjvprod!(
   @lencheck nls.meta.nvar x g v
   @lencheck nls.meta.ncon gHv
   increment!(nls, :neval_hprod)
-  gHv .= directional_second_derivative(nls.adbackend, nls.c, x, v, g)
+  gHv .= directional_second_derivative(nls.adbackend.ghjvprod_backend, nls.c, x, v, g)
   return gHv
 end
