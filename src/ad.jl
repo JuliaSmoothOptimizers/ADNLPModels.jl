@@ -1,3 +1,37 @@
+struct ADModelBackend{GB,HvB,JvB,JtvB,JB,HB,GHJ}
+  gradient_backend::GB
+  hprod_backend::HvB
+  jprod_backend::JvB
+  jtprod_backend::JtvB
+  jacobian_backend::JB
+  hessian_backend::HB
+  ghjvprod_backend::GHJ
+end
+
+function ADModelBackend(
+  nvar::Integer,
+  f,
+  ncon::Integer = 0;
+  gradient_backend::Type{GB} = ForwardDiffADGradient,
+  hprod_backend::Type{HvB} = ForwardDiffADHvprod,
+  jprod_backend::Type{JvB} = ForwardDiffADJprod,
+  jtprod_backend::Type{JtvB} = ForwardDiffADJtprod,
+  jacobian_backend::Type{JB} = ForwardDiffADJacobian,
+  hessian_backend::Type{HB} = ForwardDiffADHessian,
+  ghjvprod_backend::Type{GHJ} = ForwardDiffADGHjvprod,
+  kwargs...,
+) where {GB,HvB,JvB,JtvB,JB,HB,GHJ}
+  return ADModelBackend(
+    GB(nvar, f, ncon; kwargs...),
+    HvB(nvar, f, ncon; kwargs...),
+    JvB(nvar, f, ncon; kwargs...),
+    JtvB(nvar, f, ncon; kwargs...),
+    JB(nvar, f, ncon; kwargs...),
+    HB(nvar, f, ncon; kwargs...),
+    GHJ(nvar, f, ncon; kwargs...),
+  )
+end
+
 abstract type ADBackend end
 
 throw_error(b) =
@@ -8,6 +42,8 @@ jacobian(b::ADBackend, ::Any, ::Any) = throw_error(b)
 hessian(b::ADBackend, ::Any, ::Any) = throw_error(b)
 Jprod(b::ADBackend, ::Any, ::Any, ::Any) = throw_error(b)
 Jtprod(b::ADBackend, ::Any, ::Any, ::Any) = throw_error(b)
+Hvprod(b::ADBackend, ::Any, ::Any, ::Any) = throw_error(b)
+directional_second_derivative(::ADBackend, ::Any, ::Any, ::Any, ::Any) = throw_error(b)
 function hess_structure!(
   b::ADBackend,
   nlp,
@@ -47,10 +83,4 @@ function jac_coord!(b::ADBackend, nlp, x::AbstractVector, vals::AbstractVector)
   Jx = jacobian(b, nlp.c, x)
   vals .= Jx[:]
   return vals
-end
-function directional_second_derivative(::ADBackend, f, x, v, w)
-  return ForwardDiff.derivative(t -> ForwardDiff.derivative(s -> f(x + s * w + t * v), 0), 0)
-end
-function Hvprod(b::ADBackend, f, x, v)
-  return ForwardDiff.derivative(t -> gradient(b, f, x + t * v), 0)
 end
