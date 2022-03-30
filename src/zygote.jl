@@ -1,37 +1,96 @@
-struct ZygoteAD <: ADBackend
-  nnzh::Int
+struct ZygoteADGradient <: ADBackend end
+struct ZygoteADJacobian <: ADBackend 
   nnzj::Int
 end
+struct ZygoteADHessian <: ADBackend
+  nnzh::Int
+end
+struct ZygoteADJprod <: ADBackend end
+struct ZygoteADJtprod <: ADBackend end
+struct ZygoteADHvprod <: ADBackend end
 
 @init begin
   @require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" begin
-    function ZygoteAD(nvar::Integer, f, ncon::Integer = 0; kwargs...)
-      @assert nvar > 0
-      nnzh = nvar * (nvar + 1) / 2
-      nnzj = nvar * ncon
-      return ZygoteAD(nnzh, nnzj)
+    function ZygoteADGradient(
+      nvar::Integer,
+      f,
+      ncon::Integer = 0;
+      kwargs...,
+    )
+      return ZygoteADGradient()
     end
-
-    function gradient(::ZygoteAD, f, x)
+    function gradient(::ZygoteADGradient, f, x)
       g = Zygote.gradient(f, x)[1]
       return g === nothing ? zero(x) : g
     end
-    function gradient!(::ZygoteAD, g, f, x)
+    function gradient!(::ZygoteADGradient, g, f, x)
       _g = Zygote.gradient(f, x)[1]
       g .= _g === nothing ? 0 : _g
     end
-    function jacobian(::ZygoteAD, f, x)
+    
+    function ZygoteADJacobian(
+      nvar::Integer,
+      f,
+      ncon::Integer = 0;
+      kwargs...,
+    )
+      @assert nvar > 0
+      nnzj = nvar * ncon
+      return ZygoteADJacobian(nnzj)
+    end
+    function jacobian(::ZygoteADJacobian, f, x)
       return Zygote.jacobian(f, x)[1]
     end
-    function hessian(b::ZygoteAD, f, x)
-      return jacobian(ForwardDiffAD(length(x), f, x0 = x), x -> gradient(b, f, x), x)
+    
+    function ZygoteADHessian(
+      nvar::Integer,
+      f,
+      ncon::Integer = 0;
+      kwargs...,
+    )
+      @assert nvar > 0
+      nnzh = nvar * (nvar + 1) / 2
+      return ZygoteADHessian(nnzh)
     end
-    function Jprod(::ZygoteAD, f, x, v)
+    function hessian(b::ZygoteADHessian, f, x)
+      return jacobian(ForwardDiffADJacobian(length(x), f, x0 = x), x -> gradient(ZygoteADGradient(), f, x), x)
+    end
+    
+    function ZygoteADJprod(
+      nvar::Integer,
+      f,
+      ncon::Integer = 0;
+      kwargs...,
+    )
+      return ZygoteADJprod()
+    end
+    function Jprod(::ZygoteADJprod, f, x, v)
       return vec(Zygote.jacobian(t -> f(x + t * v), 0)[1])
     end
-    function Jtprod(::ZygoteAD, f, x, v)
+    
+    function ZygoteADJtprod(
+      nvar::Integer,
+      f,
+      ncon::Integer = 0;
+      kwargs...,
+    )
+      return ZygoteADJtprod()
+    end
+    function Jtprod(::ZygoteADJtprod, f, x, v)
       g = Zygote.gradient(x -> dot(f(x), v), x)[1]
       return g === nothing ? zero(x) : g
+    end
+    
+    function ZygoteADHvprod(
+      nvar::Integer,
+      f,
+      ncon::Integer = 0;
+      kwargs...,
+    )
+      return ZygoteADHvprod()
+    end
+    function Hvprod(::ZygoteADHvprod, f, x, v)
+      return ForwardDiff.derivative(t -> ForwardDiff.gradient(f, x + t * v), 0)
     end
   end
 end
