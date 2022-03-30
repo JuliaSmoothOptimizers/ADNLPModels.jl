@@ -7,7 +7,6 @@ struct ZygoteADHessian <: ADBackend
 end
 struct ZygoteADJprod <: ADBackend end
 struct ZygoteADJtprod <: ADBackend end
-struct ZygoteADHvprod <: ADBackend end
 
 @init begin
   @require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" begin
@@ -79,18 +78,6 @@ struct ZygoteADHvprod <: ADBackend end
     function Jtprod(::ZygoteADJtprod, f, x, v)
       g = Zygote.gradient(x -> dot(f(x), v), x)[1]
       return g === nothing ? zero(x) : g
-    end
-    
-    function ZygoteADHvprod(
-      nvar::Integer,
-      f,
-      ncon::Integer = 0;
-      kwargs...,
-    )
-      return ZygoteADHvprod()
-    end
-    function Hvprod(::ZygoteADHvprod, f, x, v)
-      return ForwardDiff.derivative(t -> ForwardDiff.gradient(f, x + t * v), 0)
     end
   end
 end
