@@ -1,9 +1,9 @@
 
-@testset "AD backend - $(adbackend)" for adbackend in (ForwardDiffAD, ZygoteAD, ReverseDiffAD)
+function nlpmodelstest_autodiff(name; kwargs...)
   for problem in NLPModelsTest.nlp_problems
-    @testset "Checking NLPModelsTest tests on problem $problem" begin
+    @testset "Checking NLPModelsTest tests on problem $problem with $name" begin
       nlp_from_T = eval(Meta.parse(lowercase(problem) * "_autodiff"))
-      nlp_ad = nlp_from_T(backend = adbackend)
+      nlp_ad = nlp_from_T(; kwargs...)
       nlp_man = eval(Meta.parse(problem))()
 
       show(IOBuffer(), nlp_ad)
@@ -27,3 +27,22 @@
     end
   end
 end
+
+nlpmodelstest_autodiff("ForwardDiff")
+nlpmodelstest_autodiff(
+  "ReverseDiff",
+  gradient_backend = ADNLPModels.ReverseDiffADGradient,
+  hprod_backend = ADNLPModels.ReverseDiffADHvprod,
+  jprod_backend = ADNLPModels.ReverseDiffADJprod,
+  jtprod_backend = ADNLPModels.ReverseDiffADJtprod,
+  jacobian_backend = ADNLPModels.ReverseDiffADJacobian,
+  hessian_backend = ADNLPModels.ReverseDiffADHessian,
+)
+nlpmodelstest_autodiff(
+  "Zygote",
+  gradient_backend = ADNLPModels.ZygoteADGradient,
+  jprod_backend = ADNLPModels.ZygoteADJprod,
+  jtprod_backend = ADNLPModels.ZygoteADJtprod,
+  jacobian_backend = ADNLPModels.ZygoteADJacobian,
+  hessian_backend = ADNLPModels.ZygoteADHessian,
+)
