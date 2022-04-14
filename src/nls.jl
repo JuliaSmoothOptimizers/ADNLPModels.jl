@@ -43,12 +43,12 @@ The following keyword arguments are available to the constructors for constraine
 - `y0`: An inital estimate to the Lagrangian multipliers (default: zeros)
 
 `ADNLSModel` uses `ForwardDiff` for the automatic differentiation by default.
-One can specify a new backend with the keyword arguments `adbackend::ADNLPModels.ADBackend`.
+One can specify a new backend with the keyword arguments `backend::ADNLPModels.ADBackend`.
 There are three pre-coded backends:
 - the default `ForwardDiffAD`.
 - `ReverseDiffAD` accessible after loading `ReverseDiff.jl` in your environment.
 - `ZygoteDiffAD` accessible after loading `Zygote.jl` in your environment.
-For an advanced usage, one can define its own backend and redefine the API as done in [ADNLPModels.jl/src/ad.jl](https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl/blob/main/src/ad.jl).
+For an advanced usage, one can define its own backend and redefine the API as done in [ADNLPModels.jl/src/forward.jl](https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl/blob/main/src/forward.jl).
 
 # Examples
 ```julia
@@ -60,10 +60,10 @@ nvar = 3
 ADNLSModel(F, x0, nequ) # uses the default ForwardDiffAD backend.
 
 using ReverseDiff
-ADNLSModel(F, x0, nequ; adbackend = ADNLPModels.ReverseDiffAD(nvar, x -> sum(F(x) .^ 2), x0))
+ADNLSModel(F, x0, nequ; backend = ADNLPModels.ReverseDiffAD)
 
 using Zygote
-ADNLSModel(F, x0, nequ; adbackend = ADNLPModels.ZygoteAD(nvar, x -> sum(F(x) .^ 2), x0))
+ADNLSModel(F, x0, nequ; backend = ADNLPModels.ZygoteAD)
 ```
 
 ```julia
@@ -76,12 +76,10 @@ nvar, ncon = 3, 2
 ADNLSModel(F, x0, nequ, c, zeros(ncon), zeros(ncon)) # uses the default ForwardDiffAD backend.
 
 using ReverseDiff
-reversediff_backend = ADNLPModels.ReverseDiffAD(nvar, ncon, x -> sum(F(x) .^ 2), x0)
-ADNLSModel(F, x0, nequ, c, zeros(ncon), zeros(ncon); adbackend = reversediff_backend)
+ADNLSModel(F, x0, nequ, c, zeros(ncon), zeros(ncon); backend = ADNLPModels.ReverseDiffAD)
 
 using Zygote
-zygote_backend = ADNLPModels.ZygoteAD(nvar, ncon, x -> sum(F(x) .^ 2), x0)
-ADNLSModel(F, x0, nequ, c, zeros(ncon), zeros(ncon); adbackend = zygote_backend)
+ADNLSModel(F, x0, nequ, c, zeros(ncon), zeros(ncon); backend = ADNLPModels.ZygoteAD)
 ```
 """
 function ADNLSModel(
