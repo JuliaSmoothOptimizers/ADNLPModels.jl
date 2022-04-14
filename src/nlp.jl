@@ -78,6 +78,7 @@ function ADNLPModel(
   x0::S;
   name::String = "Generic",
   backend::Type{AD} = ForwardDiffAD,
+  minimize::Bool = true,
   kwargs...,
 ) where {S, AD}
   T = eltype(S)
@@ -86,7 +87,7 @@ function ADNLPModel(
 
   nnzh = nvar * (nvar + 1) / 2
 
-  meta = NLPModelMeta{T, S}(nvar, x0 = x0, nnzh = nnzh, minimize = true, islp = false, name = name)
+  meta = NLPModelMeta{T, S}(nvar, x0 = x0, nnzh = nnzh, minimize = minimize, islp = false, name = name)
   adbackend = AD(nvar, f; x0 = x0, kwargs...)
 
   return ADNLPModel(meta, Counters(), adbackend, f, x -> T[])
@@ -99,6 +100,7 @@ function ADNLPModel(
   uvar::S;
   name::String = "Generic",
   backend::Type{AD} = ForwardDiffAD,
+  minimize::Bool = true,
   kwargs...,
 ) where {S, AD}
   T = eltype(S)
@@ -113,7 +115,7 @@ function ADNLPModel(
     lvar = lvar,
     uvar = uvar,
     nnzh = nnzh,
-    minimize = true,
+    minimize = minimize,
     islp = false,
     name = name,
   )
@@ -132,6 +134,7 @@ function ADNLPModel(
   name::String = "Generic",
   lin::AbstractVector{<:Integer} = Int[],
   backend::Type{AD} = ForwardDiffAD,
+  minimize::Bool = true,
   kwargs...,
 ) where {S, AD}
   T = eltype(S)
@@ -153,7 +156,7 @@ function ADNLPModel(
     nnzj = nnzj,
     nnzh = nnzh,
     lin = lin,
-    minimize = true,
+    minimize = minimize,
     islp = false,
     name = name,
   )
@@ -174,6 +177,7 @@ function ADNLPModel(
   name::String = "Generic",
   lin::AbstractVector{<:Integer} = Int[],
   backend::Type{AD} = ForwardDiffAD,
+  minimize::Bool = true,
   kwargs...,
 ) where {S, AD}
   T = eltype(S)
@@ -197,7 +201,7 @@ function ADNLPModel(
     nnzj = nnzj,
     nnzh = nnzh,
     lin = lin,
-    minimize = true,
+    minimize = minimize,
     islp = false,
     name = name,
   )
