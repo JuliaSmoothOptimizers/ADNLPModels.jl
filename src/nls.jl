@@ -89,12 +89,13 @@ function ADNLSModel(
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
   backend::Type{AD} = ForwardDiffAD,
+  minimize::Bool = true,
   kwargs...,
 ) where {S, AD}
   T = eltype(S)
   nvar = length(x0)
 
-  meta = NLPModelMeta{T, S}(nvar, x0 = x0, name = name)
+  meta = NLPModelMeta{T, S}(nvar, x0 = x0, name = name, minimize = minimize)
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
   adbackend = AD(nvar, x -> sum(F(x) .^ 2); x0 = x0, kwargs...)
@@ -110,13 +111,14 @@ function ADNLSModel(
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
   backend::Type{AD} = ForwardDiffAD,
+  minimize::Bool = true,
   kwargs...,
 ) where {S, AD}
   T = eltype(S)
   nvar = length(x0)
   @lencheck nvar lvar uvar
 
-  meta = NLPModelMeta{T, S}(nvar, x0 = x0, lvar = lvar, uvar = uvar, name = name)
+  meta = NLPModelMeta{T, S}(nvar, x0 = x0, lvar = lvar, uvar = uvar, name = name, minimize = minimize)
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
   adbackend = AD(nvar, x -> sum(F(x) .^ 2); x0 = x0, kwargs...)
@@ -135,6 +137,7 @@ function ADNLSModel(
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
   backend::Type{AD} = ForwardDiffAD,
+  minimize::Bool = true,
   kwargs...,
 ) where {S, AD}
   T = eltype(S)
@@ -153,6 +156,7 @@ function ADNLSModel(
     nnzj = nnzj,
     name = name,
     lin = lin,
+    minimize = minimize,
   )
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
@@ -174,6 +178,7 @@ function ADNLSModel(
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
   backend::Type{AD} = ForwardDiffAD,
+  minimize::Bool = true,
   kwargs...,
 ) where {S, AD}
   T = eltype(S)
@@ -195,6 +200,7 @@ function ADNLSModel(
     nnzj = nnzj,
     name = name,
     lin = lin,
+    minimize = minimize,
   )
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
