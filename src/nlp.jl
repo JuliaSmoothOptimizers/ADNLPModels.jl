@@ -87,7 +87,8 @@ function ADNLPModel(
 
   nnzh = nvar * (nvar + 1) / 2
 
-  meta = NLPModelMeta{T, S}(nvar, x0 = x0, nnzh = nnzh, minimize = minimize, islp = false, name = name)
+  meta =
+    NLPModelMeta{T, S}(nvar, x0 = x0, nnzh = nnzh, minimize = minimize, islp = false, name = name)
   adbackend = AD(nvar, f; x0 = x0, kwargs...)
 
   return ADNLPModel(meta, Counters(), adbackend, f, x -> T[])

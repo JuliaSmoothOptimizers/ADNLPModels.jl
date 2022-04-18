@@ -118,7 +118,8 @@ function ADNLSModel(
   nvar = length(x0)
   @lencheck nvar lvar uvar
 
-  meta = NLPModelMeta{T, S}(nvar, x0 = x0, lvar = lvar, uvar = uvar, name = name, minimize = minimize)
+  meta =
+    NLPModelMeta{T, S}(nvar, x0 = x0, lvar = lvar, uvar = uvar, name = name, minimize = minimize)
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
   adbackend = AD(nvar, x -> sum(F(x) .^ 2); x0 = x0, kwargs...)
