@@ -34,11 +34,50 @@ The following keyword arguments are available to the constructors for constraine
 
 - `lin`: An array of indexes of the linear constraints (default: `Int[]`)
 - `y0`: An inital estimate to the Lagrangian multipliers (default: zeros)
+
+`ADNLPModel` uses `ForwardDiff` for the automatic differentiation by default.
+One can specify a new backend with the keyword arguments `backend::ADNLPModels.ADBackend`.
+There are three pre-coded backends:
+- the default `ForwardDiffAD`.
+- `ReverseDiffAD` accessible after loading `ReverseDiff.jl` in your environment.
+- `ZygoteDiffAD` accessible after loading `Zygote.jl` in your environment.
+For an advanced usage, one can define its own backend and redefine the API as done in [ADNLPModels.jl/src/forward.jl](https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl/blob/main/src/forward.jl).
+
+# Examples
+```julia
+using ADNLPModels
+f(x) = sum(x)
+x0 = ones(3)
+nvar = 3
+ADNLPModel(f, x0) # uses the default ForwardDiffAD backend.
+
+using ReverseDiff
+ADNLPModel(f, x0; backend = ADNLPModels.ReverseDiffAD)
+
+using Zygote
+ADNLPModel(f, x0; backend = ADNLPModels.ZygoteAD)
+```
+
+```julia
+using ADNLPModels
+f(x) = sum(x)
+x0 = ones(3)
+c(x) = [1x[1] + x[2]; x[2]]
+nvar, ncon = 3, 2
+ADNLPModel(f, x0, c, zeros(ncon), zeros(ncon)) # uses the default ForwardDiffAD backend.
+
+using ReverseDiff
+ADNLPModel(f, x0, c, zeros(ncon), zeros(ncon); backend = ADNLPModels.ReverseDiffAD)
+
+using Zygote
+ADNLPModel(f, x0, c, zeros(ncon), zeros(ncon); backend = ADNLPModels.ZygoteAD)
+```
 """
 function ADNLPModel(
   f,
   x0::S;
   name::String = "Generic",
+  minimize::Bool = true,
   kwargs...,
 ) where {S}
   T = eltype(S)
@@ -47,7 +86,8 @@ function ADNLPModel(
 
   nnzh = nvar * (nvar + 1) / 2
 
-  meta = NLPModelMeta{T, S}(nvar, x0 = x0, nnzh = nnzh, minimize = true, islp = false, name = name)
+  meta =
+    NLPModelMeta{T, S}(nvar, x0 = x0, nnzh = nnzh, minimize = minimize, islp = false, name = name)
   adbackend = ADModelBackend(nvar, f; x0 = x0, kwargs...)
 
   return ADNLPModel(meta, Counters(), adbackend, f, x -> T[])
@@ -59,6 +99,7 @@ function ADNLPModel(
   lvar::S,
   uvar::S;
   name::String = "Generic",
+  minimize::Bool = true,
   kwargs...,
 ) where {S}
   T = eltype(S)
@@ -73,7 +114,7 @@ function ADNLPModel(
     lvar = lvar,
     uvar = uvar,
     nnzh = nnzh,
-    minimize = true,
+    minimize = minimize,
     islp = false,
     name = name,
   )
@@ -91,6 +132,7 @@ function ADNLPModel(
   y0::S = fill!(similar(lcon), zero(eltype(S))),
   name::String = "Generic",
   lin::AbstractVector{<:Integer} = Int[],
+  minimize::Bool = true,
   kwargs...,
 ) where {S}
   T = eltype(S)
@@ -112,7 +154,7 @@ function ADNLPModel(
     nnzj = nnzj,
     nnzh = nnzh,
     lin = lin,
-    minimize = true,
+    minimize = minimize,
     islp = false,
     name = name,
   )
@@ -132,6 +174,7 @@ function ADNLPModel(
   y0::S = fill!(similar(lcon), zero(eltype(S))),
   name::String = "Generic",
   lin::AbstractVector{<:Integer} = Int[],
+  minimize::Bool = true,
   kwargs...,
 ) where {S}
   T = eltype(S)
@@ -155,7 +198,7 @@ function ADNLPModel(
     nnzj = nnzj,
     nnzh = nnzh,
     lin = lin,
-    minimize = true,
+    minimize = minimize,
     islp = false,
     name = name,
   )
