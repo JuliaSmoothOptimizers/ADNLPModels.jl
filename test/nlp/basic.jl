@@ -112,6 +112,8 @@ function test_autodiff_model(name; kwargs...)
     @test A == sparse(nlp.clinrows, nlp.clincols, nlp.clinvals)
     nlp = ADNLPModel(f, x0, lvar, uvar, A, lcon, ucon)
     @test A == sparse(nlp.clinrows, nlp.clincols, nlp.clinvals)
+    nlp = ADNLPModel(f, x0, lvar, uvar, A, lcon, ucon)
+    @test A == sparse(nlp.clinrows, nlp.clincols, nlp.clinvals)
   end
 end
 

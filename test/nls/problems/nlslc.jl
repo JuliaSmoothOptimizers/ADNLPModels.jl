@@ -10,18 +10,13 @@ function nlslc_autodiff(::Type{T} = Float64; kwargs...) where {T}
 
   x0 = zeros(T, 15)
   F(x) = [x[i]^2 - i^2 for i = 1:15]
-  con(x) = [
-    15 * x[15]
-    c' * x[10:12]
-    d' * x[13:14]
-    b' * x[8:9]
-    C * x[6:7]
-    A * x[1:2]
-    B * x[3:5]
-  ]
 
   lcon = T[22.0; 1.0; -Inf; -11.0; -d; -b; -Inf * ones(3)]
   ucon = T[22.0; Inf; 16.0; 9.0; -d; Inf * ones(2); c]
 
-  return ADNLSModel(F, x0, 15, con, lcon, ucon, name = "nlslincon_autodiff"; kwargs...)
+  clinrows = [1,   2,  2,  2,  3,  3, 4, 4, 5, 6, 7, 8, 7, 8, 9, 10, 11]
+  clincols = [15, 10, 11, 12, 13, 14, 8, 9, 7, 6, 1, 1, 2, 2, 3,  4, 5]
+  clinvals = vcat(T(15), c, d, b, C[1, 2], C[2, 1], A[:], diag(B))
+
+  return ADNLSModel(F, x0, 15, clinrows, clincols, clinvals, lcon, ucon, name = "nlslincon_autodiff"; kwargs...)
 end

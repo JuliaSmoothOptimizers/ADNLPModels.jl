@@ -73,7 +73,7 @@ function jac_structure!(
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
 )
-  m, n = nlp.meta.ncon, nlp.meta.nvar
+  m, n = nlp.meta.nnln, nlp.meta.nvar
   I = ((i, j) for i = 1:m, j = 1:n)
   rows .= getindex.(I, 1)[:]
   cols .= getindex.(I, 2)[:]
