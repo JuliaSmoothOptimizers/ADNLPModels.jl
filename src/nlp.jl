@@ -73,13 +73,7 @@ using Zygote
 ADNLPModel(f, x0, c, zeros(ncon), zeros(ncon); backend = ADNLPModels.ZygoteAD)
 ```
 """
-function ADNLPModel(
-  f,
-  x0::S;
-  name::String = "Generic",
-  minimize::Bool = true,
-  kwargs...,
-) where {S}
+function ADNLPModel(f, x0::S; name::String = "Generic", minimize::Bool = true, kwargs...) where {S}
   T = eltype(S)
   nvar = length(x0)
   @lencheck nvar x0

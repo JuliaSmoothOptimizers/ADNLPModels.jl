@@ -42,7 +42,7 @@ function test_autodiff_backend_error()
   end
 end
 
-function test_autodiff_model(name;kwargs...)
+function test_autodiff_model(name; kwargs...)
   x0 = zeros(2)
   f(x) = dot(x, x)
   nlp = ADNLPModel(f, x0; kwargs...)
@@ -73,57 +73,11 @@ function test_autodiff_model(name;kwargs...)
     @test_throws DimensionError ADNLPModel(f, x0, c, badlcon, ucon; kwargs...)
     @test_throws DimensionError ADNLPModel(f, x0, c, lcon, baducon; kwargs...)
     @test_throws DimensionError ADNLPModel(f, x0, c, lcon, ucon, y0 = bady0; kwargs...)
-    @test_throws DimensionError ADNLPModel(
-      f,
-      x0,
-      badlvar,
-      uvar,
-      c,
-      lcon,
-      ucon;
-      kwargs...,
-    )
-    @test_throws DimensionError ADNLPModel(
-      f,
-      x0,
-      lvar,
-      baduvar,
-      c,
-      lcon,
-      ucon;
-      kwargs...,
-    )
-    @test_throws DimensionError ADNLPModel(
-      f,
-      x0,
-      lvar,
-      uvar,
-      c,
-      badlcon,
-      ucon;
-      kwargs...,
-    )
-    @test_throws DimensionError ADNLPModel(
-      f,
-      x0,
-      lvar,
-      uvar,
-      c,
-      lcon,
-      baducon;
-      kwargs...,
-    )
-    @test_throws DimensionError ADNLPModel(
-      f,
-      x0,
-      lvar,
-      uvar,
-      c,
-      lcon,
-      ucon;
-      y0 = bady0,
-      kwargs...,
-    )
+    @test_throws DimensionError ADNLPModel(f, x0, badlvar, uvar, c, lcon, ucon; kwargs...)
+    @test_throws DimensionError ADNLPModel(f, x0, lvar, baduvar, c, lcon, ucon; kwargs...)
+    @test_throws DimensionError ADNLPModel(f, x0, lvar, uvar, c, badlcon, ucon; kwargs...)
+    @test_throws DimensionError ADNLPModel(f, x0, lvar, uvar, c, lcon, baducon; kwargs...)
+    @test_throws DimensionError ADNLPModel(f, x0, lvar, uvar, c, lcon, ucon; y0 = bady0, kwargs...)
   end
 end
 

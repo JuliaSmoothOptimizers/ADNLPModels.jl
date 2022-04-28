@@ -22,60 +22,11 @@ function autodiff_nls_test(name; kwargs...)
     @test_throws DimensionError ADNLSModel(F, x0, 3, lvar, baduvar; kwargs...)
     @test_throws DimensionError ADNLSModel(F, x0, 3, c, badlcon, ucon; kwargs...)
     @test_throws DimensionError ADNLSModel(F, x0, 3, c, lcon, baducon; kwargs...)
-    @test_throws DimensionError ADNLSModel(
-      F,
-      x0,
-      3,
-      c,
-      lcon,
-      ucon,
-      y0 = bady0;
-      kwargs...,
-    )
-    @test_throws DimensionError ADNLSModel(
-      F,
-      x0,
-      3,
-      badlvar,
-      uvar,
-      c,
-      lcon,
-      ucon;
-      kwargs...,
-    )
-    @test_throws DimensionError ADNLSModel(
-      F,
-      x0,
-      3,
-      lvar,
-      baduvar,
-      c,
-      lcon,
-      ucon;
-      kwargs...,
-    )
-    @test_throws DimensionError ADNLSModel(
-      F,
-      x0,
-      3,
-      lvar,
-      uvar,
-      c,
-      badlcon,
-      ucon;
-      kwargs...,
-    )
-    @test_throws DimensionError ADNLSModel(
-      F,
-      x0,
-      3,
-      lvar,
-      uvar,
-      c,
-      lcon,
-      baducon;
-      kwargs...,
-    )
+    @test_throws DimensionError ADNLSModel(F, x0, 3, c, lcon, ucon, y0 = bady0; kwargs...)
+    @test_throws DimensionError ADNLSModel(F, x0, 3, badlvar, uvar, c, lcon, ucon; kwargs...)
+    @test_throws DimensionError ADNLSModel(F, x0, 3, lvar, baduvar, c, lcon, ucon; kwargs...)
+    @test_throws DimensionError ADNLSModel(F, x0, 3, lvar, uvar, c, badlcon, ucon; kwargs...)
+    @test_throws DimensionError ADNLSModel(F, x0, 3, lvar, uvar, c, lcon, baducon; kwargs...)
     @test_throws DimensionError ADNLSModel(
       F,
       x0,
@@ -109,4 +60,3 @@ autodiff_nls_test(
   jacobian_backend = ADNLPModels.ZygoteADJacobian,
   hessian_backend = ADNLPModels.ZygoteADHessian,
 )
-

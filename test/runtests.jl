@@ -1,13 +1,6 @@
 using ADNLPModels, LinearAlgebra, NLPModels, NLPModelsModifiers, NLPModelsTest, Test
 using ADNLPModels:
-  gradient,
-  gradient!,
-  jacobian,
-  hessian,
-  Jprod,
-  Jtprod,
-  directional_second_derivative,
-  Hvprod
+  gradient, gradient!, jacobian, hessian, Jprod, Jtprod, directional_second_derivative, Hvprod
 
 for problem in NLPModelsTest.nlp_problems ∪ ["GENROSE"]
   include("nlp/problems/$(lowercase(problem)).jl")
