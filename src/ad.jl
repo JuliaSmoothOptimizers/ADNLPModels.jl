@@ -1,4 +1,4 @@
-struct ADModelBackend{GB,HvB,JvB,JtvB,JB,HB,GHJ}
+struct ADModelBackend{GB, HvB, JvB, JtvB, JB, HB, GHJ}
   gradient_backend::GB
   hprod_backend::HvB
   jprod_backend::JvB
@@ -20,7 +20,7 @@ function ADModelBackend(
   hessian_backend::Type{HB} = ForwardDiffADHessian,
   ghjvprod_backend::Type{GHJ} = ForwardDiffADGHjvprod,
   kwargs...,
-) where {GB,HvB,JvB,JtvB,JB,HB,GHJ}
+) where {GB, HvB, JvB, JtvB, JB, HB, GHJ}
   return ADModelBackend(
     GB(nvar, f, ncon; kwargs...),
     HvB(nvar, f, ncon; kwargs...),

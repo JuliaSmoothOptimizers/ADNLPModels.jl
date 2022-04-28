@@ -490,7 +490,7 @@ function NLPModels.jth_hprod!(
   @lencheck nls.meta.nvar x v Hv
   @rangecheck 1 nls.meta.ncon j
   increment!(nls, :neval_jhprod)
-  Hv .= Hvprod(nls.adbackend.hprod_backend , x -> nls.c(x)[j], x, v)
+  Hv .= Hvprod(nls.adbackend.hprod_backend, x -> nls.c(x)[j], x, v)
   return Hv
 end
 
