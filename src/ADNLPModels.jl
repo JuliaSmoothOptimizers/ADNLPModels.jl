@@ -28,7 +28,7 @@ get_adbackend(nlp::Union{ADNLPModel, ADNLSModel}) = nlp.adbackend
     set_adbackend!(nlp, new_adbackend)
     set_adbackend!(nlp; kwargs...)
 
-Replace the current `adbackend` value of nlp by `new_adbackend` or instantiate a new one with `kwargs`, see [`ADModelBackend`](@ref).
+Replace the current `adbackend` value of nlp by `new_adbackend` or instantiate a new one with `kwargs`, see `ADModelBackend`.
 By default, the setter with kwargs will reuse existing backends.
 """
 function set_adbackend!(nlp::Union{ADNLPModel, ADNLSModel}, new_adbackend::ADModelBackend)
