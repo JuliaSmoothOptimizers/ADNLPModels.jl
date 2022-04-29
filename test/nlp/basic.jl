@@ -28,7 +28,7 @@ ZygoteAD() = ADNLPModels.ADModelBackend(
 )
 
 function test_autodiff_backend_error()
-  @testset "Error without loading package - $backend" for backend in (:ZygoteAD, :ReverseDiffAD)
+  @testset "Error without loading package - $backend" for backend in [:ZygoteAD]
     adbackend = eval(backend)()
     @test_throws ArgumentError gradient(adbackend.gradient_backend, sum, [1.0])
     @test_throws ArgumentError gradient!(adbackend.gradient_backend, [1.0], sum, [1.0])
@@ -36,9 +36,6 @@ function test_autodiff_backend_error()
     @test_throws ArgumentError hessian(adbackend.hessian_backend, sum, [1.0])
     @test_throws ArgumentError Jprod(adbackend.jprod_backend, [1.0], identity, [1.0])
     @test_throws ArgumentError Jtprod(adbackend.jtprod_backend, [1.0], identity, [1.0])
-    if backend == :ReverseDiffAD
-      @test_throws ArgumentError Hvprod(adbackend.hprod_backend, sum, [1.0], [1.0])
-    end
   end
 end
 
@@ -84,8 +81,8 @@ end
 # Test the argument error without loading the packages
 test_autodiff_backend_error()
 
-# Automatically loads the code for Zygote and ReverseDiff with Requires
-import Zygote, ReverseDiff
+# Automatically loads the code for Zygote with Requires
+import Zygote
 
 test_autodiff_model("ForwardDiff")
 test_autodiff_model(
