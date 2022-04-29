@@ -3,7 +3,7 @@ module ADNLPModels
 # stdlib
 using LinearAlgebra
 # external
-using ForwardDiff
+using ForwardDiff, ReverseDiff
 # JSO
 using NLPModels
 using Requires
