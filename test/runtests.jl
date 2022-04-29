@@ -29,6 +29,32 @@ ZygoteAD() = ADNLPModels.ADModelBackend(
   hessian_backend = ADNLPModels.ZygoteADHessian,
 )
 
+function test_getter_setter(nlp)
+  @test get_adbackend(nlp) == nlp.adbackend
+  if typeof(nlp) <: ADNLPModel
+    set_adbackend!(nlp, ReverseDiffAD(nlp.meta.nvar, nlp.f))
+  elseif typeof(nlp) <: ADNLSModel
+    set_adbackend!(nlp, ReverseDiffAD(nlp.meta.nvar, x -> sum(nlp.F(x) .^ 2)))
+  end
+  @test typeof(get_adbackend(nlp).gradient_backend) <: ADNLPModels.ReverseDiffADGradient
+  @test typeof(get_adbackend(nlp).hprod_backend) <: ADNLPModels.ReverseDiffADHvprod
+  @test typeof(get_adbackend(nlp).jprod_backend) <: ADNLPModels.ReverseDiffADJprod
+  @test typeof(get_adbackend(nlp).jtprod_backend) <: ADNLPModels.ReverseDiffADJtprod
+  @test typeof(get_adbackend(nlp).jacobian_backend) <: ADNLPModels.ReverseDiffADJacobian
+  @test typeof(get_adbackend(nlp).hessian_backend) <: ADNLPModels.ReverseDiffADHessian
+  set_adbackend!(
+    nlp,
+    gradient_backend = ADNLPModels.ForwardDiffADGradient,
+    jtprod_backend = ADNLPModels.ForwardDiffADJtprod(),
+  )
+  @test typeof(get_adbackend(nlp).gradient_backend) <: ADNLPModels.ForwardDiffADGradient
+  @test typeof(get_adbackend(nlp).hprod_backend) <: ADNLPModels.ReverseDiffADHvprod
+  @test typeof(get_adbackend(nlp).jprod_backend) <: ADNLPModels.ReverseDiffADJprod
+  @test typeof(get_adbackend(nlp).jtprod_backend) <: ADNLPModels.ForwardDiffADJtprod
+  @test typeof(get_adbackend(nlp).jacobian_backend) <: ADNLPModels.ReverseDiffADJacobian
+  @test typeof(get_adbackend(nlp).hessian_backend) <: ADNLPModels.ReverseDiffADHessian
+end
+
 include("nlp/basic.jl")
 include("nls/basic.jl")
 include("nlp/nlpmodelstest.jl")

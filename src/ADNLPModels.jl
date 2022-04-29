@@ -15,4 +15,44 @@ include("zygote.jl")
 include("nlp.jl")
 include("nls.jl")
 
+export get_adbackend, set_adbackend!
+
+"""
+    has_adbackend(nlp)
+
+Returns the value `adbackend` from nlp.
+"""
+get_adbackend(nlp::Union{ADNLPModel, ADNLSModel}) = nlp.adbackend
+
+"""
+    set_adbackend!(nlp, new_adbackend)
+    set_adbackend!(nlp; kwargs...)
+
+Replace the current `adbackend` value of nlp by `new_adbackend` or instantiate a new one with `kwargs`, see [`ADModelBackend`](@ref).
+By default, the setter with kwargs will reuse existing backends.
+"""
+function set_adbackend!(nlp::Union{ADNLPModel, ADNLSModel}, new_adbackend::ADModelBackend)
+  nlp.adbackend = new_adbackend
+  return nlp
+end
+function set_adbackend!(nlp::Union{ADNLPModel, ADNLSModel}; kwargs...)
+  args = []
+  for field in fieldnames(ADNLPModels.ADModelBackend)
+    push!(args, if field in keys(kwargs) && typeof(kwargs[field]) <: ADBackend
+      kwargs[field]
+    elseif field in keys(kwargs) && typeof(kwargs[field]) <: DataType
+      if typeof(nlp) <: ADNLPModel
+        kwargs[field](nlp.meta.nvar, nlp.f, nlp.meta.ncon; kwargs...)
+      elseif typeof(nlp) <: ADNLSModel
+        kwargs[field](nlp.meta.nvar, x -> sum(nlp.F(x) .^ 2), nlp.meta.ncon; kwargs...)
+      end
+    else
+      getfield(nlp.adbackend, field)
+    end
+    )
+  end 
+  nlp.adbackend = ADModelBackend(args...)
+  return nlp
+end
+
 end # module
