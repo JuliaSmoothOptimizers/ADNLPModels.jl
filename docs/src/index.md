@@ -1,4 +1,4 @@
-# ADNLPModelss
+# ADNLPModels
 
 This package provides AD-based model implementations that conform to the [NLPModels](https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl) API. The following packages are supported:
 - `ForwardDiff.jl`: default choice.
