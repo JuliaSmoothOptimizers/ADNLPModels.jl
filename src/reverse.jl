@@ -63,4 +63,3 @@ end
 function Hvprod(::ReverseDiffADHvprod, f, x, v)
   return ForwardDiff.derivative(t -> ReverseDiff.gradient(f, x + t * v), 0)
 end
-
