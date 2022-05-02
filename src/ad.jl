@@ -1,3 +1,28 @@
+"""
+    ADModelBackend(gradient_backend, hprod_backend, jprod_backend, jtprod_backend, jacobian_backend, hessian_backend, ghjvprod_backend)
+
+Structure that define the different backend used to compute automatic differentiation of an `ADNLPModel`/`ADNLSModel` model.
+The different backend are all subtype of `ADBackend` and are respectively used for:
+  - gradient computation;
+  - hessian-vector products;
+  - jacobian-vector products;
+  - transpose jacobian-vector products;
+  - jacobian computation;
+  - hessian computation;
+  - directional second derivative computation, i.e. gᵀ ∇²cᵢ(x) v.
+
+The default constructor is 
+    ADModelBackend(nvar, f, ncon = 0; kwargs...)
+
+where the `kwargs` are either the different backends as listed below or arguments passed to the backend's constructors:
+  - `gradient_backend = ForwardDiffADGradient`;
+  - `hprod_backend = ForwardDiffADHvprod`;
+  - `jprod_backend = ForwardDiffADJprod`;
+  - `jtprod_backend = ForwardDiffADJtprod`;
+  - `jacobian_backend = ForwardDiffADJacobian`;
+  - `hessian_backend = ForwardDiffADHessian`;
+  - `ghjvprod_backend = ForwardDiffADGHjvprod`.
+"""
 struct ADModelBackend{GB, HvB, JvB, JtvB, JB, HB, GHJ}
   gradient_backend::GB
   hprod_backend::HvB
