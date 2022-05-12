@@ -18,7 +18,7 @@ include("nls.jl")
 export get_adbackend, set_adbackend!
 
 """
-    has_adbackend(nlp)
+    get_adbackend(nlp)
 
 Returns the value `adbackend` from nlp.
 """
