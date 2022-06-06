@@ -7,14 +7,15 @@ mutable struct ADNLPModel{T, S, Si} <: AbstractNLPModel{T, S}
 
   # Functions
   f
-  c
 
   clinrows::Si
   clincols::Si
   clinvals::S
+
+  c
 end
 
-ADNLPModel(meta::NLPModelMeta{T, S}, counters::Counters, adbackend::ADModelBackend, f, c) where {T, S} = ADNLPModel(meta, counters, adbackend, f, c, Int[], Int[], T[])
+ADNLPModel(meta::NLPModelMeta{T, S}, counters::Counters, adbackend::ADModelBackend, f, c) where {T, S} = ADNLPModel(meta, counters, adbackend, f, Int[], Int[], T[], c)
 
 ADNLPModels.show_header(io::IO, nlp::ADNLPModel) =
   println(io, "ADNLPModel - Model with automatic differentiation backend $(nlp.adbackend)")
@@ -163,8 +164,7 @@ function ADNLPModel(f, x0::S, clinrows, clincols, clinvals::S, lcon::S, ucon::S;
 end
 
 function ADNLPModel(f, x0::S, A::AbstractSparseMatrix{Tv,Ti}, lcon::S, ucon::S; kwargs...,) where {S, Tv,Ti}
-  clinrows, clincols, clinvals = findnz(A)
-  return ADNLPModel(f, x0, clinrows, clincols, clinvals, lcon, ucon; kwargs...)
+  return ADNLPModel(f, x0, findnz(A)..., lcon, ucon; kwargs...)
 end
 
 function ADNLPModel(
@@ -214,12 +214,11 @@ function ADNLPModel(
   )
   adbackend = ADModelBackend(nvar, f, ncon; x0 = x0, kwargs...)
 
-  return ADNLPModel(meta, Counters(), adbackend, f, c, clinrows, clincols, clinvals)
+  return ADNLPModel(meta, Counters(), adbackend, f, clinrows, clincols, clinvals, c)
 end
 
 function ADNLPModel(f, x0, A::AbstractSparseMatrix{Tv,Ti}, c, lcon, ucon; kwargs...) where {Tv,Ti}
-  clinrows, clincols, clinvals = findnz(A)
-  return ADNLPModel(f, x0, clinrows, clincols, clinvals, c, lcon, ucon; kwargs...)
+  return ADNLPModel(f, x0, findnz(A)..., c, lcon, ucon; kwargs...)
 end
 
 function ADNLPModel(f, x0::S, lvar::S, uvar::S, clinrows, clincols, clinvals::S, lcon::S, ucon::S; kwargs...,) where {S}
@@ -228,8 +227,7 @@ function ADNLPModel(f, x0::S, lvar::S, uvar::S, clinrows, clincols, clinvals::S,
 end
 
 function ADNLPModel(f, x0::S, lvar::S, uvar::S, A::AbstractSparseMatrix{Tv,Ti}, lcon::S, ucon::S; kwargs...,) where {S, Tv,Ti}
-  clinrows, clincols, clinvals = findnz(A)
-  return ADNLPModel(f, x0, lvar, uvar, clinrows, clincols, clinvals, lcon, ucon; kwargs...)
+  return ADNLPModel(f, x0, lvar, uvar, findnz(A)..., lcon, ucon; kwargs...)
 end
 
 function ADNLPModel(
@@ -325,12 +323,11 @@ function ADNLPModel(
   )
   adbackend = ADModelBackend(nvar, f, ncon; x0 = x0, kwargs...)
 
-  return ADNLPModel(meta, Counters(), adbackend, f, c, clinrows, clincols, clinvals)
+  return ADNLPModel(meta, Counters(), adbackend, f, clinrows, clincols, clinvals, c)
 end
 
 function ADNLPModel(f, x0, lvar, uvar, A::AbstractSparseMatrix{Tv,Ti}, c, lcon, ucon; kwargs...) where {Tv, Ti}
-  clinrows, clincols, clinvals = findnz(A)
-  return ADNLPModel(f, x0, lvar, uvar, clinrows, clincols, clinvals, c, lcon, ucon; kwargs...)
+  return ADNLPModel(f, x0, lvar, uvar, findnz(A)..., c, lcon, ucon; kwargs...)
 end
 
 function NLPModels.obj(nlp::ADNLPModel, x::AbstractVector)
