@@ -1,4 +1,4 @@
-using ADNLPModels, LinearAlgebra, NLPModels, NLPModelsModifiers, NLPModelsTest, Test
+using ADNLPModels, LinearAlgebra, NLPModels, NLPModelsModifiers, NLPModelsTest, SparseArrays, Test
 using ADNLPModels:
   gradient, gradient!, jacobian, hessian, Jprod, Jtprod, directional_second_derivative, Hvprod
 

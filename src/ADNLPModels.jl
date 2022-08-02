@@ -1,7 +1,7 @@
 module ADNLPModels
 
 # stdlib
-using LinearAlgebra
+using LinearAlgebra, SparseArrays
 # external
 using ForwardDiff, ReverseDiff
 # JSO
