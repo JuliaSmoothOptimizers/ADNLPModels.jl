@@ -1,6 +1,6 @@
 export ADNLSModel
 
-mutable struct ADNLSModel{T, S} <: AbstractNLSModel{T, S}
+mutable struct ADNLSModel{T, S, Si} <: AbstractNLSModel{T, S}
   meta::NLPModelMeta{T, S}
   nls_meta::NLSMeta{T, S}
   counters::NLSCounters
@@ -8,8 +8,15 @@ mutable struct ADNLSModel{T, S} <: AbstractNLSModel{T, S}
 
   # Function
   F
+
+  clinrows::Si
+  clincols::Si
+  clinvals::S
+
   c
 end
+
+ADNLSModel(meta::NLPModelMeta{T, S}, nls_meta::NLSMeta{T, S}, counters::NLSCounters, adbackend::ADModelBackend, F, c) where {T, S} = ADNLSModel(meta, nls_meta, counters, adbackend, F, Int[], Int[], T[], c)
 
 ADNLPModels.show_header(io::IO, nls::ADNLSModel) = println(
   io,
@@ -19,15 +26,24 @@ ADNLPModels.show_header(io::IO, nls::ADNLSModel) = println(
 """
     ADNLSModel(F, x0, nequ)
     ADNLSModel(F, x0, nequ, lvar, uvar)
+    ADNLSModel(F, x0, nequ, clinrows, clincols, clinvals, lcon, ucon)
+    ADNLSModel(F, x0, nequ, A, lcon, ucon)
     ADNLSModel(F, x0, nequ, c, lcon, ucon)
+    ADNLSModel(F, x0, nequ, clinrows, clincols, clinvals, c, lcon, ucon)
+    ADNLSModel(F, x0, nequ, A, c, lcon, ucon)
+    ADNLSModel(F, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, lcon, ucon)
+    ADNLSModel(F, x0, nequ, lvar, uvar, A, lcon, ucon)
     ADNLSModel(F, x0, nequ, lvar, uvar, c, lcon, ucon)
+    ADNLSModel(F, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, c, lcon, ucon)
+    ADNLSModel(F, x0, nequ, lvar, uvar, A, c, lcon, ucon)
 
 ADNLSModel is an Nonlinear Least Squares model using automatic differentiation to
 compute the derivatives.
 The problem is defined as
 
      min  ½‖F(x)‖²
-    s.to  lcon ≤ c(x) ≤ ucon
+    s.to  lcon ≤ (  Ax  ) ≤ ucon
+                 ( c(x) )
           lvar ≤   x  ≤ uvar
 
 where `nequ` is the size of the vector `F(x)`.
@@ -40,7 +56,6 @@ The following keyword arguments are available to all constructors:
 
 The following keyword arguments are available to the constructors for constrained problems:
 
-- `lin`: An array of indexes of the linear constraints (default: `Int[]`)
 - `y0`: An inital estimate to the Lagrangian multipliers (default: zeros)
 
 `ADNLSModel` uses `ForwardDiff` for the automatic differentiation by default.
@@ -133,7 +148,6 @@ function ADNLSModel(
   lcon::S,
   ucon::S;
   y0::S = fill!(similar(lcon), zero(eltype(S))),
-  lin::AbstractVector{<:Integer} = Int[],
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
   minimize::Bool = true,
@@ -154,13 +168,85 @@ function ADNLSModel(
     ucon = ucon,
     nnzj = nnzj,
     name = name,
-    lin = lin,
     minimize = minimize,
   )
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
   adbackend = ADModelBackend(nvar, x -> sum(F(x) .^ 2), ncon; x0 = x0, kwargs...)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, c)
+end
+
+function ADNLSModel(F, x0::S, nequ::Integer, clinrows::Si, clincols::Si, clinvals::S, lcon::S, ucon::S; kwargs...,) where {S,Si}
+  T = eltype(S)
+  return ADNLSModel(F, x0, nequ, clinrows, clincols, clinvals, x -> T[], lcon, ucon; kwargs...)
+end
+
+function ADNLSModel(F, x0::S, nequ::Integer, A::AbstractSparseMatrix{Tv,Ti}, lcon::S, ucon::S; kwargs...,) where {S, Tv,Ti}
+  clinrows, clincols, clinvals = findnz(A)
+  return ADNLSModel(F, x0, nequ, clinrows, clincols, clinvals, lcon, ucon; kwargs...)
+end
+
+function ADNLSModel(
+  F,
+  x0::S,
+  nequ::Integer,
+  clinrows::Si,
+  clincols::Si,
+  clinvals::S,
+  c,
+  lcon::S,
+  ucon::S;
+  y0::S = fill!(similar(lcon), zero(eltype(S))),
+  linequ::AbstractVector{<:Integer} = Int[],
+  name::String = "Generic",
+  minimize::Bool = true,
+  kwargs...,
+) where {S,Si}
+  T = eltype(S)
+  nvar = length(x0)
+  ncon = length(lcon)
+  @lencheck ncon ucon y0
+
+  nlin = maximum(clinrows)
+  lin = 1:nlin
+  lin_nnzj = length(clinvals)
+  nln_nnzj = nvar * (ncon - nlin)
+  nnzj = lin_nnzj + nln_nnzj
+  @lencheck lin_nnzj clinrows clincols
+
+  meta = NLPModelMeta{T, S}(
+    nvar,
+    x0 = x0,
+    ncon = ncon,
+    y0 = y0,
+    lcon = lcon,
+    ucon = ucon,
+    nnzj = nnzj,
+    name = name,
+    lin = lin,
+    lin_nnzj = lin_nnzj,
+    nln_nnzj = nln_nnzj,
+    minimize = minimize,
+  )
+  nls_meta =
+    NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
+  adbackend = ADModelBackend(nvar, x -> sum(F(x) .^ 2), ncon; x0 = x0, kwargs...)
+  return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, clinrows, clincols, clinvals, c)
+end
+
+function ADNLSModel(F, x0::S, nequ::Integer, A::AbstractSparseMatrix{Tv,Ti}, c, lcon::S, ucon::S; kwargs...) where {S,Tv,Ti}
+  clinrows, clincols, clinvals = findnz(A)
+  return ADNLSModel(F, x0, nequ, clinrows, clincols, clinvals, c, lcon, ucon; kwargs...)
+end
+
+function ADNLSModel(F, x0::S, nequ::Integer, lvar::S, uvar::S, clinrows::Si, clincols::Si, clinvals::S, lcon::S, ucon::S; kwargs...,) where {S,Si}
+  T = eltype(S)
+  return ADNLSModel(F, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, x -> T[], lcon, ucon; kwargs...)
+end
+
+function ADNLSModel(F, x0::S, nequ::Integer, lvar::S, uvar::S, A::AbstractSparseMatrix{Tv,Ti}, lcon::S, ucon::S; kwargs...,) where {S, Tv,Ti}
+  clinrows, clincols, clinvals = findnz(A)
+  return ADNLSModel(F, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, lcon, ucon; kwargs...)
 end
 
 function ADNLSModel(
@@ -173,7 +259,6 @@ function ADNLSModel(
   lcon::S,
   ucon::S;
   y0::S = fill!(similar(lcon), zero(eltype(S))),
-  lin::AbstractVector{<:Integer} = Int[],
   linequ::AbstractVector{<:Integer} = Int[],
   name::String = "Generic",
   minimize::Bool = true,
@@ -197,13 +282,70 @@ function ADNLSModel(
     ucon = ucon,
     nnzj = nnzj,
     name = name,
-    lin = lin,
     minimize = minimize,
   )
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
   adbackend = ADModelBackend(nvar, x -> sum(F(x) .^ 2), ncon; x0 = x0, kwargs...)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, c)
+end
+
+function ADNLSModel(
+  F,
+  x0::S,
+  nequ::Integer,
+  lvar::S,
+  uvar::S,
+  clinrows::Si,
+  clincols::Si,
+  clinvals::S,
+  c,
+  lcon::S,
+  ucon::S;
+  y0::S = fill!(similar(lcon), zero(eltype(S))),
+  linequ::AbstractVector{<:Integer} = Int[],
+  name::String = "Generic",
+  minimize::Bool = true,
+  kwargs...,
+) where {S,Si}
+  T = eltype(S)
+  nvar = length(x0)
+  ncon = length(lcon)
+  @lencheck nvar lvar uvar
+  @lencheck ncon ucon y0
+
+  nlin = maximum(clinrows)
+  lin = 1:nlin
+  lin_nnzj = length(clinvals)
+  nln_nnzj = nvar * (ncon - nlin)
+  nnzj = lin_nnzj + nln_nnzj
+  @lencheck lin_nnzj clinrows clincols
+
+  meta = NLPModelMeta{T, S}(
+    nvar,
+    x0 = x0,
+    lvar = lvar,
+    uvar = uvar,
+    ncon = ncon,
+    y0 = y0,
+    lcon = lcon,
+    ucon = ucon,
+    nnzj = nnzj,
+    name = name,
+    lin = lin,
+    lin_nnzj = lin_nnzj,
+    nln_nnzj = nln_nnzj,
+    minimize = minimize,
+  )
+  nls_meta =
+    NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
+  adbackend = ADModelBackend(nvar, x -> sum(F(x) .^ 2), ncon; x0 = x0, kwargs...)
+  return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, clinrows, clincols, clinvals, c)
+end
+
+function ADNLSModel(F, x0, nequ::Integer, lvar::S, uvar::S, A::AbstractSparseMatrix{Tv,Ti}, c, lcon::S, ucon::S; kwargs...) where {S,Tv,Ti}
+  clinrows, clincols, clinvals = findnz(A)
+  return ADNLSModel(F, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, c, lcon, ucon; kwargs...)
 end
 
 function NLPModels.residual!(nls::ADNLSModel, x::AbstractVector, Fx::AbstractVector)
