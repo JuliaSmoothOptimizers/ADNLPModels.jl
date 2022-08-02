@@ -35,6 +35,7 @@ where `nequ` is the size of the vector `F(x)`.
 The following keyword arguments are available to all constructors:
 
 - `linequ`: An array of indexes of the linear equations (default: `Int[]`)
+- `minimize`: A boolean indicating whether this is a minimization problem (default: true)
 - `name`: The name of the model (default: "Generic")
 
 The following keyword arguments are available to the constructors for constrained problems:

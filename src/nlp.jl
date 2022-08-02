@@ -28,6 +28,7 @@ The problem is defined as
 
 The following keyword arguments are available to all constructors:
 
+- `minimize`: A boolean indicating whether this is a minimization problem (default: true)
 - `name`: The name of the model (default: "Generic")
 
 The following keyword arguments are available to the constructors for constrained problems:
