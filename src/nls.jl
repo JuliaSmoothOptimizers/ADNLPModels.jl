@@ -46,7 +46,7 @@ The problem is defined as
                  ( c(x) )
           lvar ≤   x  ≤ uvar
 
-where `nequ` is the size of the vector `F(x)`.
+where `nequ` is the size of the vector `F(x)` and the linear constraints come first.
 
 The following keyword arguments are available to all constructors:
 
