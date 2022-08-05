@@ -1,147 +1,96 @@
-using Test, NLPModels, LinearAlgebra, LinearOperators, Printf, SparseArrays
+using ADNLPModels, LinearAlgebra, NLPModels, NLPModelsModifiers, NLPModelsTest, SparseArrays, Test
 
-problems = ["BROWNDEN", "HS5", "HS6", "HS10", "HS11", "HS14", "LINCON", "LINSV"]
-nls_problems = ["LLS", "MGH01", "NLSHS20", "NLSLC"]
-
-# Including problems so that they won't be multiply loaded
-for problem in problems ∪ ["GENROSE"] # GENROSE does not have a manual version, so it's separate
-  include("problems/$(lowercase(problem)).jl")
+for problem in NLPModelsTest.nlp_problems ∪ ["GENROSE"]
+  include("nlp/problems/$(lowercase(problem)).jl")
 end
-for problem in nls_problems
-  include("nls_problems/$(lowercase(problem)).jl")
+for problem in NLPModelsTest.nls_problems
+  include("nls/problems/$(lowercase(problem)).jl")
 end
-
-@info("Testing printing of nlp.meta")
-print(ADNLPModel(x->0, zeros(10), lvar=[-ones(5); -Inf*ones(5)],
-                 uvar=[ones(3); Inf*ones(4); collect(2:4)],
-                 name="Unconstrained example").meta)
-print(ADNLPModel(x->0, zeros(10), c=x->[0.0;0.0;0.0], lcon=[0.0;0.0;-Inf],
-                 ucon=[Inf;0.0;0.0], name="Constrained example").meta)
-
-# A problem with zero variables doesn't make sense.
-@test_throws(ErrorException, NLPModelMeta(0))
-
-# Default methods should throw NotImplementedError.
-mutable struct DummyModel <: AbstractNLPModel
-  meta :: NLPModelMeta
-end
-model = DummyModel(NLPModelMeta(1))
-@test_throws(NotImplementedError, lagscale(model, 1.0))
-for meth in [:obj, :varscale, :conscale]
-  @eval @test_throws(NotImplementedError, $meth(model, [0.0]))
-end
-for meth in [:jac_structure!, :hess_structure!]
-  @eval @test_throws(NotImplementedError, $meth(model, [0], [1]))
-end
-for meth in [:grad!, :cons!, :jac_coord!]
-  @eval @test_throws(NotImplementedError, $meth(model, [0.0], [1.0]))
-end
-for meth in [:jth_con, :jth_congrad, :jth_sparse_congrad]
-  @eval @test_throws(NotImplementedError, $meth(model, [0.0], 1))
-end
-@test_throws(NotImplementedError, jth_congrad!(model, [0.0], 1, [2.0]))
-for meth in [:jprod!, :jtprod!]
-  @eval @test_throws(NotImplementedError, $meth(model, [0.0], [1.0], [2.0]))
-end
-@test_throws(NotImplementedError, jth_hprod(model, [0.0], [1.0], 2))
-@test_throws(NotImplementedError, jth_hprod!(model, [0.0], [1.0], 2, [3.0]))
-for meth in [:ghjvprod!]
-  @eval @test_throws(NotImplementedError, $meth(model, [0.0], [1.0], [2.0], [3.0]))
-end
-@assert isa(hess_op(model, [0.]), LinearOperator)
-@assert isa(jac_op(model, [0.]), LinearOperator)
-
-# ADNLPModel with no functions
-model = ADNLPModel(x->dot(x,x), zeros(2), name="square")
-@assert model.meta.name == "square"
-
-model = genrose_autodiff()
-for counter in fieldnames(typeof(model.counters))
-  @eval @assert $counter(model) == 0
+for problem in setdiff(NLPModelsTest.nlp_problems)
+  include("radnlp/problems/$(lowercase(problem)).jl")
 end
 
-obj(model, model.meta.x0)
-@assert neval_obj(model) == 1
+#=
+include("nlp/basic.jl")
+include("nls/basic.jl")
+include("nlp/nlpmodelstest.jl")
+include("nls/nlpmodelstest.jl")
+=#
+include("radnlp/basic.jl") #Doesn't work
+include("radnlp/nlpmodelstest.jl") #Partially work
 
-reset!(model)
-@assert neval_obj(model) == 0
+#=
+#List of problems used in extansive tests
+list_problems = ["arglina", "arglinb", "arglinc", "arwhead", "bdqrtic", "beale", "broydn7d",
+             "brybnd", "chainwoo", "chnrosnb", "cosine", "cragglvy", "dixon3dq", "dqdrtic",
+             "dqrtic", "edensch", "eg2", "engval1", "errinros", "extrosnb", "fletcbv2",
+             "fletcbv3", "fletchcr", "freuroth", "genhumps", "genrose", "genrose_nash",
+             "indef", "liarwhd", "morebv", "ncb20", "ncb20b", "noncvxu2", "noncvxun",
+             "nondia", "nondquar", "nzf1", "penalty2", "penalty3", "powellsg", "power",
+             "quartc", "sbrybnd", "schmvett", "scosine", "sparsine", "sparsqur", "srosenbr",
+             "sinquad", "tointgss", "tquartic", "tridia", "vardim", "woods"]
+for pb in list_problems
+    include("problems/$(lowercase(pb)).jl")
+end
 
-@test_throws(NotImplementedError, jth_con(model, model.meta.x0, 1))
+#=
+# List of problems whose symbolic hessian fails:
+# cf. issue posted on Symbolics.jl: https://github.com/JuliaSymbolics/Symbolics.jl/issues/108
+"brownden", "arwhead", "bdqrtic", "beale", "broydn7d", "brybnd", "cragglvy", "eg2", "freuroth", "genhumps"
+"indef", "ncb20", "ncb20b", "noncvxun", "nondquar", "nzf1", "penalty2", "penalty3","powellsg", "power",
+"sbrybnd", "schmvett", "sparsine", "sparsqur", "sinquad", "tquartic", "vardim"
+works but super slow:
+"arglinb", "arglinc"
+=#
 
-include("test_tools.jl")
+for problem in list_problems
+  @testset "Checking NLPModelsTest tests on problem $problem" begin
+    nlp_ad = eval(Meta.parse(lowercase(problem) * "_autodiff"))()
+    nlp_rad = eval(Meta.parse(lowercase(problem) * "_radnlp"))()
+    nlp_man = eval(Meta.parse(problem))()
+    
+    show(IOBuffer(), nlp_rad)
+    
+    nlps = [nlp_ad, nlp_man, nlp_rad]
+    @testset "Check Consistency" begin
+      #consistent_nlps(nlps)
+    end
+    @testset "Check dimensions" begin
+      check_nlp_dimensions(nlp_rad)
+    end
+    @testset "Check multiple precision" begin
+      @info "TODOs"
+      #multiple_precision_nlp(nlp_ad)
+    end
+    @testset "Check view subarray" begin
+      @info "TODOs"
+      #view_subarray_nlp(nlp_ad)
+    end
+    @testset "Check coordinate memory" begin
+      @info "TODOs"
+      #coord_memory_nlp(nlp_ad)
+    end
 
-include("test_slack_model.jl")
-include("test_qn_model.jl")
-
-@info("For tests to pass, all models must have been written identically.\n")
-@info("Constraints, if any, must have been declared in the same order.\n")
-
-include("multiple-precision.jl")
-include("check-dimensions.jl")
-include("consistency.jl")
-for problem in problems
-  @info "Checking consistency of problem $problem"
-  nlp_ad = eval(Meta.parse(lowercase(problem) * "_autodiff"))()
-  nlp_man = eval(Meta.parse(problem))()
-
-  nlps = [nlp_ad, nlp_man]
-  for nlp in nlps
-    show(nlp)
-  end
-
-  consistent_nlps(nlps)
-  @info "  Consistency checks ✓"
-
-  for nlp in nlps ∪ SlackModel.(nlps)
-    @info "  Checking that wrong input dimensions throw errors in $(nlp.meta.name)"
-    check_nlp_dimensions(nlp)
-  end
-
-  for nlp in nlps ∪ SlackModel.(nlps)
-    @info "  Checking multiple precision support by $(nlp.meta.name)"
-    multiple_precision(nlp)
+    @testset "Extra consistency" begin
+      pb_radnlp = eval(Meta.parse("$(lowercase(problem))_radnlp()"))
+      pb_adnlp = eval(Meta.parse("$(lowercase(problem))_autodiff()"))
+    
+      @test pb_radnlp.meta.nvar == pb_adnlp.meta.nvar
+    
+      x = rand(pb_radnlp.meta.nvar)
+      @test obj(pb_radnlp, x) ≈ obj(pb_adnlp, x)
+      @test grad(pb_radnlp, x) ≈ grad(pb_adnlp, x)
+      @test hess(pb_radnlp, x) ≈ hess(pb_adnlp, x)
+    
+      v = rand(pb_radnlp.meta.nvar)
+      #@test hprod(pb_radnlp, x, v) ≈ hprod(pb_adnlp, x, v)
+    
+      @test pb_radnlp.meta.ncon == pb_adnlp.meta.ncon
+      if pb_radnlp.meta.ncon > 0
+        @test cons(pb_radnlp, x) ≈ cons(pb_adnlp, x)
+        @test jac(pb_radnlp, x)  ≈ jac(pb_adnlp, x)
+      end
+    end
   end
 end
-
-include("test_autodiff_model.jl")
-include("test_nlsmodels.jl")
-include("nls_consistency.jl")
-for problem in nls_problems
-  @info "Checking consistency of NLS problem $problem"
-  nls_ad = eval(Meta.parse(lowercase(problem) * "_autodiff"))()
-  nls_man = eval(Meta.parse(problem))()
-
-  nlss = [nls_ad, nls_man]
-  spc = lowercase(problem) * "_special"
-  if isdefined(Main, Symbol(spc))
-    push!(nlss, eval(Meta.parse(spc))())
-  end
-  for nls in nlss
-    show(nls)
-  end
-
-  consistent_nlss(nlss)
-  @info "  Consistency checks ✓"
-
-  for nls in nlss ∪ SlackNLSModel.(nlss) ∪ FeasibilityFormNLS.(nlss)
-    @info "  Checking that wrong input dimensions throw errors in $(nls.meta.name)"
-    check_nls_dimensions(nls)
-    check_nlp_dimensions(nls, exclude_hess=true)
-  end
-
-  # LLSModel returns the internal A for jac, hence it doesn't respect type input
-  idx = findall(typeof.(nlss) .== LLSModel)
-  if length(idx) > 0
-    deleteat!(nlss, idx)
-  end
-
-  for nls in nlss ∪ SlackNLSModel.(nlss) ∪ FeasibilityFormNLS.(nlss)
-    @info "  Checking multiple precision support by $(nls.meta.name)"
-    multiple_precision(nls)
-  end
-end
-include("test_feasibility_form_nls.jl")
-include("test_view_subarray.jl")
-test_view_subarrays()
-include("test_memory_of_coord.jl")
-test_memory_of_coord()
+=#

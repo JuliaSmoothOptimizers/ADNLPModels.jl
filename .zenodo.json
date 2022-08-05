@@ -1,6 +1,6 @@
 {
-  "description": "Nonlinear Optimization Models for Julia",
-  "title": "NLPModels.jl",
+  "description": "Automatic Differentiation models implementing the NLPModels API",
+  "title": "ADNLPModels.jl",
   "upload_type": "software",
   "creators": [
     {
@@ -16,7 +16,7 @@
   "related_identifiers": [
     {
       "scheme": "url",
-      "identifier": "https://github.com/JuliaSmoothOptimizers/NLPModels.jl/releases/latest",
+      "identifier": "https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl/releases/latest",
       "relation": "isSupplementTo"
     }
   ],

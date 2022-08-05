@@ -1,114 +1,55 @@
-# NLPModels
+# ADNLPModels
 
-This package provides general guidelines to represent optimization problems in Julia and a standardized API to evaluate the functions and their derivatives.
-The main objective is to be able to rely on that API when designing optimization solvers in Julia.
+This package provides a very simple model implement the [NLPModels](https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl) API.
+It uses [`ForwardDiff`](https://github.com/JuliaDiff/ForwardDiff.jl) to compute the derivatives, which produces dense matrices, so it isn't very efficient for larger problems.
 
-Cite as
+## How to Cite
 
-    Abel Soares Siqueira, & Dominique Orban. (2019, February 6). NLPModels.jl. Zenodo.
-    http://doi.org/10.5281/zenodo.2558627
+If you use ADNLPModels.jl in your work, please cite using the format given in [CITATION.bib](https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl/blob/master/CITATION.bib).
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2558627.svg)](https://doi.org/10.5281/zenodo.2558627)
-[![GitHub release](https://img.shields.io/github/release/JuliaSmoothOptimizers/NLPModels.jl.svg)](https://github.com/JuliaSmoothOptimizers/NLPModels.jl/releases/latest)
-[![](https://img.shields.io/badge/docs-stable-3f51b5.svg)](https://JuliaSmoothOptimizers.github.io/NLPModels.jl/stable)
-[![](https://img.shields.io/badge/docs-latest-3f51b5.svg)](https://JuliaSmoothOptimizers.github.io/NLPModels.jl/latest)
-[![Master Build Status](https://img.shields.io/travis/JuliaSmoothOptimizers/NLPModels.jl?logo=travis)](https://travis-ci.org/JuliaSmoothOptimizers/NLPModels.jl)
-[![Master Build status](https://ci.appveyor.com/api/projects/status/l1rs9ajxkyc0cer9/branch/master?svg=true)](https://ci.appveyor.com/project/dpo/nlpmodels-jl/branch/master)
-[![Cirrus CI - Base Branch Build Status](https://img.shields.io/cirrus/github/JuliaSmoothOptimizers/NLPModels.jl?logo=Cirrus%20CI)](https://cirrus-ci.com/github/JuliaSmoothOptimizers/NLPModels.jl)
-[![Master Coverage Status](https://coveralls.io/repos/JuliaSmoothOptimizers/NLPModels.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/JuliaSmoothOptimizers/NLPModels.jl?branch=master)
+[![DOI](https://zenodo.org/badge/DOI/---.svg)](https://doi.org/---)
+[![GitHub release](https://img.shields.io/github/release/JuliaSmoothOptimizers/ADNLPModels.jl.svg)](https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl/releases/latest)
+[![](https://img.shields.io/badge/docs-stable-3f51b5.svg)](https://JuliaSmoothOptimizers.github.io/ADNLPModels.jl/stable)
+[![](https://img.shields.io/badge/docs-latest-3f51b5.svg)](https://JuliaSmoothOptimizers.github.io/ADNLPModels.jl/dev)
+[![codecov](https://codecov.io/gh/JuliaSmoothOptimizers/ADNLPModels.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaSmoothOptimizers/ADNLPModels.jl)
 
-## Optimization Problems
-
-Optimization problems are represented by an instance of (a subtype of) `AbstractNLPModel`.
-Such instances are composed of
-* an instance of `NLPModelMeta`, which provides information about the problem, including the number of variables, constraints, bounds on the variables, etc.
-* other data specific to the provenance of the problem.
-
-See the
-[documentation](https://JuliaSmoothOptimizers.github.io/NLPModels.jl/latest) for
-details on the models, a tutorial and the API.
+![CI](https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl/workflows/CI/badge.svg?branch=master)
+[![Cirrus CI - Base Branch Build Status](https://img.shields.io/cirrus/github/JuliaSmoothOptimizers/ADNLPModels.jl?logo=Cirrus%20CI)](https://cirrus-ci.com/github/JuliaSmoothOptimizers/ADNLPModels.jl)
 
 ## Installation
 
 ```julia
-pkg> add NLPModels
+pkg> add ADNLPModels
 ```
 
-## External models
+## TODO - sparse part
+- generic problems for ADNLPModel, RADNLPModel, etc...
 
-In addition to the models available in this package, there are some external models
-for specific needs:
+### Tests
+- get tests from NLPModels ✓
+- new test problems with funny structure ✓
+- pick matrix in a depot and generate quadratic problems
+### Benchmark
+- improve the output of benchmark function ✓
+- improve the benchmark or creation of models so that we can compare intra-RADNLP ✓
+- compare reversediff to compute the grad! -> add pre-allocations ✓
+- and zygote (bug?)
+### Code (1st goal is for unconstrained)
+- improve constructors ✓
+- compute nnzh, hess_structure! and hess_coord!
+- grad! ✓
+- hprod!
+- constructors for bound-constrained
+- Uncomment consistency.jl and runtests.jl lines as we get a first implementation.
+### Code (2nt goal is constrained)
+- compute nnzh and nnzj
+- cons!, jac_structure!, jac_coord!, jprod, jtprod, jac_op
+- hess_coord!, hprod!
 
-- [AmplNLReader.jl](https://github.com/JuliaSmoothOptimizers/AmplNLReader.jl): Interface
-  for [AMPL](http://www.ampl.com/);
-- [CUTEst.jl](https://github.com/JuliaSmoothOptimizers/CUTEst.jl): Interface for CUTEst
-  problems;
-- [NLPModelsJuMP.jl](https://github.com/JuliaSmoothOptimizers/NLPModelsJuMP.jl):
-  Converts MathOptInterface/JuMP models to and from NLPModels.
+## Debate
+- Have different models or one with options ?
+  The advantage of having options is the possibility to easily change the behavior
+  of an NLPModels during the execution of an algorithms.
 
-## Main Methods
-
-If `model` is an instance of an appropriate subtype of `AbstractNLPModel`, the following methods are normally defined:
-
-* `obj(model, x)`: evaluate *f(x)*, the objective at `x`
-* `cons(model x)`: evaluate *c(x)*, the vector of general constraints at `x`
-
-The following methods are defined if first-order derivatives are available:
-
-* `grad(model, x)`: evaluate *∇f(x)*, the objective gradient at `x`
-* `jac(model, x)`: evaluate *J(x)*, the Jacobian of *c* at `x` as a sparse matrix
-
-If Jacobian-vector products can be computed more efficiently than by evaluating the Jacobian explicitly, the following methods may be implemented:
-
-* `jprod(model, x, v)`: evaluate the result of the matrix-vector product *J(x)⋅v*
-* `jtprod(model, x, u)`: evaluate the result of the matrix-vector product *J(x)ᵀ⋅u*
-
-The following method is defined if second-order derivatives are available:
-
-* `hess(model, x, y)`: evaluate *∇²L(x,y)*, the Hessian of the Lagrangian at `x` and `y`
-
-If Hessian-vector products can be computed more efficiently than by evaluating the Hessian explicitly, the following method may be implemented:
-
-* `hprod(model, x, v, y)`: evaluate the result of the matrix-vector product *∇²L(x,y)⋅v*
-
-Several in-place variants of the methods above may also be implemented.
-
-The complete list of methods that an interface may implement can be found in the documentation.
-
-## Attributes
-
-`NLPModelMeta` objects have the following attributes:
-
-Attribute   | Type               | Notes
-------------|--------------------|------------------------------------
-`nvar`      | `Int             ` | number of variables
-`x0  `      | `Array{Float64,1}` | initial guess
-`lvar`      | `Array{Float64,1}` | vector of lower bounds
-`uvar`      | `Array{Float64,1}` | vector of upper bounds
-`ifix`      | `Array{Int64,1}`   | indices of fixed variables
-`ilow`      | `Array{Int64,1}`   | indices of variables with lower bound only
-`iupp`      | `Array{Int64,1}`   | indices of variables with upper bound only
-`irng`      | `Array{Int64,1}`   | indices of variables with lower and upper bound (range)
-`ifree`     | `Array{Int64,1}`   | indices of free variables
-`iinf`      | `Array{Int64,1}`   | indices of visibly infeasible bounds
-`ncon`      | `Int             ` | total number of general constraints
-`nlin `     | `Int             ` | number of linear constraints
-`nnln`      | `Int             ` | number of nonlinear general constraints
-`nnet`      | `Int             ` | number of nonlinear network constraints
-`y0  `      | `Array{Float64,1}` | initial Lagrange multipliers
-`lcon`      | `Array{Float64,1}` | vector of constraint lower bounds
-`ucon`      | `Array{Float64,1}` | vector of constraint upper bounds
-`lin `      | `Range1{Int64}   ` | indices of linear constraints
-`nln`       | `Range1{Int64}   ` | indices of nonlinear constraints (not network)
-`nnet`      | `Range1{Int64}   ` | indices of nonlinear network constraints
-`jfix`      | `Array{Int64,1}`   | indices of equality constraints
-`jlow`      | `Array{Int64,1}`   | indices of constraints of the form c(x) ≥ cl
-`jupp`      | `Array{Int64,1}`   | indices of constraints of the form c(x) ≤ cu
-`jrng`      | `Array{Int64,1}`   | indices of constraints of the form cl ≤ c(x) ≤ cu
-`jfree`     | `Array{Int64,1}`   | indices of "free" constraints (there shouldn't be any)
-`jinf`      | `Array{Int64,1}`   | indices of the visibly infeasible constraints
-`nnzj`      | `Int             ` | number of nonzeros in the sparse Jacobian
-`nnzh`      | `Int             ` | number of nonzeros in the sparse Hessian
-`minimize`  | `Bool            ` | true if `optimize == minimize`
-`islp`      | `Bool            ` | true if the problem is a linear program
-`name`      | `ASCIIString     ` | problem name
+  However, it should be slower ?
+- Is it an AbstractNLPModel or an AbstractADNLPModel?

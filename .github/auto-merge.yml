@@ -1,5 +1,12 @@
-minApprovals:
-  OWNER: 2
+rules:
+- requiredAuthorRole: MEMBER
+  minApprovals:
+    MEMBER: 1
+- minApprovals:
+    MEMBER: 2
+
 reportStatus: true
 deleteBranchAfterMerge: true
 mergeMethod: rebase
+
+# Test 2
