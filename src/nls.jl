@@ -16,7 +16,14 @@ mutable struct ADNLSModel{T, S, Si} <: AbstractNLSModel{T, S}
   c
 end
 
-ADNLSModel(meta::NLPModelMeta{T, S}, nls_meta::NLSMeta{T, S}, counters::NLSCounters, adbackend::ADModelBackend, F, c) where {T, S} = ADNLSModel(meta, nls_meta, counters, adbackend, F, Int[], Int[], T[], c)
+ADNLSModel(
+  meta::NLPModelMeta{T, S},
+  nls_meta::NLSMeta{T, S},
+  counters::NLSCounters,
+  adbackend::ADModelBackend,
+  F,
+  c,
+) where {T, S} = ADNLSModel(meta, nls_meta, counters, adbackend, F, Int[], Int[], T[], c)
 
 ADNLPModels.show_header(io::IO, nls::ADNLSModel) = println(
   io,
@@ -176,12 +183,30 @@ function ADNLSModel(
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, c)
 end
 
-function ADNLSModel(F, x0::S, nequ::Integer, clinrows::Si, clincols::Si, clinvals::S, lcon::S, ucon::S; kwargs...,) where {S,Si}
+function ADNLSModel(
+  F,
+  x0::S,
+  nequ::Integer,
+  clinrows::Si,
+  clincols::Si,
+  clinvals::S,
+  lcon::S,
+  ucon::S;
+  kwargs...,
+) where {S, Si}
   T = eltype(S)
   return ADNLSModel(F, x0, nequ, clinrows, clincols, clinvals, x -> T[], lcon, ucon; kwargs...)
 end
 
-function ADNLSModel(F, x0::S, nequ::Integer, A::AbstractSparseMatrix{Tv,Ti}, lcon::S, ucon::S; kwargs...,) where {S, Tv,Ti}
+function ADNLSModel(
+  F,
+  x0::S,
+  nequ::Integer,
+  A::AbstractSparseMatrix{Tv, Ti},
+  lcon::S,
+  ucon::S;
+  kwargs...,
+) where {S, Tv, Ti}
   clinrows, clincols, clinvals = findnz(A)
   return ADNLSModel(F, x0, nequ, clinrows, clincols, clinvals, lcon, ucon; kwargs...)
 end
@@ -201,7 +226,7 @@ function ADNLSModel(
   name::String = "Generic",
   minimize::Bool = true,
   kwargs...,
-) where {S,Si}
+) where {S, Si}
   T = eltype(S)
   nvar = length(x0)
   ncon = length(lcon)
@@ -234,17 +259,61 @@ function ADNLSModel(
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, clinrows, clincols, clinvals, c)
 end
 
-function ADNLSModel(F, x0::S, nequ::Integer, A::AbstractSparseMatrix{Tv,Ti}, c, lcon::S, ucon::S; kwargs...) where {S,Tv,Ti}
+function ADNLSModel(
+  F,
+  x0::S,
+  nequ::Integer,
+  A::AbstractSparseMatrix{Tv, Ti},
+  c,
+  lcon::S,
+  ucon::S;
+  kwargs...,
+) where {S, Tv, Ti}
   clinrows, clincols, clinvals = findnz(A)
   return ADNLSModel(F, x0, nequ, clinrows, clincols, clinvals, c, lcon, ucon; kwargs...)
 end
 
-function ADNLSModel(F, x0::S, nequ::Integer, lvar::S, uvar::S, clinrows::Si, clincols::Si, clinvals::S, lcon::S, ucon::S; kwargs...,) where {S,Si}
+function ADNLSModel(
+  F,
+  x0::S,
+  nequ::Integer,
+  lvar::S,
+  uvar::S,
+  clinrows::Si,
+  clincols::Si,
+  clinvals::S,
+  lcon::S,
+  ucon::S;
+  kwargs...,
+) where {S, Si}
   T = eltype(S)
-  return ADNLSModel(F, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, x -> T[], lcon, ucon; kwargs...)
+  return ADNLSModel(
+    F,
+    x0,
+    nequ,
+    lvar,
+    uvar,
+    clinrows,
+    clincols,
+    clinvals,
+    x -> T[],
+    lcon,
+    ucon;
+    kwargs...,
+  )
 end
 
-function ADNLSModel(F, x0::S, nequ::Integer, lvar::S, uvar::S, A::AbstractSparseMatrix{Tv,Ti}, lcon::S, ucon::S; kwargs...,) where {S, Tv,Ti}
+function ADNLSModel(
+  F,
+  x0::S,
+  nequ::Integer,
+  lvar::S,
+  uvar::S,
+  A::AbstractSparseMatrix{Tv, Ti},
+  lcon::S,
+  ucon::S;
+  kwargs...,
+) where {S, Tv, Ti}
   clinrows, clincols, clinvals = findnz(A)
   return ADNLSModel(F, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, lcon, ucon; kwargs...)
 end
@@ -307,7 +376,7 @@ function ADNLSModel(
   name::String = "Generic",
   minimize::Bool = true,
   kwargs...,
-) where {S,Si}
+) where {S, Si}
   T = eltype(S)
   nvar = length(x0)
   ncon = length(lcon)
@@ -343,7 +412,18 @@ function ADNLSModel(
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, clinrows, clincols, clinvals, c)
 end
 
-function ADNLSModel(F, x0, nequ::Integer, lvar::S, uvar::S, A::AbstractSparseMatrix{Tv,Ti}, c, lcon::S, ucon::S; kwargs...) where {S,Tv,Ti}
+function ADNLSModel(
+  F,
+  x0,
+  nequ::Integer,
+  lvar::S,
+  uvar::S,
+  A::AbstractSparseMatrix{Tv, Ti},
+  c,
+  lcon::S,
+  ucon::S;
+  kwargs...,
+) where {S, Tv, Ti}
   clinrows, clincols, clinvals = findnz(A)
   return ADNLSModel(F, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, c, lcon, ucon; kwargs...)
 end
@@ -522,7 +602,12 @@ function NLPModels.jac_nln_coord!(nls::ADNLSModel, x::AbstractVector, vals::Abst
   return jac_coord!(nls.adbackend.jacobian_backend, nls, x, vals)
 end
 
-function NLPModels.jprod_lin!(nls::ADNLSModel, x::AbstractVector, v::AbstractVector, Jv::AbstractVector{T}) where {T}
+function NLPModels.jprod_lin!(
+  nls::ADNLSModel,
+  x::AbstractVector,
+  v::AbstractVector,
+  Jv::AbstractVector{T},
+) where {T}
   @lencheck nls.meta.nvar x v
   @lencheck nls.meta.nlin Jv
   increment!(nls, :neval_jprod_lin)
@@ -530,7 +615,12 @@ function NLPModels.jprod_lin!(nls::ADNLSModel, x::AbstractVector, v::AbstractVec
   return Jv
 end
 
-function NLPModels.jprod_nln!(nls::ADNLSModel, x::AbstractVector, v::AbstractVector, Jv::AbstractVector)
+function NLPModels.jprod_nln!(
+  nls::ADNLSModel,
+  x::AbstractVector,
+  v::AbstractVector,
+  Jv::AbstractVector,
+)
   @lencheck nls.meta.nvar x v
   @lencheck nls.meta.nnln Jv
   increment!(nls, :neval_jprod_nln)
@@ -553,7 +643,7 @@ function NLPModels.jtprod!(
   else
     fill!(Jtv, zero(T))
   end
-  for i=1:nls.meta.lin_nnzj
+  for i = 1:(nls.meta.lin_nnzj)
     Jtv[nls.clincols[i]] += nls.clinvals[i] * v[nls.clinrows[i]]
   end
   return Jtv
@@ -602,7 +692,9 @@ function NLPModels.hess(
   @lencheck nls.meta.nvar x
   @lencheck nls.meta.ncon y
   increment!(nls, :neval_hess)
-  ℓ(x) = obj_weight * sum(nls.F(x) .^ 2) / 2 + dot(view(y,(nls.meta.nlin + 1):nls.meta.ncon), nls.c(x))
+  ℓ(x) =
+    obj_weight * sum(nls.F(x) .^ 2) / 2 +
+    dot(view(y, (nls.meta.nlin + 1):(nls.meta.ncon)), nls.c(x))
   Hx = hessian(nls.adbackend.hessian_backend, ℓ, x)
   return Symmetric(Hx, :L)
 end
@@ -640,7 +732,9 @@ function NLPModels.hess_coord!(
   @lencheck nls.meta.ncon y
   @lencheck nls.meta.nnzh vals
   increment!(nls, :neval_hess)
-  ℓ(x) = obj_weight * sum(nls.F(x) .^ 2) / 2 + dot(view(y,(nls.meta.nlin + 1):nls.meta.ncon), nls.c(x))
+  ℓ(x) =
+    obj_weight * sum(nls.F(x) .^ 2) / 2 +
+    dot(view(y, (nls.meta.nlin + 1):(nls.meta.ncon)), nls.c(x))
   return hess_coord!(nls.adbackend.hessian_backend, nls, x, ℓ, vals)
 end
 
@@ -669,7 +763,9 @@ function NLPModels.hprod!(
   @lencheck nls.meta.nvar x v Hv
   @lencheck nls.meta.ncon y
   increment!(nls, :neval_hprod)
-  ℓ(x) = obj_weight * sum(nls.F(x) .^ 2) / 2 + dot(view(y,(nls.meta.nlin + 1):nls.meta.ncon), nls.c(x))
+  ℓ(x) =
+    obj_weight * sum(nls.F(x) .^ 2) / 2 +
+    dot(view(y, (nls.meta.nlin + 1):(nls.meta.ncon)), nls.c(x))
   Hv .= Hvprod(nls.adbackend.hprod_backend, ℓ, x, v)
   return Hv
 end
@@ -720,7 +816,8 @@ function NLPModels.ghjvprod!(
   @lencheck nls.meta.nvar x g v
   @lencheck nls.meta.ncon gHv
   increment!(nls, :neval_hprod)
-  @views gHv[1:nls.meta.nlin] .= zero(T)
-  @views gHv[(nls.meta.nlin + 1):end] .= directional_second_derivative(nls.adbackend.ghjvprod_backend, nls.c, x, v, g)
+  @views gHv[1:(nls.meta.nlin)] .= zero(T)
+  @views gHv[(nls.meta.nlin + 1):end] .=
+    directional_second_derivative(nls.adbackend.ghjvprod_backend, nls.c, x, v, g)
   return gHv
 end

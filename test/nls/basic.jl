@@ -44,30 +44,310 @@ function autodiff_nls_test(name; kwargs...)
 
     clinrows, clincols, clinvals = ones(Int, 2), ones(Int, 2), ones(2)
     badclinrows, badclincols, badclinvals = ones(Int, 3), ones(Int, 3), ones(3)
-    @test_throws DimensionError ADNLSModel(F, x0, 3, clinrows, clincols, clinvals, badlcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLSModel(F, x0, 3, clinrows, clincols, clinvals, lcon, baducon; kwargs...)
-    @test_throws DimensionError ADNLSModel(F, x0, 3, badclinrows, clincols, clinvals, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLSModel(F, x0, 3, clinrows, badclincols, clinvals, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLSModel(F, x0, 3, clinrows, clincols, badclinvals, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLSModel(F, x0, 3, clinrows, clincols, clinvals, c, badlcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLSModel(F, x0, 3, clinrows, clincols, clinvals, c, lcon, baducon; kwargs...)
-    @test_throws DimensionError ADNLSModel(F, x0, 3, badclinrows, clincols, clinvals, c, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLSModel(F, x0, 3, clinrows, badclincols, clinvals, c, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLSModel(F, x0, 3, clinrows, clincols, badclinvals, c, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLSModel(F, x0, 3, badlvar, uvar, clinrows, clincols, clinvals, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLSModel(F, x0, 3, lvar, baduvar, clinrows, clincols, clinvals, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLSModel(F, x0, 3, lvar, uvar, clinrows, clincols, clinvals, badlcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLSModel(F, x0, 3, lvar, uvar, clinrows, clincols, clinvals, lcon, baducon; kwargs...)
-    @test_throws DimensionError ADNLSModel(F, x0, 3, lvar, uvar, badclinrows, clincols, clinvals, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLSModel(F, x0, 3, lvar, uvar, clinrows, badclincols, clinvals, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLSModel(F, x0, 3, lvar, uvar, clinrows, clincols, badclinvals, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLSModel(F, x0, 3, badlvar, uvar, clinrows, clincols, clinvals, c, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLSModel(F, x0, 3, lvar, baduvar, clinrows, clincols, clinvals, c, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLSModel(F, x0, 3, lvar, uvar, clinrows, clincols, clinvals, c, badlcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLSModel(F, x0, 3, lvar, uvar, clinrows, clincols, clinvals, c, lcon, baducon; kwargs...)
-    @test_throws DimensionError ADNLSModel(F, x0, 3, lvar, uvar, badclinrows, clincols, clinvals, c, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLSModel(F, x0, 3, lvar, uvar, clinrows, badclincols, clinvals, c, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLSModel(F, x0, 3, lvar, uvar, clinrows, clincols, badclinvals, c, lcon, ucon; kwargs...)
+    @test_throws DimensionError ADNLSModel(
+      F,
+      x0,
+      3,
+      clinrows,
+      clincols,
+      clinvals,
+      badlcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLSModel(
+      F,
+      x0,
+      3,
+      clinrows,
+      clincols,
+      clinvals,
+      lcon,
+      baducon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLSModel(
+      F,
+      x0,
+      3,
+      badclinrows,
+      clincols,
+      clinvals,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLSModel(
+      F,
+      x0,
+      3,
+      clinrows,
+      badclincols,
+      clinvals,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLSModel(
+      F,
+      x0,
+      3,
+      clinrows,
+      clincols,
+      badclinvals,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLSModel(
+      F,
+      x0,
+      3,
+      clinrows,
+      clincols,
+      clinvals,
+      c,
+      badlcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLSModel(
+      F,
+      x0,
+      3,
+      clinrows,
+      clincols,
+      clinvals,
+      c,
+      lcon,
+      baducon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLSModel(
+      F,
+      x0,
+      3,
+      badclinrows,
+      clincols,
+      clinvals,
+      c,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLSModel(
+      F,
+      x0,
+      3,
+      clinrows,
+      badclincols,
+      clinvals,
+      c,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLSModel(
+      F,
+      x0,
+      3,
+      clinrows,
+      clincols,
+      badclinvals,
+      c,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLSModel(
+      F,
+      x0,
+      3,
+      badlvar,
+      uvar,
+      clinrows,
+      clincols,
+      clinvals,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLSModel(
+      F,
+      x0,
+      3,
+      lvar,
+      baduvar,
+      clinrows,
+      clincols,
+      clinvals,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLSModel(
+      F,
+      x0,
+      3,
+      lvar,
+      uvar,
+      clinrows,
+      clincols,
+      clinvals,
+      badlcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLSModel(
+      F,
+      x0,
+      3,
+      lvar,
+      uvar,
+      clinrows,
+      clincols,
+      clinvals,
+      lcon,
+      baducon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLSModel(
+      F,
+      x0,
+      3,
+      lvar,
+      uvar,
+      badclinrows,
+      clincols,
+      clinvals,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLSModel(
+      F,
+      x0,
+      3,
+      lvar,
+      uvar,
+      clinrows,
+      badclincols,
+      clinvals,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLSModel(
+      F,
+      x0,
+      3,
+      lvar,
+      uvar,
+      clinrows,
+      clincols,
+      badclinvals,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLSModel(
+      F,
+      x0,
+      3,
+      badlvar,
+      uvar,
+      clinrows,
+      clincols,
+      clinvals,
+      c,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLSModel(
+      F,
+      x0,
+      3,
+      lvar,
+      baduvar,
+      clinrows,
+      clincols,
+      clinvals,
+      c,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLSModel(
+      F,
+      x0,
+      3,
+      lvar,
+      uvar,
+      clinrows,
+      clincols,
+      clinvals,
+      c,
+      badlcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLSModel(
+      F,
+      x0,
+      3,
+      lvar,
+      uvar,
+      clinrows,
+      clincols,
+      clinvals,
+      c,
+      lcon,
+      baducon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLSModel(
+      F,
+      x0,
+      3,
+      lvar,
+      uvar,
+      badclinrows,
+      clincols,
+      clinvals,
+      c,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLSModel(
+      F,
+      x0,
+      3,
+      lvar,
+      uvar,
+      clinrows,
+      badclincols,
+      clinvals,
+      c,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLSModel(
+      F,
+      x0,
+      3,
+      lvar,
+      uvar,
+      clinrows,
+      clincols,
+      badclinvals,
+      c,
+      lcon,
+      ucon;
+      kwargs...,
+    )
 
     A = sparse(clinrows, clincols, clinvals)
     nls = ADNLSModel(F, x0, 3, A, c, lcon, ucon)

@@ -10,5 +10,16 @@ function linsv_autodiff(::Type{T} = Float64; kwargs...) where {T}
   clincols = [1, 2, 2]
   clinvals = T[1, 1, 1]
 
-  return ADNLPModel(f, x0, clinrows, clincols, clinvals, lcon, ucon, name = "linsv_autodiff", lin = collect(1:2); kwargs...)
+  return ADNLPModel(
+    f,
+    x0,
+    clinrows,
+    clincols,
+    clinvals,
+    lcon,
+    ucon,
+    name = "linsv_autodiff",
+    lin = collect(1:2);
+    kwargs...,
+  )
 end

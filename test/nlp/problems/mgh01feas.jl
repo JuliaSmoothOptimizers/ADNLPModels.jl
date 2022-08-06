@@ -11,5 +11,16 @@ function mgh01feas_autodiff(::Type{T} = Float64; kwargs...) where {T}
   clincols = [1]
   clinvals = T[1]
 
-  return ADNLPModel(f, x0, clinrows, clincols, clinvals, c, lcon, ucon, name = "mgh01feas_autodiff"; kwargs...)
+  return ADNLPModel(
+    f,
+    x0,
+    clinrows,
+    clincols,
+    clinvals,
+    c,
+    lcon,
+    ucon,
+    name = "mgh01feas_autodiff";
+    kwargs...,
+  )
 end
