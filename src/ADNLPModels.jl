@@ -48,9 +48,8 @@ function set_adbackend!(nlp::Union{ADNLPModel, ADNLSModel}; kwargs...)
       end
     else
       getfield(nlp.adbackend, field)
-    end
-    )
-  end 
+    end)
+  end
   nlp.adbackend = ADModelBackend(args...)
   return nlp
 end

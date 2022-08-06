@@ -10,5 +10,16 @@ function lls_autodiff(::Type{T} = Float64; kwargs...) where {T}
   clincols = [1, 2]
   clinvals = T[1, 1]
 
-  return ADNLSModel(F, x0, 3, clinrows, clincols, clinvals, lcon, ucon, name = "lls_autodiff"; kwargs...)
+  return ADNLSModel(
+    F,
+    x0,
+    3,
+    clinrows,
+    clincols,
+    clinvals,
+    lcon,
+    ucon,
+    name = "lls_autodiff";
+    kwargs...,
+  )
 end

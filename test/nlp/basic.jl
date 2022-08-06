@@ -55,7 +55,7 @@ function test_autodiff_model(name; kwargs...)
   β = [ones(100) x] \ y
   @test abs(obj(nlp, β) - norm(y .- β[1] - β[2] * x)^2 / 2) < 1e-12
   @test norm(grad(nlp, β)) < 1e-12
-  
+
   test_getter_setter(nlp)
 
   @testset "Constructors for ADNLPModel with $name" begin
@@ -80,30 +80,286 @@ function test_autodiff_model(name; kwargs...)
 
     clinrows, clincols, clinvals = ones(Int, 2), ones(Int, 2), ones(2)
     badclinrows, badclincols, badclinvals = ones(Int, 3), ones(Int, 3), ones(3)
-    @test_throws DimensionError ADNLPModel(f, x0, clinrows, clincols, clinvals, badlcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLPModel(f, x0, clinrows, clincols, clinvals, lcon, baducon; kwargs...)
-    @test_throws DimensionError ADNLPModel(f, x0, badclinrows, clincols, clinvals, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLPModel(f, x0, clinrows, badclincols, clinvals, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLPModel(f, x0, clinrows, clincols, badclinvals, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLPModel(f, x0, clinrows, clincols, clinvals, c, badlcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLPModel(f, x0, clinrows, clincols, clinvals, c, lcon, baducon; kwargs...)
-    @test_throws DimensionError ADNLPModel(f, x0, badclinrows, clincols, clinvals, c, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLPModel(f, x0, clinrows, badclincols, clinvals, c, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLPModel(f, x0, clinrows, clincols, badclinvals, c, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLPModel(f, x0, badlvar, uvar, clinrows, clincols, clinvals, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLPModel(f, x0, lvar, baduvar, clinrows, clincols, clinvals, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLPModel(f, x0, lvar, uvar, clinrows, clincols, clinvals, badlcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLPModel(f, x0, lvar, uvar, clinrows, clincols, clinvals, lcon, baducon; kwargs...)
-    @test_throws DimensionError ADNLPModel(f, x0, lvar, uvar, badclinrows, clincols, clinvals, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLPModel(f, x0, lvar, uvar, clinrows, badclincols, clinvals, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLPModel(f, x0, lvar, uvar, clinrows, clincols, badclinvals, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLPModel(f, x0, badlvar, uvar, clinrows, clincols, clinvals, c, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLPModel(f, x0, lvar, baduvar, clinrows, clincols, clinvals, c, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLPModel(f, x0, lvar, uvar, clinrows, clincols, clinvals, c, badlcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLPModel(f, x0, lvar, uvar, clinrows, clincols, clinvals, c, lcon, baducon; kwargs...)
-    @test_throws DimensionError ADNLPModel(f, x0, lvar, uvar, badclinrows, clincols, clinvals, c, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLPModel(f, x0, lvar, uvar, clinrows, badclincols, clinvals, c, lcon, ucon; kwargs...)
-    @test_throws DimensionError ADNLPModel(f, x0, lvar, uvar, clinrows, clincols, badclinvals, c, lcon, ucon; kwargs...)
+    @test_throws DimensionError ADNLPModel(
+      f,
+      x0,
+      clinrows,
+      clincols,
+      clinvals,
+      badlcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLPModel(
+      f,
+      x0,
+      clinrows,
+      clincols,
+      clinvals,
+      lcon,
+      baducon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLPModel(
+      f,
+      x0,
+      badclinrows,
+      clincols,
+      clinvals,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLPModel(
+      f,
+      x0,
+      clinrows,
+      badclincols,
+      clinvals,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLPModel(
+      f,
+      x0,
+      clinrows,
+      clincols,
+      badclinvals,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLPModel(
+      f,
+      x0,
+      clinrows,
+      clincols,
+      clinvals,
+      c,
+      badlcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLPModel(
+      f,
+      x0,
+      clinrows,
+      clincols,
+      clinvals,
+      c,
+      lcon,
+      baducon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLPModel(
+      f,
+      x0,
+      badclinrows,
+      clincols,
+      clinvals,
+      c,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLPModel(
+      f,
+      x0,
+      clinrows,
+      badclincols,
+      clinvals,
+      c,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLPModel(
+      f,
+      x0,
+      clinrows,
+      clincols,
+      badclinvals,
+      c,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLPModel(
+      f,
+      x0,
+      badlvar,
+      uvar,
+      clinrows,
+      clincols,
+      clinvals,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLPModel(
+      f,
+      x0,
+      lvar,
+      baduvar,
+      clinrows,
+      clincols,
+      clinvals,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLPModel(
+      f,
+      x0,
+      lvar,
+      uvar,
+      clinrows,
+      clincols,
+      clinvals,
+      badlcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLPModel(
+      f,
+      x0,
+      lvar,
+      uvar,
+      clinrows,
+      clincols,
+      clinvals,
+      lcon,
+      baducon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLPModel(
+      f,
+      x0,
+      lvar,
+      uvar,
+      badclinrows,
+      clincols,
+      clinvals,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLPModel(
+      f,
+      x0,
+      lvar,
+      uvar,
+      clinrows,
+      badclincols,
+      clinvals,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLPModel(
+      f,
+      x0,
+      lvar,
+      uvar,
+      clinrows,
+      clincols,
+      badclinvals,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLPModel(
+      f,
+      x0,
+      badlvar,
+      uvar,
+      clinrows,
+      clincols,
+      clinvals,
+      c,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLPModel(
+      f,
+      x0,
+      lvar,
+      baduvar,
+      clinrows,
+      clincols,
+      clinvals,
+      c,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLPModel(
+      f,
+      x0,
+      lvar,
+      uvar,
+      clinrows,
+      clincols,
+      clinvals,
+      c,
+      badlcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLPModel(
+      f,
+      x0,
+      lvar,
+      uvar,
+      clinrows,
+      clincols,
+      clinvals,
+      c,
+      lcon,
+      baducon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLPModel(
+      f,
+      x0,
+      lvar,
+      uvar,
+      badclinrows,
+      clincols,
+      clinvals,
+      c,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLPModel(
+      f,
+      x0,
+      lvar,
+      uvar,
+      clinrows,
+      badclincols,
+      clinvals,
+      c,
+      lcon,
+      ucon;
+      kwargs...,
+    )
+    @test_throws DimensionError ADNLPModel(
+      f,
+      x0,
+      lvar,
+      uvar,
+      clinrows,
+      clincols,
+      badclinvals,
+      c,
+      lcon,
+      ucon;
+      kwargs...,
+    )
 
     A = sparse(clinrows, clincols, clinvals)
     nlp = ADNLPModel(f, x0, A, c, lcon, ucon)

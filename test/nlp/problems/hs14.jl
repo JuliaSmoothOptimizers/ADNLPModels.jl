@@ -11,5 +11,16 @@ function hs14_autodiff(::Type{T} = Float64; kwargs...) where {T}
   clincols = [1, 2]
   clinvals = T[1, -2]
 
-  return ADNLPModel(f, x0, clinrows, clincols, clinvals, c, lcon, ucon, name = "hs14_autodiff"; kwargs...)
+  return ADNLPModel(
+    f,
+    x0,
+    clinrows,
+    clincols,
+    clinvals,
+    c,
+    lcon,
+    ucon,
+    name = "hs14_autodiff";
+    kwargs...,
+  )
 end
