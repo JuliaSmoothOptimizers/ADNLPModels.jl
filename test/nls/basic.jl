@@ -4,6 +4,8 @@ function autodiff_nls_test(name; kwargs...)
     nls = ADNLSModel(F, zeros(2), 2; kwargs...)
 
     @test isapprox(residual(nls, ones(2)), zeros(2), rtol = 1e-8)
+
+    test_getter_setter(nls)
   end
 
   @testset "Constructors for ADNLSModel" begin

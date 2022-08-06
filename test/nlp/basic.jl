@@ -55,6 +55,8 @@ function test_autodiff_model(name; kwargs...)
   β = [ones(100) x] \ y
   @test abs(obj(nlp, β) - norm(y .- β[1] - β[2] * x)^2 / 2) < 1e-12
   @test norm(grad(nlp, β)) < 1e-12
+  
+  test_getter_setter(nlp)
 
   @testset "Constructors for ADNLPModel with $name" begin
     lvar, uvar, lcon, ucon, y0 = -ones(2), ones(2), -ones(1), ones(1), zeros(1)
