@@ -10,7 +10,7 @@ makedocs(
     prettyurls = get(ENV, "CI", nothing) == "true",
   ),
   sitename = "ADNLPModels.jl",
-  pages = ["Home" => "index.md", "Tutorial" => "tutorial.md", "Reference" => "reference.md"],
+  pages = ["Home" => "index.md", "Tutorial" => "tutorial.md", "Backend" => "backend.md", "Reference" => "reference.md"],
 )
 
 deploydocs(
