@@ -34,7 +34,15 @@ struct ADModelBackend{GB, HvB, JvB, JtvB, JB, HB, GHJ}
 end
 
 function Base.show(io::IO, backend::ADModelBackend{GB, HvB, JvB, JtvB, JB, HB, GHJ}) where {GB, HvB, JvB, JtvB, JB, HB, GHJ}
-  print(io, replace("ADModelBackend{$GB, $HvB, $JvB, $JtvB, $JB, $HB, $GHJ}", "ADNLPModels." => ""))
+  print(io, replace("ADModelBackend{
+    $GB,
+    $HvB,
+    $JvB,
+    $JtvB,
+    $JB,
+    $HB,
+    $GHJ,
+  }", "ADNLPModels." => ""))
 end
 
 function ADModelBackend(
