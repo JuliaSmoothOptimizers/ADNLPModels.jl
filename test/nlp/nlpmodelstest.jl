@@ -10,19 +10,19 @@ function nlpmodelstest_autodiff(name; kwargs...)
 
       nlps = [nlp_ad, nlp_man]
       @testset "Check Consistency" begin
-        consistent_nlps(nlps, exclude = [])
+        consistent_nlps(nlps, exclude = [], linear_api = true, reimplemented = ["jtprod"])
       end
       @testset "Check dimensions" begin
-        check_nlp_dimensions(nlp_ad, exclude = [])
+        check_nlp_dimensions(nlp_ad, exclude = [], linear_api = true)
       end
       @testset "Check multiple precision" begin
-        multiple_precision_nlp(nlp_from_T, exclude = [])
+        multiple_precision_nlp(nlp_from_T, exclude = [], linear_api = true)
       end
       @testset "Check view subarray" begin
         view_subarray_nlp(nlp_ad, exclude = [])
       end
       @testset "Check coordinate memory" begin
-        coord_memory_nlp(nlp_ad, exclude = [])
+        coord_memory_nlp(nlp_ad, exclude = [], linear_api = true)
       end
     end
   end
