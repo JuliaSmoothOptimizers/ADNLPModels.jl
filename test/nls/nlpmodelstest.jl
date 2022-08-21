@@ -25,15 +25,15 @@ function nlsmodelstest_autodiff(name; kwargs...)
       end
 
       @testset "Check Consistency" begin
-        consistent_nlss([nlss; nls_man], exclude = exclude)
+        consistent_nlss([nlss; nls_man], exclude = exclude, linear_api = true)
       end
       @testset "Check dimensions" begin
         check_nls_dimensions.(nlss, exclude = exclude)
-        check_nlp_dimensions.(nlss, exclude = exclude)
+        check_nlp_dimensions.(nlss, exclude = exclude, linear_api = true)
       end
       @testset "Check multiple precision" begin
         for nls in nlss
-          multiple_precision_nls(nls_from_T, exclude = exclude)
+          multiple_precision_nls(nls_from_T, exclude = exclude, linear_api = true)
         end
       end
       @testset "Check view subarray" begin
