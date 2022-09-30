@@ -9,7 +9,10 @@ struct ReverseDiffADHessian <: ADBackend
 end
 struct ReverseDiffADJprod <: ADBackend end
 struct ReverseDiffADJtprod <: ADBackend end
-struct ReverseDiffADHvprod <: ADBackend end
+
+struct ReverseDiffADHvprod{S} <: ADBackend
+  gx::S
+end
 
 function ReverseDiffADGradient(
   nvar::Integer,
@@ -82,15 +85,13 @@ function Jtprod(::ReverseDiffADJtprod, f, x, v)
   return ReverseDiff.gradient(x -> dot(f(x), v), x)
 end
 
-function ReverseDiffADHvprod(
-  nvar::Integer,
-  f,
-  ncon::Integer = 0,
-  c::Function = (args...) -> [];
-  kwargs...,
-)
-  return ReverseDiffADHvprod()
+function ReverseDiffADHvprod(nvar::Integer, f, ncon::Integer = 0, c::Function = (args...) -> []; x0::AbstractVector = rand(nvar), kwargs...)
+  T = eltype(x0)
+  gx = zeros(T, nvar)
+  return ReverseDiffADHvprod(gx)
 end
-function Hvprod(::ReverseDiffADHvprod, f, x, v)
-  return ForwardDiff.derivative(t -> ReverseDiff.gradient(f, x + t * v), 0)
+
+function Hvprod!(Hv, b::ReverseDiffADHvprod{S}, f, x, v) where S
+  ForwardDiff.derivative!(Hv, (y, t) -> ReverseDiff.gradient!(y, f, x + t * v), b.gx, 0) 
+  return Hv
 end

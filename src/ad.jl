@@ -173,7 +173,7 @@ jacobian(b::ADBackend, ::Any, ::Any) = throw_error(b)
 hessian(b::ADBackend, ::Any, ::Any) = throw_error(b)
 Jprod(b::ADBackend, ::Any, ::Any, ::Any) = throw_error(b)
 Jtprod(b::ADBackend, ::Any, ::Any, ::Any) = throw_error(b)
-Hvprod(b::ADBackend, ::Any, ::Any, ::Any) = throw_error(b)
+Hvprod!(::Any, b::ADBackend, ::Any, ::Any, ::Any) = throw_error(b)
 directional_second_derivative(::ADBackend, ::Any, ::Any, ::Any, ::Any) = throw_error(b)
 function hess_structure!(
   b::ADBackend,

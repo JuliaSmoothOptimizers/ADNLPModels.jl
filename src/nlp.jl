@@ -621,7 +621,7 @@ function NLPModels.hprod!(
   @lencheck n x v Hv
   increment!(nlp, :neval_hprod)
   ℓ(x) = obj_weight * nlp.f(x)
-  Hv .= Hvprod(nlp.adbackend.hprod_backend, ℓ, x, v)
+  Hvprod!(Hv, nlp.adbackend.hprod_backend, ℓ, x, v)
   return Hv
 end
 
@@ -638,7 +638,7 @@ function NLPModels.hprod!(
   @lencheck nlp.meta.ncon y
   increment!(nlp, :neval_hprod)
   ℓ(x) = obj_weight * nlp.f(x) + dot(nlp.c(x), view(y, (nlp.meta.nlin + 1):(nlp.meta.ncon)))
-  Hv .= Hvprod(nlp.adbackend.hprod_backend, ℓ, x, v)
+  Hvprod!(Hv, nlp.adbackend.hprod_backend, ℓ, x, v)
   return Hv
 end
 
@@ -673,7 +673,7 @@ function NLPModels.jth_hprod!(
   if j ≤ nlp.meta.nlin
     fill!(Hv, zero(T))
   else
-    Hv .= Hvprod(nlp.adbackend.hprod_backend, x -> nlp.c(x)[j - nlp.meta.nlin], x, v)
+    Hvprod!(Hv, nlp.adbackend.hprod_backend, x -> nlp.c(x)[j - nlp.meta.nlin], x, v)
   end
   return Hv
 end

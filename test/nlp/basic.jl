@@ -10,7 +10,7 @@ end
 
 ReverseDiffAD() = ADNLPModels.ADModelBackend(
   ADNLPModels.ReverseDiffADGradient(nothing),
-  ADNLPModels.ReverseDiffADHvprod(),
+  ADNLPModels.ReverseDiffADHvprod([1.0]),
   ADNLPModels.ReverseDiffADJprod(),
   ADNLPModels.ReverseDiffADJtprod(),
   ADNLPModels.ReverseDiffADJacobian(0),
@@ -24,7 +24,7 @@ ReverseDiffAD() = ADNLPModels.ADModelBackend(
 )
 ZygoteAD() = ADNLPModels.ADModelBackend(
   ADNLPModels.ZygoteADGradient(),
-  ADNLPModels.ForwardDiffADHvprod(),
+  ADNLPModels.ForwardDiffADHvprod([1.0]),
   ADNLPModels.ZygoteADJprod(),
   ADNLPModels.ZygoteADJtprod(),
   ADNLPModels.ZygoteADJacobian(0),

@@ -79,18 +79,19 @@ function Jtprod(::ForwardDiffADJtprod, f, x, v)
   return ForwardDiff.gradient(x -> dot(f(x), v), x)
 end
 
-struct ForwardDiffADHvprod <: ADBackend end
-function ForwardDiffADHvprod(
-  nvar::Integer,
-  f,
-  ncon::Integer = 0,
-  c::Function = (args...) -> [];
-  kwargs...,
-)
-  return ForwardDiffADHvprod()
+struct ForwardDiffADHvprod{S} <: ADBackend
+  gx::S
 end
-function Hvprod(::ForwardDiffADHvprod, f, x, v)
-  return ForwardDiff.derivative(t -> ForwardDiff.gradient(f, x + t * v), 0)
+
+function ForwardDiffADHvprod(nvar::Integer, f, ncon::Integer = 0, c::Function = (args...) -> []; x0::AbstractVector = rand(nvar), kwargs...)
+  T = eltype(x0)
+  gx = zeros(T, nvar)
+  return ForwardDiffADHvprod(gx)
+end
+
+function Hvprod!(Hv, b::ForwardDiffADHvprod{S}, f, x, v) where {S}
+  ForwardDiff.derivative!(Hv, (y, t) -> ForwardDiff.gradient!(y, f, x + t * v), b.gx, 0)
+  return Hv
 end
 
 struct ForwardDiffADGHjvprod <: ADBackend end
