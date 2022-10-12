@@ -12,7 +12,7 @@ The different backend are all subtype of `ADBackend` and are respectively used f
   - directional second derivative computation, i.e. gᵀ ∇²cᵢ(x) v.
 
 The default constructor is 
-    ADModelBackend(nvar, f, ncon = 0; kwargs...)
+    ADModelBackend(nvar, f, ncon = 0, c::Function = (args...) -> []; kwargs...)
 
 where the `kwargs` are either the different backends as listed below or arguments passed to the backend's constructors:
   - `gradient_backend = ForwardDiffADGradient`;
@@ -54,7 +54,8 @@ end
 function ADModelBackend(
   nvar::Integer,
   f,
-  ncon::Integer = 0;
+  ncon::Integer = 0,
+  c::Function = (args...) -> [];
   gradient_backend::Type{GB} = ForwardDiffADGradient,
   hprod_backend::Type{HvB} = ForwardDiffADHvprod,
   jprod_backend::Type{JvB} = ForwardDiffADJprod,

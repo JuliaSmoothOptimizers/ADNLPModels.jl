@@ -168,7 +168,7 @@ function ADNLPModel(
     islp = false,
     name = name,
   )
-  adbackend = ADModelBackend(nvar, f, ncon; x0 = x0, kwargs...)
+  adbackend = ADModelBackend(nvar, f, ncon, c; x0 = x0, kwargs...)
 
   return ADNLPModel(meta, Counters(), adbackend, f, c)
 end
@@ -243,7 +243,7 @@ function ADNLPModel(
     islp = false,
     name = name,
   )
-  adbackend = ADModelBackend(nvar, f, ncon; x0 = x0, kwargs...)
+  adbackend = ADModelBackend(nvar, f, ncon, c; x0 = x0, kwargs...)
 
   return ADNLPModel(meta, Counters(), adbackend, f, clinrows, clincols, clinvals, c)
 end
@@ -330,7 +330,7 @@ function ADNLPModel(
     islp = false,
     name = name,
   )
-  adbackend = ADModelBackend(nvar, f, ncon; x0 = x0, kwargs...)
+  adbackend = ADModelBackend(nvar, f, ncon, c; x0 = x0, kwargs...)
 
   return ADNLPModel(meta, Counters(), adbackend, f, c)
 end
@@ -384,7 +384,7 @@ function ADNLPModel(
     islp = false,
     name = name,
   )
-  adbackend = ADModelBackend(nvar, f, ncon; x0 = x0, kwargs...)
+  adbackend = ADModelBackend(nvar, f, ncon, c; x0 = x0, kwargs...)
 
   return ADNLPModel(meta, Counters(), adbackend, f, clinrows, clincols, clinvals, c)
 end
