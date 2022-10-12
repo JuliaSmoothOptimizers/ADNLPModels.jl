@@ -44,7 +44,8 @@ struct NewADGradient <: ADNLPModels.ADBackend end
 function NewADGradient(
   nvar::Integer,
   f,
-  ncon::Integer = 0;
+  ncon::Integer = 0,
+  c::Function = (args...) -> [];
   kwargs...,
 )
   return NewADGradient()
