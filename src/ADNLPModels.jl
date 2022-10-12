@@ -3,12 +3,13 @@ module ADNLPModels
 # stdlib
 using LinearAlgebra, SparseArrays
 # external
-using ForwardDiff, ReverseDiff
+using ForwardDiff, ReverseDiff, Symbolics
 # JSO
 using NLPModels
 using Requires
 
 include("ad.jl")
+include("sparse_derivatives.jl")
 include("forward.jl")
 include("reverse.jl")
 include("zygote.jl")

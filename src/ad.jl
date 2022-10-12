@@ -20,7 +20,7 @@ where the `kwargs` are either the different backends as listed below or argument
   - `hprod_backend = ForwardDiffADHvprod`;
   - `jprod_backend = ForwardDiffADJprod`;
   - `jtprod_backend = ForwardDiffADJtprod`;
-  - `jacobian_backend = ForwardDiffADJacobian`;
+  - `jacobian_backend = SparseADJacobian`;
   - `hessian_backend = ForwardDiffADHessian`;
   - `ghjvprod_backend = ForwardDiffADGHjvprod`;
   - `hprod_residual_backend = ForwardDiffADHvprod` for `ADNLSModel` and `EmptyADbackend` otherwise;
@@ -73,19 +73,19 @@ function ADModelBackend(
   hprod_backend::Type{HvB} = ForwardDiffADHvprod,
   jprod_backend::Type{JvB} = ForwardDiffADJprod,
   jtprod_backend::Type{JtvB} = ForwardDiffADJtprod,
-  jacobian_backend::Type{JB} = ForwardDiffADJacobian,
+  jacobian_backend::Type{JB} = SparseADJacobian, 
   hessian_backend::Type{HB} = ForwardDiffADHessian,
   ghjvprod_backend::Type{GHJ} = ForwardDiffADGHjvprod,
   kwargs...,
 ) where {GB, HvB, JvB, JtvB, JB, HB, GHJ}
   return ADModelBackend(
-    GB(nvar, f, ncon; kwargs...),
-    HvB(nvar, f, ncon; kwargs...),
-    JvB(nvar, f, ncon; kwargs...),
-    JtvB(nvar, f, ncon; kwargs...),
-    JB(nvar, f, ncon; kwargs...),
-    HB(nvar, f, ncon; kwargs...),
-    GHJ(nvar, f, ncon; kwargs...),
+    GB(nvar, f, ncon, c; kwargs...),
+    HvB(nvar, f, ncon, c; kwargs...),
+    JvB(nvar, f, ncon, c; kwargs...),
+    JtvB(nvar, f, ncon, c; kwargs...),
+    JB(nvar, f, ncon, c; kwargs...),
+    HB(nvar, f, ncon, c; kwargs...),
+    GHJ(nvar, f, ncon, c; kwargs...),
     EmptyADbackend(),
     EmptyADbackend(),
     EmptyADbackend(),
@@ -104,7 +104,7 @@ function ADModelNLSBackend(
   hprod_backend::Type{HvB} = ForwardDiffADHvprod,
   jprod_backend::Type{JvB} = ForwardDiffADJprod,
   jtprod_backend::Type{JtvB} = ForwardDiffADJtprod,
-  jacobian_backend::Type{JB} = ForwardDiffADJacobian, 
+  jacobian_backend::Type{JB} = SparseADJacobian,
   hessian_backend::Type{HB} = ForwardDiffADHessian,
   ghjvprod_backend::Type{GHJ} = ForwardDiffADGHjvprod,
   hprod_residual_backend::Type{HvBLS} = ForwardDiffADHvprod,
