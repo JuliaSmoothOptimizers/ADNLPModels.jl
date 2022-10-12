@@ -186,6 +186,7 @@ function ADNLSModel(
     ucon = ucon,
     nnzj = nnzj,
     nnzh = nnzh,
+    nln_nnzj = nnzj,
     name = name,
     minimize = minimize,
   )
@@ -370,6 +371,7 @@ function ADNLSModel(
     ucon = ucon,
     nnzj = nnzj,
     nnzh = nnzh,
+    nln_nnzj = nnzj,
     name = name,
     minimize = minimize,
   )
