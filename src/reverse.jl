@@ -30,35 +30,65 @@ function gradient!(adbackend::ReverseDiffADGradient, g, f, x)
   return ReverseDiff.gradient!(g, adbackend.cfg, x)
 end
 
-function ReverseDiffADJacobian(nvar::Integer, f, ncon::Integer = 0, c::Function = (args...) -> []; kwargs...)
+function ReverseDiffADJacobian(
+  nvar::Integer,
+  f,
+  ncon::Integer = 0,
+  c::Function = (args...) -> [];
+  kwargs...,
+)
   @assert nvar > 0
   nnzj = nvar * ncon
   return ReverseDiffADJacobian(nnzj)
 end
 jacobian(::ReverseDiffADJacobian, f, x) = ReverseDiff.jacobian(f, x)
 
-function ReverseDiffADHessian(nvar::Integer, f, ncon::Integer = 0, c::Function = (args...) -> []; kwargs...)
+function ReverseDiffADHessian(
+  nvar::Integer,
+  f,
+  ncon::Integer = 0,
+  c::Function = (args...) -> [];
+  kwargs...,
+)
   @assert nvar > 0
   nnzh = nvar * (nvar + 1) / 2
   return ReverseDiffADHessian(nnzh)
 end
 hessian(::ReverseDiffADHessian, f, x) = ReverseDiff.hessian(f, x)
 
-function ReverseDiffADJprod(nvar::Integer, f, ncon::Integer = 0, c::Function = (args...) -> []; kwargs...)
+function ReverseDiffADJprod(
+  nvar::Integer,
+  f,
+  ncon::Integer = 0,
+  c::Function = (args...) -> [];
+  kwargs...,
+)
   return ReverseDiffADJprod()
 end
 function Jprod(::ReverseDiffADJprod, f, x, v)
   return vec(ReverseDiff.jacobian(t -> f(x + t[1] * v), [0.0]))
 end
 
-function ReverseDiffADJtprod(nvar::Integer, f, ncon::Integer = 0, c::Function = (args...) -> []; kwargs...)
+function ReverseDiffADJtprod(
+  nvar::Integer,
+  f,
+  ncon::Integer = 0,
+  c::Function = (args...) -> [];
+  kwargs...,
+)
   return ReverseDiffADJtprod()
 end
 function Jtprod(::ReverseDiffADJtprod, f, x, v)
   return ReverseDiff.gradient(x -> dot(f(x), v), x)
 end
 
-function ReverseDiffADHvprod(nvar::Integer, f, ncon::Integer = 0, c::Function = (args...) -> []; kwargs...)
+function ReverseDiffADHvprod(
+  nvar::Integer,
+  f,
+  ncon::Integer = 0,
+  c::Function = (args...) -> [];
+  kwargs...,
+)
   return ReverseDiffADHvprod()
 end
 function Hvprod(::ReverseDiffADHvprod, f, x, v)
