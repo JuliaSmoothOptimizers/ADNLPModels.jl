@@ -22,7 +22,13 @@ end
 struct ForwardDiffADJacobian <: ADBackend
   nnzj::Int
 end
-function ForwardDiffADJacobian(nvar::Integer, f, ncon::Integer = 0, c::Function = (args...) -> []; kwargs...)
+function ForwardDiffADJacobian(
+  nvar::Integer,
+  f,
+  ncon::Integer = 0,
+  c::Function = (args...) -> [];
+  kwargs...,
+)
   @assert nvar > 0
   nnzj = nvar * ncon
   return ForwardDiffADJacobian(nnzj)
@@ -32,7 +38,13 @@ jacobian(::ForwardDiffADJacobian, f, x) = ForwardDiff.jacobian(f, x)
 struct ForwardDiffADHessian <: ADBackend
   nnzh::Int
 end
-function ForwardDiffADHessian(nvar::Integer, f, ncon::Integer = 0, c::Function = (args...) -> []; kwargs...)
+function ForwardDiffADHessian(
+  nvar::Integer,
+  f,
+  ncon::Integer = 0,
+  c::Function = (args...) -> [];
+  kwargs...,
+)
   @assert nvar > 0
   nnzh = nvar * (nvar + 1) / 2
   return ForwardDiffADHessian(nnzh)
@@ -40,7 +52,13 @@ end
 hessian(::ForwardDiffADHessian, f, x) = ForwardDiff.hessian(f, x)
 
 struct ForwardDiffADJprod <: ADBackend end
-function ForwardDiffADJprod(nvar::Integer, f, ncon::Integer = 0, c::Function = (args...) -> []; kwargs...)
+function ForwardDiffADJprod(
+  nvar::Integer,
+  f,
+  ncon::Integer = 0,
+  c::Function = (args...) -> [];
+  kwargs...,
+)
   return ForwardDiffADJprod()
 end
 function Jprod(::ForwardDiffADJprod, f, x, v)
@@ -48,7 +66,13 @@ function Jprod(::ForwardDiffADJprod, f, x, v)
 end
 
 struct ForwardDiffADJtprod <: ADBackend end
-function ForwardDiffADJtprod(nvar::Integer, f, ncon::Integer = 0, c::Function = (args...) -> []; kwargs...)
+function ForwardDiffADJtprod(
+  nvar::Integer,
+  f,
+  ncon::Integer = 0,
+  c::Function = (args...) -> [];
+  kwargs...,
+)
   return ForwardDiffADJtprod()
 end
 function Jtprod(::ForwardDiffADJtprod, f, x, v)
@@ -56,7 +80,13 @@ function Jtprod(::ForwardDiffADJtprod, f, x, v)
 end
 
 struct ForwardDiffADHvprod <: ADBackend end
-function ForwardDiffADHvprod(nvar::Integer, f, ncon::Integer = 0, c::Function = (args...) -> []; kwargs...)
+function ForwardDiffADHvprod(
+  nvar::Integer,
+  f,
+  ncon::Integer = 0,
+  c::Function = (args...) -> [];
+  kwargs...,
+)
   return ForwardDiffADHvprod()
 end
 function Hvprod(::ForwardDiffADHvprod, f, x, v)
@@ -64,7 +94,13 @@ function Hvprod(::ForwardDiffADHvprod, f, x, v)
 end
 
 struct ForwardDiffADGHjvprod <: ADBackend end
-function ForwardDiffADGHjvprod(nvar::Integer, f, ncon::Integer = 0, c::Function = (args...) -> []; kwargs...)
+function ForwardDiffADGHjvprod(
+  nvar::Integer,
+  f,
+  ncon::Integer = 0,
+  c::Function = (args...) -> [];
+  kwargs...,
+)
   return ForwardDiffADGHjvprod()
 end
 function directional_second_derivative(::ForwardDiffADGHjvprod, f, x, v, w)
