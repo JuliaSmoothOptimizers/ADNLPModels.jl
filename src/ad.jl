@@ -82,7 +82,7 @@ abstract type ADBackend end
     get_nln_nnzj(::ADBackend, nvar, ncon)
     get_nln_nnzj(b::ADModelBackend, nvar, ncon)
 
-For a given `ADBackend` of a problem with `nvar` variables and `ncon` constraints, it returns the number of nonzeros in the Jacobian of nonlinear constraints.
+For a given `ADBackend` of a problem with `nvar` variables and `ncon` constraints, return the number of nonzeros in the Jacobian of nonlinear constraints.
 If `b` is the `ADModelBackend` then `b.jacobian_backend` is used.
 """
 function get_nln_nnzj(b::ADModelBackend, nvar, ncon)
@@ -91,6 +91,21 @@ end
 
 function get_nln_nnzj(::ADBackend, nvar, ncon)
   nvar * ncon
+end
+
+"""
+    get_nln_nnzh(::ADBackend, nvar)
+    get_nln_nnzh(b::ADModelBackend, nvar)
+
+For a given `ADBackend` of a problem with `nvar` variables, return the number of nonzeros in the lower triangle of the Hessian.
+If `b` is the `ADModelBackend` then `b.hessian_backend` is used.
+"""
+function get_nln_nnzh(b::ADModelBackend, nvar)
+  get_nln_nnzh(b.hessian_backend, nvar)
+end
+
+function get_nln_nnzh(::ADBackend, nvar)
+  nvar * (nvar + 1) / 2
 end
 
 throw_error(b) =
