@@ -16,6 +16,11 @@ ReverseDiffAD() = ADNLPModels.ADModelBackend(
   ADNLPModels.ReverseDiffADJacobian(0),
   ADNLPModels.ReverseDiffADHessian(0),
   ADNLPModels.ForwardDiffADGHjvprod(),
+  ADNLPModels.EmptyADbackend(),
+  ADNLPModels.EmptyADbackend(),
+  ADNLPModels.EmptyADbackend(),
+  ADNLPModels.EmptyADbackend(),
+  ADNLPModels.EmptyADbackend(),
 )
 ZygoteAD() = ADNLPModels.ADModelBackend(
   ADNLPModels.ZygoteADGradient(),
@@ -25,6 +30,11 @@ ZygoteAD() = ADNLPModels.ADModelBackend(
   ADNLPModels.ZygoteADJacobian(0),
   ADNLPModels.ZygoteADHessian(0),
   ADNLPModels.ForwardDiffADGHjvprod(),
+  ADNLPModels.EmptyADbackend(),
+  ADNLPModels.EmptyADbackend(),
+  ADNLPModels.EmptyADbackend(),
+  ADNLPModels.EmptyADbackend(),
+  ADNLPModels.EmptyADbackend(),
 )
 
 function test_autodiff_backend_error()

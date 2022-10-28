@@ -1,5 +1,5 @@
 """
-    ADModelBackend(gradient_backend, hprod_backend, jprod_backend, jtprod_backend, jacobian_backend, hessian_backend, ghjvprod_backend)
+    ADModelBackend(gradient_backend, hprod_backend, jprod_backend, jtprod_backend, jacobian_backend, hessian_backend, ghjvprod_backend, hprod_residual_backend, jprod_residual_backend, jtprod_residual_backend, jacobian_residual_backend, hessian_residual_backend)
 
 Structure that define the different backend used to compute automatic differentiation of an `ADNLPModel`/`ADNLSModel` model.
 The different backend are all subtype of `ADBackend` and are respectively used for:
@@ -11,8 +11,9 @@ The different backend are all subtype of `ADBackend` and are respectively used f
   - hessian computation;
   - directional second derivative computation, i.e. gᵀ ∇²cᵢ(x) v.
 
-The default constructor is 
+The default constructors are 
     ADModelBackend(nvar, f, ncon = 0, c::Function = (args...) -> []; kwargs...)
+    ADModelNLSBackend(nvar, F, nequ, ncon = 0, c::Function = (args...) -> []; kwargs...)
 
 where the `kwargs` are either the different backends as listed below or arguments passed to the backend's constructors:
   - `gradient_backend = ForwardDiffADGradient`;
@@ -21,9 +22,15 @@ where the `kwargs` are either the different backends as listed below or argument
   - `jtprod_backend = ForwardDiffADJtprod`;
   - `jacobian_backend = ForwardDiffADJacobian`;
   - `hessian_backend = ForwardDiffADHessian`;
-  - `ghjvprod_backend = ForwardDiffADGHjvprod`.
+  - `ghjvprod_backend = ForwardDiffADGHjvprod`;
+  - `hprod_residual_backend = ForwardDiffADHvprod` for `ADNLSModel` and `EmptyADbackend` otherwise;
+  - `jprod_residual_backend = ForwardDiffADJprod` for `ADNLSModel` and `EmptyADbackend` otherwise;
+  - `jtprod_residual_backend = ForwardDiffADJtprod` for `ADNLSModel` and `EmptyADbackend` otherwise;
+  - `jacobian_residual_backend = ForwardDiffADJacobian` for `ADNLSModel` and `EmptyADbackend` otherwise;
+  - `hessian_residual_backend = ForwardDiffADHessian` for `ADNLSModel` and `EmptyADbackend` otherwise.
+
 """
-struct ADModelBackend{GB, HvB, JvB, JtvB, JB, HB, GHJ}
+struct ADModelBackend{GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS}
   gradient_backend::GB
   hprod_backend::HvB
   jprod_backend::JvB
@@ -31,6 +38,12 @@ struct ADModelBackend{GB, HvB, JvB, JtvB, JB, HB, GHJ}
   jacobian_backend::JB
   hessian_backend::HB
   ghjvprod_backend::GHJ
+
+  hprod_residual_backend::HvBLS
+  jprod_residual_backend::JvBLS
+  jtprod_residual_backend::JtvBLS
+  jacobian_residual_backend::JBLS
+  hessian_residual_backend::HBLS
 end
 
 function Base.show(
@@ -73,10 +86,54 @@ function ADModelBackend(
     JB(nvar, f, ncon; kwargs...),
     HB(nvar, f, ncon; kwargs...),
     GHJ(nvar, f, ncon; kwargs...),
+    EmptyADbackend(),
+    EmptyADbackend(),
+    EmptyADbackend(),
+    EmptyADbackend(),
+    EmptyADbackend(),
+  )
+end
+
+function ADModelNLSBackend(
+  nvar::Integer,
+  F,
+  nequ::Integer,
+  ncon::Integer = 0,
+  c::Function = (args...) -> [];
+  gradient_backend::Type{GB} = ForwardDiffADGradient,
+  hprod_backend::Type{HvB} = ForwardDiffADHvprod,
+  jprod_backend::Type{JvB} = ForwardDiffADJprod,
+  jtprod_backend::Type{JtvB} = ForwardDiffADJtprod,
+  jacobian_backend::Type{JB} = SparseADJacobian, 
+  hessian_backend::Type{HB} = ForwardDiffADHessian,
+  ghjvprod_backend::Type{GHJ} = ForwardDiffADGHjvprod,
+  hprod_residual_backend::Type{HvBLS} = ForwardDiffADHvprod,
+  jprod_residual_backend::Type{JvBLS} = ForwardDiffADJprod,
+  jtprod_residual_backend::Type{JtvBLS} = ForwardDiffADJtprod,
+  jacobian_residual_backend::Type{JBLS} = ForwardDiffADJacobian,
+  hessian_residual_backend::Type{HBLS} = ForwardDiffADHessian,
+  kwargs...,
+) where {GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS}
+  f = x -> sum(F(x) .^ 2)
+  return ADModelBackend(
+    GB(nvar, f, ncon, c; kwargs...),
+    HvB(nvar, f, ncon, c; kwargs...),
+    JvB(nvar, f, ncon, c; kwargs...),
+    JtvB(nvar, f, ncon, c; kwargs...),
+    JB(nvar, f, ncon, c; kwargs...),
+    HB(nvar, f, ncon, c; kwargs...),
+    GHJ(nvar, f, ncon, c; kwargs...),
+    HvBLS(nvar, f, nequ, F; kwargs...),
+    JvBLS(nvar, f, nequ, F; kwargs...),
+    JtvBLS(nvar, f, nequ, F; kwargs...),
+    JBLS(nvar, f, nequ, F; kwargs...),
+    HBLS(nvar, f, nequ, F; kwargs...),
   )
 end
 
 abstract type ADBackend end
+
+struct EmptyADbackend <: ADBackend end
 
 """
     get_nln_nnzj(::ADBackend, nvar, ncon)
