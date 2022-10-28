@@ -96,11 +96,11 @@ function ADNLPModel(f, x0::S; name::String = "Generic", minimize::Bool = true, k
   nvar = length(x0)
   @lencheck nvar x0
 
-  nnzh = nvar * (nvar + 1) / 2
+  adbackend = ADModelBackend(nvar, f; x0 = x0, kwargs...)
+  nnzh = get_nln_nnzh(adbackend, nvar)
 
   meta =
     NLPModelMeta{T, S}(nvar, x0 = x0, nnzh = nnzh, minimize = minimize, islp = false, name = name)
-  adbackend = ADModelBackend(nvar, f; x0 = x0, kwargs...)
 
   return ADNLPModel(meta, Counters(), adbackend, f, x -> T[])
 end
@@ -118,7 +118,8 @@ function ADNLPModel(
   nvar = length(x0)
   @lencheck nvar x0 lvar uvar
 
-  nnzh = nvar * (nvar + 1) / 2
+  adbackend = ADModelBackend(nvar, f; x0 = x0, kwargs...)
+  nnzh = get_nln_nnzh(adbackend, nvar)
 
   meta = NLPModelMeta{T, S}(
     nvar,
@@ -130,7 +131,6 @@ function ADNLPModel(
     islp = false,
     name = name,
   )
-  adbackend = ADModelBackend(nvar, f; x0 = x0, kwargs...)
 
   return ADNLPModel(meta, Counters(), adbackend, f, x -> T[])
 end
@@ -154,7 +154,7 @@ function ADNLPModel(
 
   adbackend = ADModelBackend(nvar, f, ncon, c; x0 = x0, kwargs...)
 
-  nnzh = nvar * (nvar + 1) / 2
+  nnzh = get_nln_nnzh(adbackend, nvar)
   nnzj = get_nln_nnzj(adbackend, nvar, ncon)
 
   meta = NLPModelMeta{T, S}(
@@ -221,7 +221,7 @@ function ADNLPModel(
 
   adbackend = ADModelBackend(nvar, f, ncon, c; x0 = x0, kwargs...)
 
-  nnzh = nvar * (nvar + 1) / 2
+  nnzh = get_nln_nnzh(adbackend, nvar)
 
   nlin = maximum(clinrows)
   lin = 1:nlin
@@ -316,7 +316,7 @@ function ADNLPModel(
 
   adbackend = ADModelBackend(nvar, f, ncon, c; x0 = x0, kwargs...)
 
-  nnzh = nvar * (nvar + 1) / 2
+  nnzh = get_nln_nnzh(adbackend, nvar)
   nnzj = get_nln_nnzj(adbackend, nvar, ncon)
 
   meta = NLPModelMeta{T, S}(
@@ -362,7 +362,7 @@ function ADNLPModel(
 
   adbackend = ADModelBackend(nvar, f, ncon, c; x0 = x0, kwargs...)
 
-  nnzh = nvar * (nvar + 1) / 2
+  nnzh = get_nln_nnzh(adbackend, nvar)
 
   nlin = maximum(clinrows)
   lin = 1:nlin
