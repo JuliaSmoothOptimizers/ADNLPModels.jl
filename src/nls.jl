@@ -160,7 +160,10 @@ function ADNLSModel(
   nvar = length(x0)
   ncon = length(lcon)
   @lencheck ncon ucon y0
-  nnzj = nvar * ncon
+
+  adbackend = ADModelBackend(nvar, x -> sum(F(x) .^ 2), ncon, c; x0 = x0, kwargs...)
+
+  nnzj = get_nln_nnzj(adbackend, nvar, ncon)
 
   meta = NLPModelMeta{T, S}(
     nvar,
@@ -175,7 +178,6 @@ function ADNLSModel(
   )
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
-  adbackend = ADModelBackend(nvar, x -> sum(F(x) .^ 2), ncon, c; x0 = x0, kwargs...)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, c)
 end
 
@@ -228,10 +230,12 @@ function ADNLSModel(
   ncon = length(lcon)
   @lencheck ncon ucon y0
 
+  adbackend = ADModelBackend(nvar, x -> sum(F(x) .^ 2), ncon, c; x0 = x0, kwargs...)
+
   nlin = maximum(clinrows)
   lin = 1:nlin
   lin_nnzj = length(clinvals)
-  nln_nnzj = nvar * (ncon - nlin)
+  nln_nnzj = get_nln_nnzj(adbackend, nvar, ncon - nlin)
   nnzj = lin_nnzj + nln_nnzj
   @lencheck lin_nnzj clinrows clincols
 
@@ -251,7 +255,6 @@ function ADNLSModel(
   )
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
-  adbackend = ADModelBackend(nvar, x -> sum(F(x) .^ 2), ncon, c; x0 = x0, kwargs...)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, clinrows, clincols, clinvals, c)
 end
 
@@ -334,7 +337,10 @@ function ADNLSModel(
   ncon = length(lcon)
   @lencheck nvar lvar uvar
   @lencheck ncon ucon y0
-  nnzj = nvar * ncon
+
+  adbackend = ADModelBackend(nvar, x -> sum(F(x) .^ 2), ncon, c; x0 = x0, kwargs...)
+
+  nnzj = get_nln_nnzj(adbackend, nvar, ncon)
 
   meta = NLPModelMeta{T, S}(
     nvar,
@@ -351,7 +357,6 @@ function ADNLSModel(
   )
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
-  adbackend = ADModelBackend(nvar, x -> sum(F(x) .^ 2), ncon, c; x0 = x0, kwargs...)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, c)
 end
 
@@ -379,10 +384,12 @@ function ADNLSModel(
   @lencheck nvar lvar uvar
   @lencheck ncon ucon y0
 
+  adbackend = ADModelBackend(nvar, x -> sum(F(x) .^ 2), ncon, c; x0 = x0, kwargs...)
+
   nlin = maximum(clinrows)
   lin = 1:nlin
   lin_nnzj = length(clinvals)
-  nln_nnzj = nvar * (ncon - nlin)
+  nln_nnzj = get_nln_nnzj(adbackend, nvar, ncon - nlin)
   nnzj = lin_nnzj + nln_nnzj
   @lencheck lin_nnzj clinrows clincols
 
@@ -404,7 +411,6 @@ function ADNLSModel(
   )
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
-  adbackend = ADModelBackend(nvar, x -> sum(F(x) .^ 2), ncon, c; x0 = x0, kwargs...)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, clinrows, clincols, clinvals, c)
 end
 

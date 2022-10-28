@@ -78,6 +78,21 @@ end
 
 abstract type ADBackend end
 
+"""
+    get_nln_nnzj(::ADBackend, nvar, ncon)
+    get_nln_nnzj(b::ADModelBackend, nvar, ncon)
+
+For a given `ADBackend` of a problem with `nvar` variables and `ncon` constraints, it returns the number of nonzeros in the Jacobian of nonlinear constraints.
+If `b` is the `ADModelBackend` then `b.jacobian_backend` is used.
+"""
+function get_nln_nnzj(b::ADModelBackend, nvar, ncon)
+  get_nln_nnzj(b.jacobian_backend, nvar, ncon)
+end
+
+function get_nln_nnzj(::ADBackend, nvar, ncon)
+  nvar * ncon
+end
+
 throw_error(b) =
   throw(ArgumentError("The AD backend $b is not loaded. Please load the corresponding AD package."))
 gradient(b::ADBackend, ::Any, ::Any) = throw_error(b)
