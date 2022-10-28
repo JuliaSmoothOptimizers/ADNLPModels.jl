@@ -140,8 +140,15 @@ function ADNLSModel(
   adbackend = ADModelBackend(nvar, x -> sum(F(x) .^ 2); x0 = x0, kwargs...)
   nnzh = get_nln_nnzh(adbackend, nvar)
 
-  meta =
-    NLPModelMeta{T, S}(nvar, x0 = x0, lvar = lvar, uvar = uvar, nnzh = nnzh, name = name, minimize = minimize)
+  meta = NLPModelMeta{T, S}(
+    nvar,
+    x0 = x0,
+    lvar = lvar,
+    uvar = uvar,
+    nnzh = nnzh,
+    name = name,
+    minimize = minimize,
+  )
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, x -> T[])
