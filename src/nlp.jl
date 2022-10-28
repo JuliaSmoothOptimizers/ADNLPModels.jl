@@ -152,8 +152,10 @@ function ADNLPModel(
   @lencheck nvar x0
   @lencheck ncon ucon y0
 
+  adbackend = ADModelBackend(nvar, f, ncon, c; x0 = x0, kwargs...)
+
   nnzh = nvar * (nvar + 1) / 2
-  nnzj = nvar * ncon
+  nnzj = get_nln_nnzj(adbackend, nvar, ncon)
 
   meta = NLPModelMeta{T, S}(
     nvar,
@@ -168,7 +170,6 @@ function ADNLPModel(
     islp = false,
     name = name,
   )
-  adbackend = ADModelBackend(nvar, f, ncon, c; x0 = x0, kwargs...)
 
   return ADNLPModel(meta, Counters(), adbackend, f, c)
 end
@@ -218,12 +219,14 @@ function ADNLPModel(
   @lencheck nvar x0
   @lencheck ncon ucon y0
 
+  adbackend = ADModelBackend(nvar, f, ncon, c; x0 = x0, kwargs...)
+
   nnzh = nvar * (nvar + 1) / 2
 
   nlin = maximum(clinrows)
   lin = 1:nlin
   lin_nnzj = length(clinvals)
-  nln_nnzj = nvar * (ncon - nlin)
+  nln_nnzj = get_nln_nnzj(adbackend, nvar, ncon - nlin)
   nnzj = lin_nnzj + nln_nnzj
   @lencheck lin_nnzj clinrows clincols
 
@@ -243,7 +246,6 @@ function ADNLPModel(
     islp = false,
     name = name,
   )
-  adbackend = ADModelBackend(nvar, f, ncon, c; x0 = x0, kwargs...)
 
   return ADNLPModel(meta, Counters(), adbackend, f, clinrows, clincols, clinvals, c)
 end
@@ -312,8 +314,10 @@ function ADNLPModel(
   @lencheck nvar x0 lvar uvar
   @lencheck ncon y0 ucon
 
+  adbackend = ADModelBackend(nvar, f, ncon, c; x0 = x0, kwargs...)
+
   nnzh = nvar * (nvar + 1) / 2
-  nnzj = nvar * ncon
+  nnzj = get_nln_nnzj(adbackend, nvar, ncon)
 
   meta = NLPModelMeta{T, S}(
     nvar,
@@ -330,7 +334,6 @@ function ADNLPModel(
     islp = false,
     name = name,
   )
-  adbackend = ADModelBackend(nvar, f, ncon, c; x0 = x0, kwargs...)
 
   return ADNLPModel(meta, Counters(), adbackend, f, c)
 end
@@ -357,12 +360,14 @@ function ADNLPModel(
   @lencheck nvar x0 lvar uvar
   @lencheck ncon y0 ucon
 
+  adbackend = ADModelBackend(nvar, f, ncon, c; x0 = x0, kwargs...)
+
   nnzh = nvar * (nvar + 1) / 2
 
   nlin = maximum(clinrows)
   lin = 1:nlin
   lin_nnzj = length(clinvals)
-  nln_nnzj = nvar * (ncon - nlin)
+  nln_nnzj = get_nln_nnzj(adbackend, nvar, ncon - nlin)
   nnzj = lin_nnzj + nln_nnzj
   @lencheck lin_nnzj clinrows clincols
 
@@ -384,7 +389,6 @@ function ADNLPModel(
     islp = false,
     name = name,
   )
-  adbackend = ADModelBackend(nvar, f, ncon, c; x0 = x0, kwargs...)
 
   return ADNLPModel(meta, Counters(), adbackend, f, clinrows, clincols, clinvals, c)
 end
