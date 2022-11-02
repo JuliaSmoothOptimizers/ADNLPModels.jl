@@ -25,9 +25,9 @@ function ADNLPModels.gradient!(adbackend::NewADGradient, g, f, x)
   return g
 end</code></pre><p>Finally, we use the homemade backend to compute the gradient.</p><pre><code class="language-julia hljs">nlp = ADNLPModel(sum, ones(3), gradient_backend = NewADGradient)
 grad(nlp, nlp.meta.x0) # returns the gradient at x0 using `NewADGradient`</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">3-element Vector{Float64}:
- 0.44823396693581186
- 0.6022706809065471
- 0.2234786703312378</code></pre><h3 id="Change-backend"><a class="docs-heading-anchor" href="#Change-backend">Change backend</a><a id="Change-backend-1"></a><a class="docs-heading-anchor-permalink" href="#Change-backend" title="Permalink"></a></h3><p>Once an instance of an <code>ADNLPModel</code> has been created, it is possible to change the backends without re-instantiating the model.</p><pre><code class="language-julia hljs">using ADNLPModels, NLPModels
+ 0.46064010273130573
+ 0.9748345127695529
+ 0.4598340857920985</code></pre><h3 id="Change-backend"><a class="docs-heading-anchor" href="#Change-backend">Change backend</a><a id="Change-backend-1"></a><a class="docs-heading-anchor-permalink" href="#Change-backend" title="Permalink"></a></h3><p>Once an instance of an <code>ADNLPModel</code> has been created, it is possible to change the backends without re-instantiating the model.</p><pre><code class="language-julia hljs">using ADNLPModels, NLPModels
 f(x) = 100 * (x[2] - x[1]^2)^2 + (x[1] - 1)^2
 x0 = 3 * ones(2)
 nlp = ADNLPModel(f, x0)
@@ -36,7 +36,7 @@ get_adbackend(nlp) # returns the `ADModelBackend` structure that regroup all the
   ForwardDiffADHvprod,
   ForwardDiffADJprod,
   ForwardDiffADJtprod,
-  ForwardDiffADJacobian,
+  SparseADJacobian,
   ForwardDiffADHessian,
   ForwardDiffADGHjvprod,
 }</code></pre><p>There are currently two ways to modify instantiated backends. The first one is to instantiate a new <code>ADModelBackend</code> and use <code>set_adbackend!</code> to modify <code>nlp</code>.</p><pre><code class="language-julia hljs">adback = ADNLPModels.ADModelBackend(nlp.meta.nvar, nlp.f, gradient_backend = ADNLPModels.ForwardDiffADGradient)
@@ -46,7 +46,7 @@ get_adbackend(nlp)</code></pre><pre class="documenter-example-output"><code clas
   ForwardDiffADHvprod,
   ForwardDiffADJprod,
   ForwardDiffADJtprod,
-  ForwardDiffADJacobian,
+  SparseADJacobian,
   ForwardDiffADHessian,
   ForwardDiffADGHjvprod,
 }</code></pre><p>The alternative is to use `<code>set_adbackend!</code> and pass the new backends via <code>kwargs</code>. In the second approach, it is possible to pass either the type of the desired backend or an instance as shown below.</p><pre><code class="language-julia hljs">set_adbackend!(
@@ -59,7 +59,7 @@ get_adbackend(nlp)</code></pre><pre class="documenter-example-output"><code clas
   ForwardDiffADHvprod,
   ForwardDiffADJprod,
   ForwardDiffADJtprod,
-  ForwardDiffADJacobian,
+  SparseADJacobian,
   ForwardDiffADHessian,
   ForwardDiffADGHjvprod,
 }</code></pre><h3 id="Support-multiple-precision-without-having-to-recreate-the-model"><a class="docs-heading-anchor" href="#Support-multiple-precision-without-having-to-recreate-the-model">Support multiple precision without having to recreate the model</a><a id="Support-multiple-precision-without-having-to-recreate-the-model-1"></a><a class="docs-heading-anchor-permalink" href="#Support-multiple-precision-without-having-to-recreate-the-model" title="Permalink"></a></h3><p>One of the strength of <code>ADNLPModels.jl</code> is the type flexibility. Let&#39;s assume, we first instantiate an <code>ADNLPModel</code> with a <code>Float64</code> initial guess.</p><pre><code class="language-julia hljs">using ADNLPModels, NLPModels
@@ -70,7 +70,7 @@ nlp = ADNLPModel(f, x0)</code></pre><pre class="documenter-example-output"><code
   ForwardDiffADHvprod,
   ForwardDiffADJprod,
   ForwardDiffADJtprod,
-  ForwardDiffADJacobian,
+  SparseADJacobian,
   ForwardDiffADHessian,
   ForwardDiffADGHjvprod,
 }
@@ -96,10 +96,10 @@ nlp = ADNLPModel(f, x0)</code></pre><pre class="documenter-example-output"><code
            jhess: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0               jhprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
 </code></pre><p>Then, the gradient will return a vector of <code>Float64</code>.</p><pre><code class="language-julia hljs">x64 = rand(2)
 grad(nlp, x64)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2-element Vector{Float64}:
- -2.237319824841794
- 58.04401374271782</code></pre><p>It is now possible to move to a different type, for instance <code>Float32</code>, while keeping the instance <code>nlp</code>.</p><pre><code class="language-julia hljs">x0_32 = ones(Float32, 2)
+ -84.84931160936635
+  62.41977999848146</code></pre><p>It is now possible to move to a different type, for instance <code>Float32</code>, while keeping the instance <code>nlp</code>.</p><pre><code class="language-julia hljs">x0_32 = ones(Float32, 2)
 set_adbackend!(nlp, gradient_backend = ADNLPModels.ForwardDiffADGradient, x0 = x0_32)
 x32 = rand(Float32, 2)
 grad(nlp, x32)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2-element Vector{Float32}:
-  358.02542
- -185.13388</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../tutorial/">« Tutorial</a><a class="docs-footer-nextpage" href="../reference/">Reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Saturday 29 October 2022 16:09">Saturday 29 October 2022</span>. Using Julia version 1.8.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ -123.56963
+  100.46005</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../tutorial/">« Tutorial</a><a class="docs-footer-nextpage" href="../reference/">Reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Wednesday 2 November 2022 15:59">Wednesday 2 November 2022</span>. Using Julia version 1.8.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
