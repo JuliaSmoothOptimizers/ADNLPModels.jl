@@ -1,8 +1,8 @@
-struct SparseADJacobian <: ADBackend
-  nnzj
-  rows
-  cols
-  cfJ
+struct SparseADJacobian{J} <: ADBackend
+  nnzj::Int
+  rows::Vector{Int}
+  cols::Vector{Int}
+  cfJ::J
 end
 
 function SparseADJacobian(nvar, f, ncon, c; kwargs...)
