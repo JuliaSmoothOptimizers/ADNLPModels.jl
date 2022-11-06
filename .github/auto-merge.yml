@@ -1,7 +1,7 @@
 rules:
 - requiredAuthorRole: MEMBER
   minApprovals:
-    MEMBER: 1
+    MEMBER: 2
 - minApprovals:
     MEMBER: 2
 
