@@ -73,7 +73,7 @@ function ADModelBackend(
   hprod_backend::Type{HvB} = ForwardDiffADHvprod,
   jprod_backend::Type{JvB} = ForwardDiffADJprod,
   jtprod_backend::Type{JtvB} = ForwardDiffADJtprod,
-  jacobian_backend::Type{JB} = SparseADJacobian, 
+  jacobian_backend::Type{JB} = SparseADJacobian,
   hessian_backend::Type{HB} = ForwardDiffADHessian,
   ghjvprod_backend::Type{GHJ} = ForwardDiffADGHjvprod,
   kwargs...,
