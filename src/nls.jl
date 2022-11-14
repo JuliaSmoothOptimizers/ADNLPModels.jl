@@ -742,8 +742,7 @@ function NLPModels.hess_coord!(
   @lencheck nls.meta.nvar x
   @lencheck nls.meta.nnzh vals
   increment!(nls, :neval_hess)
-  ℓ(x) = obj_weight * sum(nls.F(x) .^ 2) / 2
-  return hess_coord!(nls.adbackend.hessian_backend, nls, x, ℓ, vals)
+  return hess_coord!(nls.adbackend.hessian_backend, nls, x, obj_weight, vals)
 end
 
 function NLPModels.hess_coord!(
@@ -757,10 +756,7 @@ function NLPModels.hess_coord!(
   @lencheck nls.meta.ncon y
   @lencheck nls.meta.nnzh vals
   increment!(nls, :neval_hess)
-  ℓ(x) =
-    obj_weight * sum(nls.F(x) .^ 2) / 2 +
-    dot(view(y, (nls.meta.nlin + 1):(nls.meta.ncon)), nls.c(x))
-  return hess_coord!(nls.adbackend.hessian_backend, nls, x, ℓ, vals)
+  return hess_coord!(nls.adbackend.hessian_backend, nls, x, view(y, (nls.meta.nlin + 1):(nls.meta.ncon)), obj_weight, vals)
 end
 
 function NLPModels.hprod!(
