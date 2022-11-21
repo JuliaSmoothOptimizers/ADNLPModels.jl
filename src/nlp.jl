@@ -600,7 +600,14 @@ function NLPModels.hess_coord!(
   @lencheck nlp.meta.ncon y
   @lencheck nlp.meta.nnzh vals
   increment!(nlp, :neval_hess)
-  return hess_coord!(nlp.adbackend.hessian_backend, nlp, x, view(y, (nlp.meta.nlin + 1):(nlp.meta.ncon)), obj_weight, vals)
+  return hess_coord!(
+    nlp.adbackend.hessian_backend,
+    nlp,
+    x,
+    view(y, (nlp.meta.nlin + 1):(nlp.meta.ncon)),
+    obj_weight,
+    vals,
+  )
 end
 
 function NLPModels.hprod!(
