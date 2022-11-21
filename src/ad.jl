@@ -187,6 +187,23 @@ function hess_structure!(
   cols .= getindex.(I, 2)
   return rows, cols
 end
+
+function hess_coord!(b::ADBackend, nlp::AbstractNLPModel, x::AbstractVector, y::AbstractVector, obj_weight::Real, vals::AbstractVector)
+  ℓ(x) = obj_weight * nlp.f(x) + dot(nlp.c(x), y)
+  return hess_coord!(b, nlp, x, ℓ, vals)
+end
+function hess_coord!(b::ADBackend, nlp::AbstractNLPModel, x::AbstractVector, obj_weight::Real, vals::AbstractVector)
+  ℓ(x) = obj_weight * nlp.f(x)
+  return hess_coord!(b, nlp, x, ℓ, vals)
+end
+function hess_coord!(b::ADBackend, nls::AbstractNLSModel, x::AbstractVector, y::AbstractVector, obj_weight::Real, vals::AbstractVector)
+  ℓ(x) = obj_weight * sum(nls.F(x) .^ 2) / 2 + dot(nls.c(x), y)
+  return hess_coord!(b, nls, x, ℓ, vals)
+end
+function hess_coord!(b::ADBackend, nls::AbstractNLSModel, x::AbstractVector, obj_weight::Real, vals::AbstractVector)
+  ℓ(x) = obj_weight * sum(nls.F(x) .^ 2) / 2
+  return hess_coord!(b, nls, x, ℓ, vals)
+end
 function hess_coord!(b::ADBackend, nlp, x::AbstractVector, ℓ::Function, vals::AbstractVector)
   Hx = hessian(b, ℓ, x)
   k = 1
@@ -198,6 +215,7 @@ function hess_coord!(b::ADBackend, nlp, x::AbstractVector, ℓ::Function, vals::
   end
   return vals
 end
+
 function jac_structure!(
   b::ADBackend,
   nlp,
