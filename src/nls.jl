@@ -572,7 +572,7 @@ function NLPModels.hprod_residual!(
 )
   @lencheck nls.meta.nvar x v Hiv
   increment!(nls, :neval_hprod_residual)
-  Hvprod!(Hiv, nls.adbackend..hprod_residual_backend, x -> nls.F(x)[i], x, v)
+  Hvprod!(Hiv, nls.adbackend.hprod_residual_backend, x -> nls.F(x)[i], x, v)
   return Hiv
 end
 
