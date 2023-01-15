@@ -16,7 +16,7 @@ ForwardDiff = "0.9.0, 0.10.0"
 NLPModels = "0.18, 0.19"
 Requires = "1"
 ReverseDiff = "1"
-Symbolics = "^4.11"
+Symbolics = "^4.11, 5"
 julia = "^1.6"
 
 [extras]
