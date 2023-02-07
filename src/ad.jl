@@ -50,7 +50,7 @@ function Base.show(
   io::IO,
   backend::ADModelBackend{GB, HvB, JvB, JtvB, JB, HB, GHJ},
 ) where {GB, HvB, JvB, JtvB, JB, HB, GHJ}
-  print(io, replace(
+  print(io, replace(replace(
     "ADModelBackend{
   $GB,
   $HvB,
@@ -61,7 +61,7 @@ function Base.show(
   $GHJ,
 }",
     "ADNLPModels." => "",
-  ))
+  ), r"\{(.+)\}" => s""))
 end
 
 function ADModelBackend(
