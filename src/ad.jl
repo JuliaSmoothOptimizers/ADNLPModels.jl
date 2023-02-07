@@ -61,6 +61,7 @@ function Base.show(
   $GHJ,
 }",
     "ADNLPModels." => "",
+    r"\{(.+)\}" => s"",
   ))
 end
 
