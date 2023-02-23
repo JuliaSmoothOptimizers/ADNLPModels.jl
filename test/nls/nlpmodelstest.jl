@@ -53,6 +53,17 @@ nlsmodelstest_autodiff(
   jacobian_backend = ADNLPModels.ReverseDiffADJacobian,
   hessian_backend = ADNLPModels.ReverseDiffADHessian,
 )
+#=
+  Got exception outside of a @test
+  Mutating arrays is not supported -- called copyto!(Vector{Float64}, ...)
+  This error occurs when you ask Zygote to differentiate operations that change
+  the elements of arrays in place (e.g. setting values with x .= ...)
+
+  Possible fixes:
+  - avoid mutating operations (preferred)
+  - or read the documentation and solutions for this error
+    https://fluxml.ai/Zygote.jl/latest/limitations
+
 nlsmodelstest_autodiff(
   "Zygote",
   gradient_backend = ADNLPModels.ZygoteADGradient,
@@ -61,3 +72,4 @@ nlsmodelstest_autodiff(
   jacobian_backend = ADNLPModels.ZygoteADJacobian,
   hessian_backend = ADNLPModels.ZygoteADHessian,
 )
+=#

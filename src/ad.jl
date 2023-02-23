@@ -73,7 +73,7 @@ function ADModelBackend(
   hprod_backend::Type{HvB} = ForwardDiffADHvprod,
   jprod_backend::Type{JvB} = ForwardDiffADJprod,
   jtprod_backend::Type{JtvB} = ForwardDiffADJtprod,
-  jacobian_backend::Type{JB} = SparseADJacobian,
+  jacobian_backend::Type{JB} = ForwardDiffADJacobian, # SparseADJacobian,
   hessian_backend::Type{HB} = ForwardDiffADHessian,
   ghjvprod_backend::Type{GHJ} = ForwardDiffADGHjvprod,
   kwargs...,
@@ -104,7 +104,7 @@ function ADModelNLSBackend(
   hprod_backend::Type{HvB} = ForwardDiffADHvprod,
   jprod_backend::Type{JvB} = ForwardDiffADJprod,
   jtprod_backend::Type{JtvB} = ForwardDiffADJtprod,
-  jacobian_backend::Type{JB} = SparseADJacobian,
+  jacobian_backend::Type{JB} = ForwardDiffADJacobian, # SparseADJacobian,
   hessian_backend::Type{HB} = ForwardDiffADHessian,
   ghjvprod_backend::Type{GHJ} = ForwardDiffADGHjvprod,
   hprod_residual_backend::Type{HvBLS} = ForwardDiffADHvprod,
@@ -196,7 +196,7 @@ function hess_coord!(
   obj_weight::Real,
   vals::AbstractVector,
 )
-  ℓ(x) = obj_weight * nlp.f(x) + dot(nlp.c(x), y)
+  ℓ(x) = obj_weight * nlp.f(x) + dot(get_c(nlp)(x), y)
   return hess_coord!(b, nlp, x, ℓ, vals)
 end
 function hess_coord!(
@@ -217,7 +217,7 @@ function hess_coord!(
   obj_weight::Real,
   vals::AbstractVector,
 )
-  ℓ(x) = obj_weight * sum(nls.F(x) .^ 2) / 2 + dot(nls.c(x), y)
+  ℓ(x) = obj_weight * sum(nls.F(x) .^ 2) / 2 + dot(get_c(nls)(x), y)
   return hess_coord!(b, nls, x, ℓ, vals)
 end
 function hess_coord!(
@@ -255,7 +255,7 @@ function jac_structure!(
   return rows, cols
 end
 function jac_coord!(b::ADBackend, nlp, x::AbstractVector, vals::AbstractVector)
-  Jx = jacobian(b, nlp.c, x)
+  Jx = jacobian(b, get_c(nlp), x)
   vals .= Jx[:]
   return vals
 end

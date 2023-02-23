@@ -19,6 +19,20 @@ include("nls.jl")
 export get_adbackend, set_adbackend!
 
 """
+    get_c(nlp)
+
+Return the out-of-place version of `nlp.c!`
+"""
+function get_c(nlp::Union{ADNLPModel, ADNLSModel})
+  function c(x)
+    c = similar(x, nlp.meta.nnln)
+    nlp.c!(c, x)
+    return c
+  end
+  return c
+end
+
+"""
     get_adbackend(nlp)
 
 Returns the value `adbackend` from nlp.

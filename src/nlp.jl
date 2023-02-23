@@ -1,4 +1,4 @@
-export ADNLPModel
+export ADNLPModel, ADNLPModel!
 
 mutable struct ADNLPModel{T, S, Si} <: AbstractNLPModel{T, S}
   meta::NLPModelMeta{T, S}
@@ -12,7 +12,7 @@ mutable struct ADNLPModel{T, S, Si} <: AbstractNLPModel{T, S}
   clincols::Si
   clinvals::S
 
-  c
+  c!
 end
 
 ADNLPModel(
@@ -90,6 +90,29 @@ ADNLPModel(f, x0, c, zeros(ncon), zeros(ncon); backend = ADNLPModels.ReverseDiff
 using Zygote
 ADNLPModel(f, x0, c, zeros(ncon), zeros(ncon); backend = ADNLPModels.ZygoteAD)
 ```
+
+For in-place constraints function, use one of the following constructors:
+
+    ADNLPModel!(f, x0, c!, lcon, ucon)
+    ADNLPModel!(f, x0, clinrows, clincols, clinvals, c!, lcon, ucon)
+    ADNLPModel!(f, x0, A, c!, lcon, ucon)
+    ADNLPModel(f, x0, lvar, uvar, c!, lcon, ucon)
+    ADNLPModel(f, x0, lvar, uvar, clinrows, clincols, clinvals, c!, lcon, ucon)
+    ADNLPModel(f, x0, lvar, uvar, A, c!, lcon, ucon)
+
+where the constraint function has the signature `c!(output, input)`.
+
+```julia
+using ADNLPModels
+f(x) = sum(x)
+x0 = ones(3)
+function c!(output, x) 
+  output[1] = 1x[1] + x[2]
+  output[2] = x[2]
+end
+nvar, ncon = 3, 2
+nlp = ADNLPModel!(f, x0, c!, zeros(ncon), zeros(ncon)) # uses the default ForwardDiffAD backend.
+```
 """
 function ADNLPModel(f, x0::S; name::String = "Generic", minimize::Bool = true, kwargs...) where {S}
   T = eltype(S)
@@ -141,6 +164,22 @@ function ADNLPModel(
   c,
   lcon::S,
   ucon::S;
+  kwargs...,
+) where {S}
+
+  function c!(output, x)
+    output .= c(x)
+  end
+
+  return ADNLPModel!(f, x0, c!, lcon, ucon; kwargs... )
+end
+
+function ADNLPModel!(
+  f,
+  x0::S,
+  c!,
+  lcon::S,
+  ucon::S;
   y0::S = fill!(similar(lcon), zero(eltype(S))),
   name::String = "Generic",
   minimize::Bool = true,
@@ -152,7 +191,7 @@ function ADNLPModel(
   @lencheck nvar x0
   @lencheck ncon ucon y0
 
-  adbackend = ADModelBackend(nvar, f, ncon, c; x0 = x0, kwargs...)
+  adbackend = ADModelBackend(nvar, f, ncon, c!; x0 = x0, kwargs...)
 
   nnzh = get_nln_nnzh(adbackend, nvar)
   nnzj = get_nln_nnzj(adbackend, nvar, ncon)
@@ -172,7 +211,7 @@ function ADNLPModel(
     name = name,
   )
 
-  return ADNLPModel(meta, Counters(), adbackend, f, c)
+  return ADNLPModel(meta, Counters(), adbackend, f, c!)
 end
 
 function ADNLPModel(
@@ -209,6 +248,25 @@ function ADNLPModel(
   c,
   lcon::S,
   ucon::S;
+  kwargs...
+) where {S}
+
+  function c!(output, x)
+    output .= c(x)
+  end
+
+  return ADNLPModel!(f, x0, clinrows, clincols, clinvals, c!, lcon, ucon; kwargs... )
+end
+
+function ADNLPModel!(
+  f,
+  x0::S,
+  clinrows,
+  clincols,
+  clinvals::S,
+  c!,
+  lcon::S,
+  ucon::S;
   y0::S = fill!(similar(lcon), zero(eltype(S))),
   name::String = "Generic",
   minimize::Bool = true,
@@ -220,7 +278,7 @@ function ADNLPModel(
   @lencheck nvar x0
   @lencheck ncon ucon y0
 
-  adbackend = ADModelBackend(nvar, f, ncon, c; x0 = x0, kwargs...)
+  adbackend = ADModelBackend(nvar, f, ncon, c!; x0 = x0, kwargs...)
 
   nnzh = get_nln_nnzh(adbackend, nvar)
 
@@ -248,11 +306,15 @@ function ADNLPModel(
     name = name,
   )
 
-  return ADNLPModel(meta, Counters(), adbackend, f, clinrows, clincols, clinvals, c)
+  return ADNLPModel(meta, Counters(), adbackend, f, clinrows, clincols, clinvals, c!)
 end
 
 function ADNLPModel(f, x0, A::AbstractSparseMatrix{Tv, Ti}, c, lcon, ucon; kwargs...) where {Tv, Ti}
   return ADNLPModel(f, x0, findnz(A)..., c, lcon, ucon; kwargs...)
+end
+
+function ADNLPModel!(f, x0, A::AbstractSparseMatrix{Tv, Ti}, c!, lcon, ucon; kwargs...) where {Tv, Ti}
+  return ADNLPModel!(f, x0, findnz(A)..., c!, lcon, ucon; kwargs...)
 end
 
 function ADNLPModel(
@@ -304,6 +366,24 @@ function ADNLPModel(
   c,
   lcon::S,
   ucon::S;
+  kwargs...,
+) where {S}
+
+  function c!(output, x)
+    output .= c(x)
+  end
+
+  return ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon; kwargs... )
+end
+
+function ADNLPModel!(
+  f,
+  x0::S,
+  lvar::S,
+  uvar::S,
+  c!,
+  lcon::S,
+  ucon::S;
   y0::S = fill!(similar(lcon), zero(eltype(S))),
   name::String = "Generic",
   minimize::Bool = true,
@@ -315,7 +395,7 @@ function ADNLPModel(
   @lencheck nvar x0 lvar uvar
   @lencheck ncon y0 ucon
 
-  adbackend = ADModelBackend(nvar, f, ncon, c; x0 = x0, kwargs...)
+  adbackend = ADModelBackend(nvar, f, ncon, c!; x0 = x0, kwargs...)
 
   nnzh = get_nln_nnzh(adbackend, nvar)
   nnzj = get_nln_nnzj(adbackend, nvar, ncon)
@@ -337,7 +417,7 @@ function ADNLPModel(
     name = name,
   )
 
-  return ADNLPModel(meta, Counters(), adbackend, f, c)
+  return ADNLPModel(meta, Counters(), adbackend, f, c!)
 end
 
 function ADNLPModel(
@@ -351,6 +431,27 @@ function ADNLPModel(
   c,
   lcon::S,
   ucon::S;
+  kwargs...,
+) where {S}
+
+  function c!(output, x)
+    output .= c(x)
+  end
+
+  return ADNLPModel!(f, x0, lvar, uvar, clinrows, clincols, clinvals, c!, lcon, ucon; kwargs... )
+end
+
+function ADNLPModel!(
+  f,
+  x0::S,
+  lvar::S,
+  uvar::S,
+  clinrows,
+  clincols,
+  clinvals::S,
+  c!,
+  lcon::S,
+  ucon::S;
   y0::S = fill!(similar(lcon), zero(eltype(S))),
   name::String = "Generic",
   minimize::Bool = true,
@@ -362,7 +463,7 @@ function ADNLPModel(
   @lencheck nvar x0 lvar uvar
   @lencheck ncon y0 ucon
 
-  adbackend = ADModelBackend(nvar, f, ncon, c; x0 = x0, kwargs...)
+  adbackend = ADModelBackend(nvar, f, ncon, c!; x0 = x0, kwargs...)
 
   nnzh = get_nln_nnzh(adbackend, nvar)
 
@@ -392,7 +493,7 @@ function ADNLPModel(
     name = name,
   )
 
-  return ADNLPModel(meta, Counters(), adbackend, f, clinrows, clincols, clinvals, c)
+  return ADNLPModel(meta, Counters(), adbackend, f, clinrows, clincols, clinvals, c!)
 end
 
 function ADNLPModel(
@@ -407,6 +508,20 @@ function ADNLPModel(
   kwargs...,
 ) where {Tv, Ti}
   return ADNLPModel(f, x0, lvar, uvar, findnz(A)..., c, lcon, ucon; kwargs...)
+end
+
+function ADNLPModel!(
+  f,
+  x0,
+  lvar,
+  uvar,
+  A::AbstractSparseMatrix{Tv, Ti},
+  c!,
+  lcon,
+  ucon;
+  kwargs...,
+) where {Tv, Ti}
+  return ADNLPModel!(f, x0, lvar, uvar, findnz(A)..., c!, lcon, ucon; kwargs...)
 end
 
 function NLPModels.obj(nlp::ADNLPModel, x::AbstractVector)
@@ -434,7 +549,7 @@ function NLPModels.cons_nln!(nlp::ADNLPModel, x::AbstractVector, c::AbstractVect
   @lencheck nlp.meta.nvar x
   @lencheck nlp.meta.nnln c
   increment!(nlp, :neval_cons_nln)
-  c .= nlp.c(x)
+  nlp.c!(c, x)
   return c
 end
 
@@ -495,7 +610,7 @@ function NLPModels.jprod_nln!(
   @lencheck nlp.meta.nvar x v
   @lencheck nlp.meta.nnln Jv
   increment!(nlp, :neval_jprod_nln)
-  Jv .= Jprod(nlp.adbackend.jprod_backend, nlp.c, x, v)
+  Jv .= Jprod(nlp.adbackend.jprod_backend, get_c(nlp), x, v)
   return Jv
 end
 
@@ -542,7 +657,7 @@ function NLPModels.jtprod_nln!(
   @lencheck nlp.meta.nvar x Jtv
   @lencheck nlp.meta.nnln v
   increment!(nlp, :neval_jtprod_nln)
-  Jtv .= Jtprod(nlp.adbackend.jtprod_backend, nlp.c, x, v)
+  Jtv .= Jtprod(nlp.adbackend.jtprod_backend, get_c(nlp), x, v)
   return Jtv
 end
 
@@ -563,7 +678,7 @@ function NLPModels.hess(
   @lencheck nlp.meta.nvar x
   @lencheck nlp.meta.ncon y
   increment!(nlp, :neval_hess)
-  ℓ(x) = obj_weight * nlp.f(x) + dot(nlp.c(x), view(y, (nlp.meta.nlin + 1):(nlp.meta.ncon)))
+  ℓ(x) = obj_weight * nlp.f(x) + dot(get_c(nlp)(x), view(y, (nlp.meta.nlin + 1):(nlp.meta.ncon)))
   Hx = hessian(nlp.adbackend.hessian_backend, ℓ, x)
   return Symmetric(Hx, :L)
 end
@@ -637,7 +752,7 @@ function NLPModels.hprod!(
   @lencheck n x v Hv
   @lencheck nlp.meta.ncon y
   increment!(nlp, :neval_hprod)
-  ℓ(x) = obj_weight * nlp.f(x) + dot(nlp.c(x), view(y, (nlp.meta.nlin + 1):(nlp.meta.ncon)))
+  ℓ(x) = obj_weight * nlp.f(x) + dot(get_c(nlp)(x), view(y, (nlp.meta.nlin + 1):(nlp.meta.ncon)))
   Hv .= Hvprod(nlp.adbackend.hprod_backend, ℓ, x, v)
   return Hv
 end
@@ -655,7 +770,7 @@ function NLPModels.jth_hess_coord!(
   if j ≤ nlp.meta.nlin
     fill!(vals, zero(T))
   else
-    hess_coord!(nlp.adbackend.hessian_backend, nlp, x, x -> nlp.c(x)[j - nlp.meta.nlin], vals)
+    hess_coord!(nlp.adbackend.hessian_backend, nlp, x, x -> get_c(nlp)(x)[j - nlp.meta.nlin], vals)
   end
   return vals
 end
@@ -673,7 +788,7 @@ function NLPModels.jth_hprod!(
   if j ≤ nlp.meta.nlin
     fill!(Hv, zero(T))
   else
-    Hv .= Hvprod(nlp.adbackend.hprod_backend, x -> nlp.c(x)[j - nlp.meta.nlin], x, v)
+    Hv .= Hvprod(nlp.adbackend.hprod_backend, x -> get_c(nlp)(x)[j - nlp.meta.nlin], x, v)
   end
   return Hv
 end
@@ -690,6 +805,6 @@ function NLPModels.ghjvprod!(
   increment!(nlp, :neval_hprod)
   @views gHv[1:(nlp.meta.nlin)] .= zero(T)
   @views gHv[(nlp.meta.nlin + 1):end] .=
-    directional_second_derivative(nlp.adbackend.ghjvprod_backend, nlp.c, x, v, g)
+    directional_second_derivative(nlp.adbackend.ghjvprod_backend, get_c(nlp), x, v, g)
   return gHv
 end
