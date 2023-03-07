@@ -5,15 +5,16 @@ struct SparseADJacobian{J} <: ADBackend
   cfJ::J
 end
 
-function SparseADJacobian(nvar, f, ncon, c; kwargs...)
-  @variables xs[1:nvar]
-  w = Symbolics.scalarize(xs)
-  _fun = c(w)
-  S = Symbolics.jacobian_sparsity(_fun, w)
+function SparseADJacobian(nvar, f, ncon, c!; kwargs...)
+  @variables xs[1:nvar] out[1:ncon]
+  wi = Symbolics.scalarize(xs)
+  wo = Symbolics.scalarize(out)
+  _fun = c!(wo, wi)
+  S = Symbolics.jacobian_sparsity(c!, wo, wi)
   rows, cols, _ = findnz(S)
-  vals = Symbolics.sparsejacobian_vals(_fun, w, rows, cols)
+  vals = Symbolics.sparsejacobian_vals(_fun, wi, rows, cols)
   nnzj = length(rows)
-  cfJ = Symbolics.build_function(vals, w, expression = Val{false})
+  cfJ = Symbolics.build_function(vals, wi, expression = Val{false})
   SparseADJacobian(nnzj, rows, cols, cfJ)
 end
 

@@ -189,7 +189,11 @@ function ADNLSModel(
 ) where {S}
 
   function c!(output, x)
-    output .= c(x)
+    cx = c(x)
+    for i=1:length(cx)
+      output[i] = cx[i]
+    end
+    return output
   end
 
   return ADNLSModel!(F, x0, nequ, c!, lcon, ucon; kwargs... )
@@ -278,7 +282,11 @@ function ADNLSModel(
 ) where {S, Si}
 
   function c!(output, x)
-    output .= c(x)
+    cx = c(x)
+    for i=1:length(cx)
+      output[i] = cx[i]
+    end
+    return output
   end
 
   return ADNLSModel!(F, x0, nequ, clinrows, clincols, clinvals, c!, lcon, ucon; kwargs... )
@@ -422,7 +430,11 @@ function ADNLSModel(
 ) where {S, AD}
 
   function c!(output, x)
-    output .= c(x)
+    cx = c(x)
+    for i=1:length(cx)
+      output[i] = cx[i]
+    end
+    return output
   end
 
   return ADNLSModel!(F, x0, nequ, lvar, uvar, c!, lcon, ucon; kwargs... )
@@ -490,7 +502,11 @@ function ADNLSModel(
 ) where {S, Si}
 
   function c!(output, x)
-    output .= c(x)
+    cx = c(x)
+    for i=1:length(cx)
+      output[i] = cx[i]
+    end
+    return output
   end
 
   return ADNLSModel!(F, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, c!, lcon, ucon; kwargs... )
@@ -781,7 +797,8 @@ function NLPModels.jprod_nln!(
   @lencheck nls.meta.nvar x v
   @lencheck nls.meta.nnln Jv
   increment!(nls, :neval_jprod_nln)
-  Jv .= Jprod(nls.adbackend.jprod_backend, get_c(nls), x, v)
+  c = get_c(nls, nls.adbackend.jprod_backend)
+  Jv .= Jprod(nls.adbackend.jprod_backend, c, x, v)
   return Jv
 end
 
@@ -828,7 +845,8 @@ function NLPModels.jtprod_nln!(
   @lencheck nls.meta.nvar x Jtv
   @lencheck nls.meta.nnln v
   increment!(nls, :neval_jtprod_nln)
-  Jtv .= Jtprod(nls.adbackend.jtprod_backend, get_c(nls), x, v)
+  c = get_c(nls, nls.adbackend.jtprod_backend)
+  Jtv .= Jtprod(nls.adbackend.jtprod_backend, c, x, v)
   return Jtv
 end
 
@@ -849,9 +867,13 @@ function NLPModels.hess(
   @lencheck nls.meta.nvar x
   @lencheck nls.meta.ncon y
   increment!(nls, :neval_hess)
-  ℓ(x) =
-    obj_weight * sum(nls.F(x) .^ 2) / 2 +
-    dot(view(y, (nls.meta.nlin + 1):(nls.meta.ncon)), get_c(nls)(x))
+    
+  ℓ(x) = if nls.meta.nnln > 0
+    c = get_c(nls, nls.adbackend.hessian_backend)
+    obj_weight * sum(nls.F(x) .^ 2) / 2 + dot(view(y, (nls.meta.nlin + 1):(nls.meta.ncon)), c(x))
+  else
+    obj_weight * sum(nls.F(x) .^ 2) / 2
+  end
   Hx = hessian(nls.adbackend.hessian_backend, ℓ, x)
   return Symmetric(Hx, :L)
 end
@@ -923,9 +945,12 @@ function NLPModels.hprod!(
   @lencheck nls.meta.nvar x v Hv
   @lencheck nls.meta.ncon y
   increment!(nls, :neval_hprod)
-  ℓ(x) =
-    obj_weight * sum(nls.F(x) .^ 2) / 2 +
-    dot(view(y, (nls.meta.nlin + 1):(nls.meta.ncon)), get_c(nls)(x))
+  ℓ(x) = if nls.meta.nnln > 0
+    c = get_c(nls, nls.adbackend.hprod_backend)
+    obj_weight * sum(nls.F(x) .^ 2) / 2 + dot(view(y, (nls.meta.nlin + 1):(nls.meta.ncon)), c(x))
+  else
+    obj_weight * sum(nls.F(x) .^ 2) / 2
+  end
   Hv .= Hvprod(nls.adbackend.hprod_backend, ℓ, x, v)
   return Hv
 end
@@ -943,7 +968,8 @@ function NLPModels.jth_hess_coord!(
   if j ≤ nls.meta.nlin
     fill!(vals, zero(T))
   else
-    hess_coord!(nls.adbackend.hessian_backend, nls, x, x -> get_c(nls)(x)[j - nls.meta.nlin], vals)
+    c = get_c(nls, nls.adbackend.hessian_backend)
+    hess_coord!(nls.adbackend.hessian_backend, nls, x, x -> c(x)[j - nls.meta.nlin], vals)
   end
   return vals
 end
@@ -961,7 +987,8 @@ function NLPModels.jth_hprod!(
   if j ≤ nls.meta.nlin
     fill!(Hv, zero(T))
   else
-    Hv .= Hvprod(nls.adbackend.hprod_backend, x -> get_c(nls)(x)[j - nls.meta.nlin], x, v)
+    c = get_c(nls, nls.adbackend.hprod_backend)
+    Hv .= Hvprod(nls.adbackend.hprod_backend, x -> c(x)[j - nls.meta.nlin], x, v)
   end
   return Hv
 end
@@ -977,7 +1004,8 @@ function NLPModels.ghjvprod!(
   @lencheck nls.meta.ncon gHv
   increment!(nls, :neval_hprod)
   @views gHv[1:(nls.meta.nlin)] .= zero(T)
+  c = get_c(nls, nls.adbackend.ghjvprod_backend)
   @views gHv[(nls.meta.nlin + 1):end] .=
-    directional_second_derivative(nls.adbackend.ghjvprod_backend, get_c(nls), x, v, g)
+    directional_second_derivative(nls.adbackend.ghjvprod_backend, c, x, v, g)
   return gHv
 end

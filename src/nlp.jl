@@ -168,7 +168,11 @@ function ADNLPModel(
 ) where {S}
 
   function c!(output, x)
-    output .= c(x)
+    cx = c(x)
+    for i=1:length(cx)
+      output[i] = cx[i]
+    end
+    return output
   end
 
   return ADNLPModel!(f, x0, c!, lcon, ucon; kwargs... )
@@ -252,7 +256,11 @@ function ADNLPModel(
 ) where {S}
 
   function c!(output, x)
-    output .= c(x)
+    cx = c(x)
+    for i=1:length(cx)
+      output[i] = cx[i]
+    end
+    return output
   end
 
   return ADNLPModel!(f, x0, clinrows, clincols, clinvals, c!, lcon, ucon; kwargs... )
@@ -370,7 +378,11 @@ function ADNLPModel(
 ) where {S}
 
   function c!(output, x)
-    output .= c(x)
+    cx = c(x)
+    for i=1:length(cx)
+      output[i] = cx[i]
+    end
+    return output
   end
 
   return ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon; kwargs... )
@@ -435,7 +447,11 @@ function ADNLPModel(
 ) where {S}
 
   function c!(output, x)
-    output .= c(x)
+    cx = c(x)
+    for i=1:length(cx)
+      output[i] = cx[i]
+    end
+    return output
   end
 
   return ADNLPModel!(f, x0, lvar, uvar, clinrows, clincols, clinvals, c!, lcon, ucon; kwargs... )
@@ -610,7 +626,8 @@ function NLPModels.jprod_nln!(
   @lencheck nlp.meta.nvar x v
   @lencheck nlp.meta.nnln Jv
   increment!(nlp, :neval_jprod_nln)
-  Jv .= Jprod(nlp.adbackend.jprod_backend, get_c(nlp), x, v)
+  c = get_c(nlp, nlp.adbackend.jprod_backend)
+  Jv .= Jprod(nlp.adbackend.jprod_backend, c, x, v)
   return Jv
 end
 
@@ -657,7 +674,8 @@ function NLPModels.jtprod_nln!(
   @lencheck nlp.meta.nvar x Jtv
   @lencheck nlp.meta.nnln v
   increment!(nlp, :neval_jtprod_nln)
-  Jtv .= Jtprod(nlp.adbackend.jtprod_backend, get_c(nlp), x, v)
+  c = get_c(nlp, nlp.adbackend.jtprod_backend)
+  Jtv .= Jtprod(nlp.adbackend.jtprod_backend, c, x, v)
   return Jtv
 end
 
@@ -678,7 +696,12 @@ function NLPModels.hess(
   @lencheck nlp.meta.nvar x
   @lencheck nlp.meta.ncon y
   increment!(nlp, :neval_hess)
-  ℓ(x) = obj_weight * nlp.f(x) + dot(get_c(nlp)(x), view(y, (nlp.meta.nlin + 1):(nlp.meta.ncon)))
+  ℓ(x) = if nlp.meta.nnln > 0
+    c = get_c(nlp, nlp.adbackend.hessian_backend)
+    obj_weight * nlp.f(x) + dot(c(x), view(y, (nlp.meta.nlin + 1):(nlp.meta.ncon)))
+  else
+    obj_weight * nlp.f(x)
+  end
   Hx = hessian(nlp.adbackend.hessian_backend, ℓ, x)
   return Symmetric(Hx, :L)
 end
@@ -752,7 +775,12 @@ function NLPModels.hprod!(
   @lencheck n x v Hv
   @lencheck nlp.meta.ncon y
   increment!(nlp, :neval_hprod)
-  ℓ(x) = obj_weight * nlp.f(x) + dot(get_c(nlp)(x), view(y, (nlp.meta.nlin + 1):(nlp.meta.ncon)))
+  ℓ(x) = if nlp.meta.nnln > 0
+    c = get_c(nlp, nlp.adbackend.hprod_backend)
+    obj_weight * nlp.f(x) + dot(c(x), view(y, (nlp.meta.nlin + 1):(nlp.meta.ncon)))
+  else
+    obj_weight * nlp.f(x)
+  end
   Hv .= Hvprod(nlp.adbackend.hprod_backend, ℓ, x, v)
   return Hv
 end
@@ -770,7 +798,8 @@ function NLPModels.jth_hess_coord!(
   if j ≤ nlp.meta.nlin
     fill!(vals, zero(T))
   else
-    hess_coord!(nlp.adbackend.hessian_backend, nlp, x, x -> get_c(nlp)(x)[j - nlp.meta.nlin], vals)
+    c = get_c(nlp, nlp.adbackend.hessian_backend)
+    hess_coord!(nlp.adbackend.hessian_backend, nlp, x, x -> c(x)[j - nlp.meta.nlin], vals)
   end
   return vals
 end
@@ -788,7 +817,8 @@ function NLPModels.jth_hprod!(
   if j ≤ nlp.meta.nlin
     fill!(Hv, zero(T))
   else
-    Hv .= Hvprod(nlp.adbackend.hprod_backend, x -> get_c(nlp)(x)[j - nlp.meta.nlin], x, v)
+    c = get_c(nlp, nlp.adbackend.hprod_backend)
+    Hv .= Hvprod(nlp.adbackend.hprod_backend, x -> c(x)[j - nlp.meta.nlin], x, v)
   end
   return Hv
 end
@@ -804,7 +834,8 @@ function NLPModels.ghjvprod!(
   @lencheck nlp.meta.ncon gHv
   increment!(nlp, :neval_hprod)
   @views gHv[1:(nlp.meta.nlin)] .= zero(T)
+  c = get_c(nlp, nlp.adbackend.ghjvprod_backend)
   @views gHv[(nlp.meta.nlin + 1):end] .=
-    directional_second_derivative(nlp.adbackend.ghjvprod_backend, get_c(nlp), x, v, g)
+    directional_second_derivative(nlp.adbackend.ghjvprod_backend, c, x, v, g)
   return gHv
 end

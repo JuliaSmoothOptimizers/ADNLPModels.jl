@@ -8,6 +8,8 @@ using ForwardDiff, ReverseDiff, Symbolics
 using NLPModels
 using Requires
 
+abstract type  AbstractADNLPModel{T, S} <:  AbstractNLPModel{T, S} end
+
 include("ad.jl")
 include("sparse_derivatives.jl")
 include("forward.jl")
@@ -20,17 +22,19 @@ export get_adbackend, set_adbackend!
 
 """
     get_c(nlp)
+    get_c(nlp, ::ADBackend)
 
-Return the out-of-place version of `nlp.c!`
+Return the out-of-place version of `nlp.c!`.
 """
 function get_c(nlp::Union{ADNLPModel, ADNLSModel})
-  function c(x)
-    c = similar(x, nlp.meta.nnln)
+  function c(x; nnln = nlp.meta.nnln)
+    c = similar(x, nnln)
     nlp.c!(c, x)
     return c
   end
   return c
 end
+get_c(nlp::Union{ADNLPModel, ADNLSModel}, ::ADBackend) = get_c(nlp)
 
 """
     get_adbackend(nlp)
