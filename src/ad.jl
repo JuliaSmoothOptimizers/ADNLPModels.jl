@@ -132,6 +132,7 @@ function ADModelNLSBackend(
 end
 
 abstract type ADBackend end
+abstract type ImmutableADbackend <: ADBackend end
 
 struct EmptyADbackend <: ADBackend end
 
@@ -196,7 +197,12 @@ function hess_coord!(
   obj_weight::Real,
   vals::AbstractVector,
 )
-  ℓ(x) = obj_weight * nlp.f(x) + dot(nlp.c(x), y)
+  ℓ(x) = if length(y) > 0
+    c = get_c(nlp, b)
+    obj_weight * nlp.f(x) + dot(c(x), y)
+  else
+    obj_weight * nlp.f(x)
+  end
   return hess_coord!(b, nlp, x, ℓ, vals)
 end
 function hess_coord!(
@@ -217,7 +223,12 @@ function hess_coord!(
   obj_weight::Real,
   vals::AbstractVector,
 )
-  ℓ(x) = obj_weight * sum(nls.F(x) .^ 2) / 2 + dot(nls.c(x), y)
+  ℓ(x) = if length(y) > 0
+    c = get_c(nls, b)
+    obj_weight * sum(nls.F(x) .^ 2) / 2 + dot(c(x), y)
+  else
+    obj_weight * sum(nls.F(x) .^ 2) / 2
+  end
   return hess_coord!(b, nls, x, ℓ, vals)
 end
 function hess_coord!(
@@ -255,7 +266,8 @@ function jac_structure!(
   return rows, cols
 end
 function jac_coord!(b::ADBackend, nlp, x::AbstractVector, vals::AbstractVector)
-  Jx = jacobian(b, nlp.c, x)
+  c = get_c(nlp, b)
+  Jx = jacobian(b, c, x)
   vals .= Jx[:]
   return vals
 end
