@@ -178,7 +178,7 @@ Hvprod(b::ADBackend, ::Any, ::Any, ::Any) = throw_error(b)
 directional_second_derivative(::ADBackend, ::Any, ::Any, ::Any, ::Any) = throw_error(b)
 function hess_structure!(
   b::ADBackend,
-  nlp,
+  nlp::ADModel,
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
 )
@@ -191,7 +191,7 @@ end
 
 function hess_coord!(
   b::ADBackend,
-  nlp::AbstractNLPModel,
+  nlp::AbstractADNLPModel,
   x::AbstractVector,
   y::AbstractVector,
   obj_weight::Real,
@@ -207,7 +207,7 @@ function hess_coord!(
 end
 function hess_coord!(
   b::ADBackend,
-  nlp::AbstractNLPModel,
+  nlp::AbstractADNLPModel,
   x::AbstractVector,
   obj_weight::Real,
   vals::AbstractVector,
@@ -217,7 +217,7 @@ function hess_coord!(
 end
 function hess_coord!(
   b::ADBackend,
-  nls::AbstractNLSModel,
+  nls::AbstractADNLSModel,
   x::AbstractVector,
   y::AbstractVector,
   obj_weight::Real,
@@ -233,7 +233,7 @@ function hess_coord!(
 end
 function hess_coord!(
   b::ADBackend,
-  nls::AbstractNLSModel,
+  nls::AbstractADNLSModel,
   x::AbstractVector,
   obj_weight::Real,
   vals::AbstractVector,
@@ -241,7 +241,7 @@ function hess_coord!(
   ℓ(x) = obj_weight * sum(nls.F(x) .^ 2) / 2
   return hess_coord!(b, nls, x, ℓ, vals)
 end
-function hess_coord!(b::ADBackend, nlp, x::AbstractVector, ℓ::Function, vals::AbstractVector)
+function hess_coord!(b::ADBackend, nlp::ADModel, x::AbstractVector, ℓ::Function, vals::AbstractVector)
   Hx = hessian(b, ℓ, x)
   k = 1
   for j = 1:(nlp.meta.nvar)
@@ -255,7 +255,7 @@ end
 
 function jac_structure!(
   b::ADBackend,
-  nlp,
+  nlp::ADModel,
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
 )
@@ -265,7 +265,7 @@ function jac_structure!(
   cols .= getindex.(I, 2)[:]
   return rows, cols
 end
-function jac_coord!(b::ADBackend, nlp, x::AbstractVector, vals::AbstractVector)
+function jac_coord!(b::ADBackend, nlp::ADModel, x::AbstractVector, vals::AbstractVector)
   c = get_c(nlp, b)
   Jx = jacobian(b, c, x)
   vals .= Jx[:]
