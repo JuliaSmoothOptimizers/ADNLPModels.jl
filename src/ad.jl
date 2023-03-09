@@ -203,13 +203,13 @@ function hess_coord!(
   obj_weight::Real,
   vals::AbstractVector,
 )
-ℓ(x) =
-if length(y) > 0
-    c = get_c(nlp, b)
-    obj_weight * nlp.f(x) + dot(c(x), y)
-  else
-    obj_weight * nlp.f(x)
-  end
+  ℓ(x) =
+    if length(y) > 0
+      c = get_c(nlp, b)
+      obj_weight * nlp.f(x) + dot(c(x), y)
+    else
+      obj_weight * nlp.f(x)
+    end
   return hess_coord!(b, nlp, x, ℓ, vals)
 end
 function hess_coord!(
@@ -233,11 +233,11 @@ function hess_coord!(
   F = get_F(nls, b)
   ℓ(x) =
     if length(y) > 0
-    c = get_c(nls, b)
-    obj_weight * sum(F(x) .^ 2) / 2 + dot(c(x), y)
-  else
-    obj_weight * sum(F(x) .^ 2) / 2
-  end
+      c = get_c(nls, b)
+      obj_weight * sum(F(x) .^ 2) / 2 + dot(c(x), y)
+    else
+      obj_weight * sum(F(x) .^ 2) / 2
+    end
   return hess_coord!(b, nls, x, ℓ, vals)
 end
 function hess_coord!(
