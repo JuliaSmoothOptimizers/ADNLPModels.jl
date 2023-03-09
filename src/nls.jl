@@ -7,7 +7,7 @@ mutable struct ADNLSModel{T, S, Si} <: AbstractADNLSModel{T, S}
   adbackend::ADModelBackend
 
   # Function
-  F
+  F!
 
   clinrows::Si
   clincols::Si
@@ -101,20 +101,25 @@ using Zygote
 ADNLSModel(F, x0, nequ, c, zeros(ncon), zeros(ncon); backend = ADNLPModels.ZygoteAD)
 ```
 
-For in-place constraints function, use one of the following constructors:
+For in-place constraints and residual function, use one of the following constructors:
 
-    ADNLSModel!(F, x0, nequ, c!, lcon, ucon)
-    ADNLSModel!(F, x0, nequ, clinrows, clincols, clinvals, c!, lcon, ucon)
-    ADNLSModel!(F, x0, nequ, A, c!, lcon, ucon)
-    ADNLSModel(F, x0, nequ, lvar, uvar, c!, lcon, ucon)
-    ADNLSModel(F, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, c!, lcon, ucon)
-    ADNLSModel(F, x0, nequ, lvar, uvar, A, c!, lcon, ucon)
+    ADNLSModel!(F!, x0, nequ)
+    ADNLSModel!(F!, x0, nequ, lvar, uvar)
+    ADNLSModel!(F!, x0, nequ, c!, lcon, ucon)
+    ADNLSModel!(F!, x0, nequ, clinrows, clincols, clinvals, c!, lcon, ucon)
+    ADNLSModel!(F!, x0, nequ, A, c!, lcon, ucon)
+    ADNLSModel!(F!, x0, nequ, lvar, uvar, c!, lcon, ucon)
+    ADNLSModel!(F!, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, c!, lcon, ucon)
+    ADNLSModel!(F!, x0, nequ, lvar, uvar, A, c!, lcon, ucon)
 
 where the constraint function has the signature `c!(output, input)`.
 
 ```julia
 using ADNLPModels
-F(x) = [x[2]; x[1]]
+function F!(output, x)
+  output[1] = x[2]
+  output[2] = x[1]
+end
 nequ = 2
 x0 = ones(3)
 function c!(output, x) 
@@ -122,11 +127,29 @@ function c!(output, x)
   output[2] = x[2]
 end
 nvar, ncon = 3, 2
-nls = ADNLSModel!(F, x0, nequ, c!, zeros(ncon), zeros(ncon))
+nls = ADNLSModel!(F!, x0, nequ, c!, zeros(ncon), zeros(ncon))
 ```
 """
 function ADNLSModel(
   F,
+  x0::S,
+  nequ::Integer;
+  kwargs...,
+) where {S}
+
+  function F!(output, x)
+    Fx = F(x)
+    for i=1:length(Fx)
+      output[i] = Fx[i]
+    end
+    return output
+  end
+
+  return ADNLSModel!(F!, x0, nequ; kwargs...)
+end
+
+function ADNLSModel!(
+  F!,
   x0::S,
   nequ::Integer;
   linequ::AbstractVector{<:Integer} = Int[],
@@ -137,17 +160,37 @@ function ADNLSModel(
   T = eltype(S)
   nvar = length(x0)
 
-  adbackend = ADModelNLSBackend(nvar, F, nequ; x0 = x0, kwargs...)
+  adbackend = ADModelNLSBackend(nvar, F!, nequ; x0 = x0, kwargs...)
   nnzh = get_nln_nnzh(adbackend, nvar)
 
   meta = NLPModelMeta{T, S}(nvar, x0 = x0, nnzh = nnzh, name = name, minimize = minimize)
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
-  return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, x -> T[])
+  return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F!, x -> T[])
 end
 
 function ADNLSModel(
   F,
+  x0::S,
+  nequ::Integer,
+  lvar::S,
+  uvar::S;
+  kwargs...,
+) where {S}
+
+  function F!(output, x)
+    Fx = F(x)
+    for i=1:length(Fx)
+      output[i] = Fx[i]
+    end
+    return output
+  end
+
+  return ADNLSModel!(F!, x0, nequ, lvar, uvar; kwargs...)
+end
+
+function ADNLSModel!(
+  F!,
   x0::S,
   nequ::Integer,
   lvar::S,
@@ -161,7 +204,7 @@ function ADNLSModel(
   nvar = length(x0)
   @lencheck nvar lvar uvar
 
-  adbackend = ADModelNLSBackend(nvar, F, nequ; x0 = x0, kwargs...)
+  adbackend = ADModelNLSBackend(nvar, F!, nequ; x0 = x0, kwargs...)
   nnzh = get_nln_nnzh(adbackend, nvar)
 
   meta = NLPModelMeta{T, S}(
@@ -175,7 +218,7 @@ function ADNLSModel(
   )
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
-  return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, x -> T[])
+  return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F!, x -> T[])
 end
 
 function ADNLSModel(
@@ -188,6 +231,14 @@ function ADNLSModel(
   kwargs...,
 ) where {S}
 
+  function F!(output, x)
+    Fx = F(x)
+    for i=1:length(Fx)
+      output[i] = Fx[i]
+    end
+    return output
+  end
+
   function c!(output, x)
     cx = c(x)
     for i=1:length(cx)
@@ -196,11 +247,11 @@ function ADNLSModel(
     return output
   end
 
-  return ADNLSModel!(F, x0, nequ, c!, lcon, ucon; kwargs... )
+  return ADNLSModel!(F!, x0, nequ, c!, lcon, ucon; kwargs... )
 end
 
 function ADNLSModel!(
-  F,
+  F!,
   x0::S,
   nequ::Integer,
   c!,
@@ -217,7 +268,7 @@ function ADNLSModel!(
   ncon = length(lcon)
   @lencheck ncon ucon y0
 
-  adbackend = ADModelNLSBackend(nvar, F, nequ, ncon, c!; x0 = x0, kwargs...)
+  adbackend = ADModelNLSBackend(nvar, F!, nequ, ncon, c!; x0 = x0, kwargs...)
 
   nnzh = get_nln_nnzh(adbackend, nvar)
   nnzj = get_nln_nnzj(adbackend, nvar, ncon)
@@ -237,7 +288,7 @@ function ADNLSModel!(
   )
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
-  return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, c!)
+  return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F!, c!)
 end
 
 function ADNLSModel(
@@ -281,6 +332,14 @@ function ADNLSModel(
   kwargs...,
 ) where {S, Si}
 
+  function F!(output, x)
+    Fx = F(x)
+    for i=1:length(Fx)
+      output[i] = Fx[i]
+    end
+    return output
+  end
+
   function c!(output, x)
     cx = c(x)
     for i=1:length(cx)
@@ -289,11 +348,11 @@ function ADNLSModel(
     return output
   end
 
-  return ADNLSModel!(F, x0, nequ, clinrows, clincols, clinvals, c!, lcon, ucon; kwargs... )
+  return ADNLSModel!(F!, x0, nequ, clinrows, clincols, clinvals, c!, lcon, ucon; kwargs... )
 end
 
 function ADNLSModel!(
-  F,
+  F!,
   x0::S,
   nequ::Integer,
   clinrows::Si,
@@ -313,7 +372,7 @@ function ADNLSModel!(
   ncon = length(lcon)
   @lencheck ncon ucon y0
 
-  adbackend = ADModelNLSBackend(nvar, F, nequ, ncon, c!; x0 = x0, kwargs...)
+  adbackend = ADModelNLSBackend(nvar, F!, nequ, ncon, c!; x0 = x0, kwargs...)
 
   nnzh = get_nln_nnzh(adbackend, nvar)
 
@@ -341,7 +400,7 @@ function ADNLSModel!(
   )
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
-  return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, clinrows, clincols, clinvals, c!)
+  return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F!, clinrows, clincols, clinvals, c!)
 end
 
 function ADNLSModel(
@@ -359,7 +418,7 @@ function ADNLSModel(
 end
 
 function ADNLSModel!(
-  F,
+  F!,
   x0::S,
   nequ::Integer,
   A::AbstractSparseMatrix{Tv, Ti},
@@ -369,7 +428,7 @@ function ADNLSModel!(
   kwargs...,
 ) where {S, Tv, Ti}
   clinrows, clincols, clinvals = findnz(A)
-  return ADNLSModel!(F, x0, nequ, clinrows, clincols, clinvals, c!, lcon, ucon; kwargs...)
+  return ADNLSModel!(F!, x0, nequ, clinrows, clincols, clinvals, c!, lcon, ucon; kwargs...)
 end
 
 function ADNLSModel(
@@ -429,6 +488,14 @@ function ADNLSModel(
   kwargs...,
 ) where {S, AD}
 
+  function F!(output, x)
+    Fx = F(x)
+    for i=1:length(Fx)
+      output[i] = Fx[i]
+    end
+    return output
+  end
+
   function c!(output, x)
     cx = c(x)
     for i=1:length(cx)
@@ -437,11 +504,11 @@ function ADNLSModel(
     return output
   end
 
-  return ADNLSModel!(F, x0, nequ, lvar, uvar, c!, lcon, ucon; kwargs... )
+  return ADNLSModel!(F!, x0, nequ, lvar, uvar, c!, lcon, ucon; kwargs... )
 end
 
 function ADNLSModel!(
-  F,
+  F!,
   x0::S,
   nequ::Integer,
   lvar::S,
@@ -461,7 +528,7 @@ function ADNLSModel!(
   @lencheck nvar lvar uvar
   @lencheck ncon ucon y0
 
-  adbackend = ADModelNLSBackend(nvar, F, nequ, ncon, c!; x0 = x0, kwargs...)
+  adbackend = ADModelNLSBackend(nvar, F!, nequ, ncon, c!; x0 = x0, kwargs...)
 
   nnzh = get_nln_nnzh(adbackend, nvar)
   nnzj = get_nln_nnzj(adbackend, nvar, ncon)
@@ -483,7 +550,7 @@ function ADNLSModel!(
   )
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
-  return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, c!)
+  return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F!, c!)
 end
 
 function ADNLSModel(
@@ -501,6 +568,14 @@ function ADNLSModel(
   kwargs...,
 ) where {S, Si}
 
+  function F!(output, x)
+    Fx = F(x)
+    for i=1:length(Fx)
+      output[i] = Fx[i]
+    end
+    return output
+  end
+
   function c!(output, x)
     cx = c(x)
     for i=1:length(cx)
@@ -509,11 +584,11 @@ function ADNLSModel(
     return output
   end
 
-  return ADNLSModel!(F, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, c!, lcon, ucon; kwargs... )
+  return ADNLSModel!(F!, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, c!, lcon, ucon; kwargs... )
 end
 
 function ADNLSModel!(
-  F,
+  F!,
   x0::S,
   nequ::Integer,
   lvar::S,
@@ -536,7 +611,7 @@ function ADNLSModel!(
   @lencheck nvar lvar uvar
   @lencheck ncon ucon y0
 
-  adbackend = ADModelNLSBackend(nvar, F, nequ, ncon, c!; x0 = x0, kwargs...)
+  adbackend = ADModelNLSBackend(nvar, F!, nequ, ncon, c!; x0 = x0, kwargs...)
 
   nnzh = get_nln_nnzh(adbackend, nvar)
 
@@ -566,7 +641,7 @@ function ADNLSModel!(
   )
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
-  return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F, clinrows, clincols, clinvals, c!)
+  return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F!, clinrows, clincols, clinvals, c!)
 end
 
 function ADNLSModel(
@@ -586,7 +661,7 @@ function ADNLSModel(
 end
 
 function ADNLSModel!(
-  F,
+  F!,
   x0,
   nequ::Integer,
   lvar::S,
@@ -598,21 +673,22 @@ function ADNLSModel!(
   kwargs...,
 ) where {S, Tv, Ti}
   clinrows, clincols, clinvals = findnz(A)
-  return ADNLSModel!(F, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, c!, lcon, ucon; kwargs...)
+  return ADNLSModel!(F!, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, c!, lcon, ucon; kwargs...)
 end
 
 function NLPModels.residual!(nls::ADNLSModel, x::AbstractVector, Fx::AbstractVector)
   @lencheck nls.meta.nvar x
   @lencheck nls.nls_meta.nequ Fx
   increment!(nls, :neval_residual)
-  Fx .= nls.F(x)
+  nls.F!(Fx, x)
   return Fx
 end
 
 function NLPModels.jac_residual(nls::ADNLSModel, x::AbstractVector)
   @lencheck nls.meta.nvar x
   increment!(nls, :neval_jac_residual)
-  return jacobian(nls.adbackend.jacobian_residual_backend, nls.F, x)
+  F = get_F(nls, nls.adbackend.jacobian_residual_backend)
+  return jacobian(nls.adbackend.jacobian_residual_backend, F, x)
 end
 
 function NLPModels.jac_structure_residual!(
@@ -632,7 +708,8 @@ function NLPModels.jac_coord_residual!(nls::ADNLSModel, x::AbstractVector, vals:
   @lencheck nls.meta.nvar x
   @lencheck nls.nls_meta.nnzj vals
   increment!(nls, :neval_jac_residual)
-  Jx = jacobian(nls.adbackend.jacobian_residual_backend, nls.F, x)
+  F = get_F(nls, nls.adbackend.jacobian_residual_backend)
+  Jx = jacobian(nls.adbackend.jacobian_residual_backend, F, x)
   vals .= Jx[:]
   return vals
 end
@@ -646,7 +723,8 @@ function NLPModels.jprod_residual!(
   @lencheck nls.meta.nvar x v
   @lencheck nls.nls_meta.nequ Jv
   increment!(nls, :neval_jprod_residual)
-  Jv .= Jprod(nls.adbackend.jprod_residual_backend, nls.F, x, v)
+  F = get_F(nls, nls.adbackend.jprod_residual_backend)
+  Jv .= Jprod(nls.adbackend.jprod_residual_backend, F, x, v)
   return Jv
 end
 
@@ -659,7 +737,8 @@ function NLPModels.jtprod_residual!(
   @lencheck nls.meta.nvar x Jtv
   @lencheck nls.nls_meta.nequ v
   increment!(nls, :neval_jtprod_residual)
-  Jtv .= Jtprod(nls.adbackend.jtprod_residual_backend, nls.F, x, v)
+  F = get_F(nls, nls.adbackend.jtprod_residual_backend)
+  Jtv .= Jtprod(nls.adbackend.jtprod_residual_backend, F, x, v)
   return Jtv
 end
 
@@ -667,7 +746,8 @@ function NLPModels.hess_residual(nls::ADNLSModel, x::AbstractVector, v::Abstract
   @lencheck nls.meta.nvar x
   @lencheck nls.nls_meta.nequ v
   increment!(nls, :neval_hess_residual)
-  ϕ(x) = dot(nls.F(x), v)
+  F = get_F(nls, nls.adbackend.hessian_residual_backend)
+  ϕ(x) = dot(F(x), v)
   return Symmetric(hessian(nls.adbackend.hessian_residual_backend, ϕ, x), :L)
 end
 
@@ -694,7 +774,8 @@ function NLPModels.hess_coord_residual!(
   @lencheck nls.nls_meta.nequ v
   @lencheck nls.nls_meta.nnzh vals
   increment!(nls, :neval_hess_residual)
-  Hx = hessian(nls.adbackend.hessian_residual_backend, x -> dot(nls.F(x), v), x)
+  F = get_F(nls, nls.adbackend.hessian_residual_backend)
+  Hx = hessian(nls.adbackend.hessian_residual_backend, x -> dot(F(x), v), x)
   k = 1
   for j = 1:(nls.meta.nvar)
     for i = j:(nls.meta.nvar)
@@ -708,7 +789,8 @@ end
 function NLPModels.jth_hess_residual(nls::ADNLSModel, x::AbstractVector, i::Int)
   @lencheck nls.meta.nvar x
   increment!(nls, :neval_jhess_residual)
-  return Symmetric(hessian(nls.adbackend.hessian_residual_backend, x -> nls.F(x)[i], x), :L)
+  F = get_F(nls, nls.adbackend.hessian_residual_backend)
+  return Symmetric(hessian(nls.adbackend.hessian_residual_backend, x -> F(x)[i], x), :L)
 end
 
 function NLPModels.hprod_residual!(
@@ -720,7 +802,8 @@ function NLPModels.hprod_residual!(
 )
   @lencheck nls.meta.nvar x v Hiv
   increment!(nls, :neval_hprod_residual)
-  Hiv .= Hvprod(nls.adbackend.hprod_residual_backend, x -> nls.F(x)[i], x, v)
+  F = get_F(nls, nls.adbackend.hprod_residual_backend)
+  Hiv .= Hvprod(nls.adbackend.hprod_residual_backend, x -> F(x)[i], x, v)
   return Hiv
 end
 
@@ -853,7 +936,8 @@ end
 function NLPModels.hess(nls::ADNLSModel, x::AbstractVector; obj_weight::Real = one(eltype(x)))
   @lencheck nls.meta.nvar x
   increment!(nls, :neval_hess)
-  ℓ(x) = obj_weight * sum(nls.F(x) .^ 2) / 2
+  F = get_F(nls, nls.adbackend.hessian_backend)
+  ℓ(x) = obj_weight * sum(F(x) .^ 2) / 2
   Hx = hessian(nls.adbackend.hessian_backend, ℓ, x)
   return Symmetric(Hx, :L)
 end
@@ -867,12 +951,12 @@ function NLPModels.hess(
   @lencheck nls.meta.nvar x
   @lencheck nls.meta.ncon y
   increment!(nls, :neval_hess)
-    
+  F = get_F(nls, nls.adbackend.hessian_backend)
   ℓ(x) = if nls.meta.nnln > 0
     c = get_c(nls, nls.adbackend.hessian_backend)
-    obj_weight * sum(nls.F(x) .^ 2) / 2 + dot(view(y, (nls.meta.nlin + 1):(nls.meta.ncon)), c(x))
+    obj_weight * sum(F(x) .^ 2) / 2 + dot(view(y, (nls.meta.nlin + 1):(nls.meta.ncon)), c(x))
   else
-    obj_weight * sum(nls.F(x) .^ 2) / 2
+    obj_weight * sum(F(x) .^ 2) / 2
   end
   Hx = hessian(nls.adbackend.hessian_backend, ℓ, x)
   return Symmetric(Hx, :L)
@@ -929,7 +1013,8 @@ function NLPModels.hprod!(
 )
   @lencheck nls.meta.nvar x v Hv
   increment!(nls, :neval_hprod)
-  ℓ(x) = obj_weight * sum(nls.F(x) .^ 2) / 2
+  F = get_F(nls, nls.adbackend.hprod_backend)
+  ℓ(x) = obj_weight * sum(F(x) .^ 2) / 2
   Hv .= Hvprod(nls.adbackend.hprod_backend, ℓ, x, v)
   return Hv
 end
@@ -945,11 +1030,12 @@ function NLPModels.hprod!(
   @lencheck nls.meta.nvar x v Hv
   @lencheck nls.meta.ncon y
   increment!(nls, :neval_hprod)
+  F = get_F(nls, nls.adbackend.hprod_backend)
   ℓ(x) = if nls.meta.nnln > 0
     c = get_c(nls, nls.adbackend.hprod_backend)
-    obj_weight * sum(nls.F(x) .^ 2) / 2 + dot(view(y, (nls.meta.nlin + 1):(nls.meta.ncon)), c(x))
+    obj_weight * sum(F(x) .^ 2) / 2 + dot(view(y, (nls.meta.nlin + 1):(nls.meta.ncon)), c(x))
   else
-    obj_weight * sum(nls.F(x) .^ 2) / 2
+    obj_weight * sum(F(x) .^ 2) / 2
   end
   Hv .= Hvprod(nls.adbackend.hprod_backend, ℓ, x, v)
   return Hv

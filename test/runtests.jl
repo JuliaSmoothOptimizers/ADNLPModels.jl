@@ -34,7 +34,12 @@ function test_getter_setter(nlp)
   if typeof(nlp) <: ADNLPModel
     set_adbackend!(nlp, ReverseDiffAD(nlp.meta.nvar, nlp.f))
   elseif typeof(nlp) <: ADNLSModel
-    set_adbackend!(nlp, ReverseDiffAD(nlp.meta.nvar, x -> sum(nlp.F(x) .^ 2)))
+    function F(x; nequ = nlp.nls_meta.nequ)
+      Fx = similar(x, nequ)
+      nlp.F!(Fx, x)
+      return Fx
+    end
+    set_adbackend!(nlp, ReverseDiffAD(nlp.meta.nvar, x -> sum(F(x) .^ 2)))
   end
   @test typeof(get_adbackend(nlp).gradient_backend) <: ADNLPModels.ReverseDiffADGradient
   @test typeof(get_adbackend(nlp).hprod_backend) <: ADNLPModels.ReverseDiffADHvprod

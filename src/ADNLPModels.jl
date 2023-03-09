@@ -40,6 +40,22 @@ end
 get_c(nlp::ADModel, ::ADBackend) = get_c(nlp)
 
 """
+    get_F(nls)
+    get_F(nls, ::ADBackend)
+
+Return the out-of-place version of `nls.F!`.
+"""
+function get_F(nls::AbstractADNLSModel)
+  function F(x; nequ = nls.nls_meta.nequ)
+    Fx = similar(x, nequ)
+    nls.F!(Fx, x)
+    return Fx
+  end
+  return F
+end
+get_F(nls::AbstractADNLSModel, ::ADBackend) = get_F(nls)
+
+"""
     get_adbackend(nlp)
 
 Returns the value `adbackend` from nlp.

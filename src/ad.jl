@@ -13,7 +13,7 @@ The different backend are all subtype of `ADBackend` and are respectively used f
 
 The default constructors are 
     ADModelBackend(nvar, f, ncon = 0, c::Function = (args...) -> []; kwargs...)
-    ADModelNLSBackend(nvar, F, nequ, ncon = 0, c::Function = (args...) -> []; kwargs...)
+    ADModelNLSBackend(nvar, F!, nequ, ncon = 0, c::Function = (args...) -> []; kwargs...)
 
 where the `kwargs` are either the different backends as listed below or arguments passed to the backend's constructors:
   - `gradient_backend = ForwardDiffADGradient`;
@@ -68,7 +68,7 @@ function ADModelBackend(
   nvar::Integer,
   f,
   ncon::Integer = 0,
-  c::Function = (args...) -> [];
+  c!::Function = (args...) -> [];
   gradient_backend::Type{GB} = ForwardDiffADGradient,
   hprod_backend::Type{HvB} = ForwardDiffADHvprod,
   jprod_backend::Type{JvB} = ForwardDiffADJprod,
@@ -79,13 +79,13 @@ function ADModelBackend(
   kwargs...,
 ) where {GB, HvB, JvB, JtvB, JB, HB, GHJ}
   return ADModelBackend(
-    GB(nvar, f, ncon, c; kwargs...),
-    HvB(nvar, f, ncon, c; kwargs...),
-    JvB(nvar, f, ncon, c; kwargs...),
-    JtvB(nvar, f, ncon, c; kwargs...),
-    JB(nvar, f, ncon, c; kwargs...),
-    HB(nvar, f, ncon, c; kwargs...),
-    GHJ(nvar, f, ncon, c; kwargs...),
+    GB(nvar, f, ncon, c!; kwargs...),
+    HvB(nvar, f, ncon, c!; kwargs...),
+    JvB(nvar, f, ncon, c!; kwargs...),
+    JtvB(nvar, f, ncon, c!; kwargs...),
+    JB(nvar, f, ncon, c!; kwargs...),
+    HB(nvar, f, ncon, c!; kwargs...),
+    GHJ(nvar, f, ncon, c!; kwargs...),
     EmptyADbackend(),
     EmptyADbackend(),
     EmptyADbackend(),
@@ -96,10 +96,10 @@ end
 
 function ADModelNLSBackend(
   nvar::Integer,
-  F,
+  F!,
   nequ::Integer,
   ncon::Integer = 0,
-  c::Function = (args...) -> [];
+  c!::Function = (args...) -> [];
   gradient_backend::Type{GB} = ForwardDiffADGradient,
   hprod_backend::Type{HvB} = ForwardDiffADHvprod,
   jprod_backend::Type{JvB} = ForwardDiffADJprod,
@@ -114,20 +114,25 @@ function ADModelNLSBackend(
   hessian_residual_backend::Type{HBLS} = ForwardDiffADHessian,
   kwargs...,
 ) where {GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS}
+  function F(x; nequ = nequ)
+    Fx = similar(x, nequ)
+    F!(Fx, x)
+    return Fx
+  end
   f = x -> sum(F(x) .^ 2)
   return ADModelBackend(
-    GB(nvar, f, ncon, c; kwargs...),
-    HvB(nvar, f, ncon, c; kwargs...),
-    JvB(nvar, f, ncon, c; kwargs...),
-    JtvB(nvar, f, ncon, c; kwargs...),
-    JB(nvar, f, ncon, c; kwargs...),
-    HB(nvar, f, ncon, c; kwargs...),
-    GHJ(nvar, f, ncon, c; kwargs...),
-    HvBLS(nvar, f, nequ, F; kwargs...),
-    JvBLS(nvar, f, nequ, F; kwargs...),
-    JtvBLS(nvar, f, nequ, F; kwargs...),
-    JBLS(nvar, f, nequ, F; kwargs...),
-    HBLS(nvar, f, nequ, F; kwargs...),
+    GB(nvar, f, ncon, c!; kwargs...),
+    HvB(nvar, f, ncon, c!; kwargs...),
+    JvB(nvar, f, ncon, c!; kwargs...),
+    JtvB(nvar, f, ncon, c!; kwargs...),
+    JB(nvar, f, ncon, c!; kwargs...),
+    HB(nvar, f, ncon, c!; kwargs...),
+    GHJ(nvar, f, ncon, c!; kwargs...),
+    HvBLS(nvar, f, nequ, F!; kwargs...),
+    JvBLS(nvar, f, nequ, F!; kwargs...),
+    JtvBLS(nvar, f, nequ, F!; kwargs...),
+    JBLS(nvar, f, nequ, F!; kwargs...),
+    HBLS(nvar, f, nequ, F!; kwargs...),
   )
 end
 
@@ -223,11 +228,12 @@ function hess_coord!(
   obj_weight::Real,
   vals::AbstractVector,
 )
+  F = get_F(nls, b)
   ℓ(x) = if length(y) > 0
     c = get_c(nls, b)
-    obj_weight * sum(nls.F(x) .^ 2) / 2 + dot(c(x), y)
+    obj_weight * sum(F(x) .^ 2) / 2 + dot(c(x), y)
   else
-    obj_weight * sum(nls.F(x) .^ 2) / 2
+    obj_weight * sum(F(x) .^ 2) / 2
   end
   return hess_coord!(b, nls, x, ℓ, vals)
 end
@@ -238,7 +244,8 @@ function hess_coord!(
   obj_weight::Real,
   vals::AbstractVector,
 )
-  ℓ(x) = obj_weight * sum(nls.F(x) .^ 2) / 2
+  F = get_F(nls, b)
+  ℓ(x) = obj_weight * sum(F(x) .^ 2) / 2
   return hess_coord!(b, nls, x, ℓ, vals)
 end
 function hess_coord!(b::ADBackend, nlp::ADModel, x::AbstractVector, ℓ::Function, vals::AbstractVector)
