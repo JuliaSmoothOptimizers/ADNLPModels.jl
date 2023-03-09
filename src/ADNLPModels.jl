@@ -8,7 +8,10 @@ using ForwardDiff, ReverseDiff, Symbolics
 using NLPModels
 using Requires
 
-abstract type  AbstractADNLPModel{T, S} <:  AbstractNLPModel{T, S} end
+abstract type AbstractADNLPModel{T, S} <: AbstractNLPModel{T, S} end
+abstract type AbstractADNLSModel{T, S} <: AbstractNLSModel{T, S} end
+
+const ADModel{T, S} = Union{AbstractADNLPModel{T, S}, AbstractADNLSModel{T, S}}
 
 include("ad.jl")
 include("sparse_derivatives.jl")
@@ -26,7 +29,7 @@ export get_adbackend, set_adbackend!
 
 Return the out-of-place version of `nlp.c!`.
 """
-function get_c(nlp::Union{ADNLPModel, ADNLSModel})
+function get_c(nlp::ADModel)
   function c(x; nnln = nlp.meta.nnln)
     c = similar(x, nnln)
     nlp.c!(c, x)
@@ -34,14 +37,14 @@ function get_c(nlp::Union{ADNLPModel, ADNLSModel})
   end
   return c
 end
-get_c(nlp::Union{ADNLPModel, ADNLSModel}, ::ADBackend) = get_c(nlp)
+get_c(nlp::ADModel, ::ADBackend) = get_c(nlp)
 
 """
     get_adbackend(nlp)
 
 Returns the value `adbackend` from nlp.
 """
-get_adbackend(nlp::Union{ADNLPModel, ADNLSModel}) = nlp.adbackend
+get_adbackend(nlp::ADModel) = nlp.adbackend
 
 """
     set_adbackend!(nlp, new_adbackend)
@@ -50,11 +53,11 @@ get_adbackend(nlp::Union{ADNLPModel, ADNLSModel}) = nlp.adbackend
 Replace the current `adbackend` value of nlp by `new_adbackend` or instantiate a new one with `kwargs`, see `ADModelBackend`.
 By default, the setter with kwargs will reuse existing backends.
 """
-function set_adbackend!(nlp::Union{ADNLPModel, ADNLSModel}, new_adbackend::ADModelBackend)
+function set_adbackend!(nlp::ADModel, new_adbackend::ADModelBackend)
   nlp.adbackend = new_adbackend
   return nlp
 end
-function set_adbackend!(nlp::Union{ADNLPModel, ADNLSModel}; kwargs...)
+function set_adbackend!(nlp::ADModel; kwargs...)
   args = []
   for field in fieldnames(ADNLPModels.ADModelBackend)
     push!(args, if field in keys(kwargs) && typeof(kwargs[field]) <: ADBackend

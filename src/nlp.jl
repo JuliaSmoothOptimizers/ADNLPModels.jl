@@ -1,6 +1,6 @@
 export ADNLPModel, ADNLPModel!
 
-mutable struct ADNLPModel{T, S, Si} <: AbstractNLPModel{T, S}
+mutable struct ADNLPModel{T, S, Si} <:AbstractADNLPModel{T, S}
   meta::NLPModelMeta{T, S}
   counters::Counters
   adbackend::ADModelBackend

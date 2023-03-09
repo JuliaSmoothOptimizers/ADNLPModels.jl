@@ -1,6 +1,6 @@
 export ADNLSModel
 
-mutable struct ADNLSModel{T, S, Si} <: AbstractNLSModel{T, S}
+mutable struct ADNLSModel{T, S, Si} <: AbstractADNLSModel{T, S}
   meta::NLPModelMeta{T, S}
   nls_meta::NLSMeta{T, S}
   counters::NLSCounters

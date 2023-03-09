@@ -24,7 +24,7 @@ end
 
 function jac_structure!(
   b::SparseADJacobian,
-  nlp,
+  ::ADModel,
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
 )
@@ -32,7 +32,7 @@ function jac_structure!(
   cols .= b.cols
   return rows, cols
 end
-function jac_coord!(b::SparseADJacobian, nlp, x::AbstractVector, vals::AbstractVector)
+function jac_coord!(b::SparseADJacobian, ::ADModel, x::AbstractVector, vals::AbstractVector)
   _fun = eval(b.cfJ[2])
   Base.invokelatest(_fun, vals, x)
   return vals

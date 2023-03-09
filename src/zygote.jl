@@ -11,7 +11,7 @@ struct ZygoteADJtprod <: ImmutableADbackend end
 @init begin
   @require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" begin
     # See https://fluxml.ai/Zygote.jl/latest/limitations/
-    function get_immutable_c(nlp::Union{ADNLPModel, ADNLSModel})
+    function get_immutable_c(nlp::ADModel)
       function c(x; nnln = nlp.meta.nnln)
         c = Zygote.Buffer(x, nnln)
         nlp.c!(c, x)
@@ -19,7 +19,7 @@ struct ZygoteADJtprod <: ImmutableADbackend end
       end
       return c
     end
-    get_c(nlp::Union{ADNLPModel, ADNLSModel}, ::ImmutableADbackend) = get_immutable_c(nlp)
+    get_c(nlp::ADModel, ::ImmutableADbackend) = get_immutable_c(nlp)
 
     function ZygoteADGradient(
       nvar::Integer,
