@@ -3,7 +3,7 @@ module ADNLPModels
 # stdlib
 using LinearAlgebra, SparseArrays
 # external
-using ForwardDiff, ReverseDiff, Symbolics
+using ForwardDiff, ReverseDiff, SparseDiffTools, Symbolics
 # JSO
 using NLPModels
 using Requires
@@ -38,6 +38,7 @@ function get_c(nlp::ADModel)
   return c
 end
 get_c(nlp::ADModel, ::ADBackend) = get_c(nlp)
+get_c(nlp::ADModel, ::InPlaceADbackend) = nlp.c!
 
 """
     get_F(nls)

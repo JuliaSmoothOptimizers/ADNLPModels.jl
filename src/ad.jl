@@ -20,7 +20,7 @@ where the `kwargs` are either the different backends as listed below or argument
   - `hprod_backend = ForwardDiffADHvprod`;
   - `jprod_backend = ForwardDiffADJprod`;
   - `jtprod_backend = ForwardDiffADJtprod`;
-  - `jacobian_backend = SparseADJacobian`;
+  - `jacobian_backend = SparseForwardADJacobian`;
   - `hessian_backend = ForwardDiffADHessian`;
   - `ghjvprod_backend = ForwardDiffADGHjvprod`;
   - `hprod_residual_backend = ForwardDiffADHvprod` for `ADNLSModel` and `EmptyADbackend` otherwise;
@@ -73,7 +73,7 @@ function ADModelBackend(
   hprod_backend::Type{HvB} = ForwardDiffADHvprod,
   jprod_backend::Type{JvB} = ForwardDiffADJprod,
   jtprod_backend::Type{JtvB} = ForwardDiffADJtprod,
-  jacobian_backend::Type{JB} = SparseADJacobian,
+  jacobian_backend::Type{JB} = SparseForwardADJacobian,
   hessian_backend::Type{HB} = ForwardDiffADHessian,
   ghjvprod_backend::Type{GHJ} = ForwardDiffADGHjvprod,
   kwargs...,
@@ -104,7 +104,7 @@ function ADModelNLSBackend(
   hprod_backend::Type{HvB} = ForwardDiffADHvprod,
   jprod_backend::Type{JvB} = ForwardDiffADJprod,
   jtprod_backend::Type{JtvB} = ForwardDiffADJtprod,
-  jacobian_backend::Type{JB} = SparseADJacobian,
+  jacobian_backend::Type{JB} = SparseForwardADJacobian,
   hessian_backend::Type{HB} = ForwardDiffADHessian,
   ghjvprod_backend::Type{GHJ} = ForwardDiffADGHjvprod,
   hprod_residual_backend::Type{HvBLS} = ForwardDiffADHvprod,
@@ -138,6 +138,7 @@ end
 
 abstract type ADBackend end
 abstract type ImmutableADbackend <: ADBackend end
+abstract type InPlaceADbackend <: ADBackend end
 
 struct EmptyADbackend <: ADBackend end
 
@@ -202,13 +203,13 @@ function hess_coord!(
   obj_weight::Real,
   vals::AbstractVector,
 )
-  ℓ(x) =
-    if length(y) > 0
-      c = get_c(nlp, b)
-      obj_weight * nlp.f(x) + dot(c(x), y)
-    else
-      obj_weight * nlp.f(x)
-    end
+ℓ(x) =
+if length(y) > 0
+    c = get_c(nlp, b)
+    obj_weight * nlp.f(x) + dot(c(x), y)
+  else
+    obj_weight * nlp.f(x)
+  end
   return hess_coord!(b, nlp, x, ℓ, vals)
 end
 function hess_coord!(
@@ -232,11 +233,11 @@ function hess_coord!(
   F = get_F(nls, b)
   ℓ(x) =
     if length(y) > 0
-      c = get_c(nls, b)
-      obj_weight * sum(F(x) .^ 2) / 2 + dot(c(x), y)
-    else
-      obj_weight * sum(F(x) .^ 2) / 2
-    end
+    c = get_c(nls, b)
+    obj_weight * sum(F(x) .^ 2) / 2 + dot(c(x), y)
+  else
+    obj_weight * sum(F(x) .^ 2) / 2
+  end
   return hess_coord!(b, nls, x, ℓ, vals)
 end
 function hess_coord!(
