@@ -20,6 +20,16 @@ struct ZygoteADJtprod <: ImmutableADbackend end
       return c
     end
     get_c(nlp::ADModel, ::ImmutableADbackend) = get_immutable_c(nlp)
+    
+    function get_immutable_F(nls::AbstractADNLSModel)
+      function F(x; nequ = nls.nls_meta.nequ)
+        Fx = Zygote.Buffer(x, nequ)
+        nls.F!(Fx, x)
+        return copy(Fx)
+      end
+      return F
+    end
+    get_F(nls::AbstractADNLSModel, ::ImmutableADbackend) = get_immutable_F(nls)
 
     function ZygoteADGradient(
       nvar::Integer,
