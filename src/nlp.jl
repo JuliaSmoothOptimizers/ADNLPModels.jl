@@ -1,6 +1,6 @@
 export ADNLPModel, ADNLPModel!
 
-mutable struct ADNLPModel{T, S, Si} <:AbstractADNLPModel{T, S}
+mutable struct ADNLPModel{T, S, Si} <: AbstractADNLPModel{T, S}
   meta::NLPModelMeta{T, S}
   counters::Counters
   adbackend::ADModelBackend
@@ -158,24 +158,16 @@ function ADNLPModel(
   return ADNLPModel(meta, Counters(), adbackend, f, x -> T[])
 end
 
-function ADNLPModel(
-  f,
-  x0::S,
-  c,
-  lcon::S,
-  ucon::S;
-  kwargs...,
-) where {S}
-
+function ADNLPModel(f, x0::S, c, lcon::S, ucon::S; kwargs...) where {S}
   function c!(output, x)
     cx = c(x)
-    for i=1:length(cx)
+    for i = 1:length(cx)
       output[i] = cx[i]
     end
     return output
   end
 
-  return ADNLPModel!(f, x0, c!, lcon, ucon; kwargs... )
+  return ADNLPModel!(f, x0, c!, lcon, ucon; kwargs...)
 end
 
 function ADNLPModel!(
@@ -252,18 +244,17 @@ function ADNLPModel(
   c,
   lcon::S,
   ucon::S;
-  kwargs...
+  kwargs...,
 ) where {S}
-
   function c!(output, x)
     cx = c(x)
-    for i=1:length(cx)
+    for i = 1:length(cx)
       output[i] = cx[i]
     end
     return output
   end
 
-  return ADNLPModel!(f, x0, clinrows, clincols, clinvals, c!, lcon, ucon; kwargs... )
+  return ADNLPModel!(f, x0, clinrows, clincols, clinvals, c!, lcon, ucon; kwargs...)
 end
 
 function ADNLPModel!(
@@ -321,7 +312,15 @@ function ADNLPModel(f, x0, A::AbstractSparseMatrix{Tv, Ti}, c, lcon, ucon; kwarg
   return ADNLPModel(f, x0, findnz(A)..., c, lcon, ucon; kwargs...)
 end
 
-function ADNLPModel!(f, x0, A::AbstractSparseMatrix{Tv, Ti}, c!, lcon, ucon; kwargs...) where {Tv, Ti}
+function ADNLPModel!(
+  f,
+  x0,
+  A::AbstractSparseMatrix{Tv, Ti},
+  c!,
+  lcon,
+  ucon;
+  kwargs...,
+) where {Tv, Ti}
   return ADNLPModel!(f, x0, findnz(A)..., c!, lcon, ucon; kwargs...)
 end
 
@@ -366,26 +365,16 @@ function ADNLPModel(
   return ADNLPModel(f, x0, lvar, uvar, findnz(A)..., lcon, ucon; kwargs...)
 end
 
-function ADNLPModel(
-  f,
-  x0::S,
-  lvar::S,
-  uvar::S,
-  c,
-  lcon::S,
-  ucon::S;
-  kwargs...,
-) where {S}
-
+function ADNLPModel(f, x0::S, lvar::S, uvar::S, c, lcon::S, ucon::S; kwargs...) where {S}
   function c!(output, x)
     cx = c(x)
-    for i=1:length(cx)
+    for i = 1:length(cx)
       output[i] = cx[i]
     end
     return output
   end
 
-  return ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon; kwargs... )
+  return ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon; kwargs...)
 end
 
 function ADNLPModel!(
@@ -445,16 +434,15 @@ function ADNLPModel(
   ucon::S;
   kwargs...,
 ) where {S}
-
   function c!(output, x)
     cx = c(x)
-    for i=1:length(cx)
+    for i = 1:length(cx)
       output[i] = cx[i]
     end
     return output
   end
 
-  return ADNLPModel!(f, x0, lvar, uvar, clinrows, clincols, clinvals, c!, lcon, ucon; kwargs... )
+  return ADNLPModel!(f, x0, lvar, uvar, clinrows, clincols, clinvals, c!, lcon, ucon; kwargs...)
 end
 
 function ADNLPModel!(
@@ -696,12 +684,13 @@ function NLPModels.hess(
   @lencheck nlp.meta.nvar x
   @lencheck nlp.meta.ncon y
   increment!(nlp, :neval_hess)
-  ℓ(x) = if nlp.meta.nnln > 0
-    c = get_c(nlp, nlp.adbackend.hessian_backend)
-    obj_weight * nlp.f(x) + dot(c(x), view(y, (nlp.meta.nlin + 1):(nlp.meta.ncon)))
-  else
-    obj_weight * nlp.f(x)
-  end
+  ℓ(x) =
+    if nlp.meta.nnln > 0
+      c = get_c(nlp, nlp.adbackend.hessian_backend)
+      obj_weight * nlp.f(x) + dot(c(x), view(y, (nlp.meta.nlin + 1):(nlp.meta.ncon)))
+    else
+      obj_weight * nlp.f(x)
+    end
   Hx = hessian(nlp.adbackend.hessian_backend, ℓ, x)
   return Symmetric(Hx, :L)
 end
@@ -775,12 +764,13 @@ function NLPModels.hprod!(
   @lencheck n x v Hv
   @lencheck nlp.meta.ncon y
   increment!(nlp, :neval_hprod)
-  ℓ(x) = if nlp.meta.nnln > 0
-    c = get_c(nlp, nlp.adbackend.hprod_backend)
-    obj_weight * nlp.f(x) + dot(c(x), view(y, (nlp.meta.nlin + 1):(nlp.meta.ncon)))
-  else
-    obj_weight * nlp.f(x)
-  end
+  ℓ(x) =
+    if nlp.meta.nnln > 0
+      c = get_c(nlp, nlp.adbackend.hprod_backend)
+      obj_weight * nlp.f(x) + dot(c(x), view(y, (nlp.meta.nlin + 1):(nlp.meta.ncon)))
+    else
+      obj_weight * nlp.f(x)
+    end
   Hv .= Hvprod(nlp.adbackend.hprod_backend, ℓ, x, v)
   return Hv
 end
