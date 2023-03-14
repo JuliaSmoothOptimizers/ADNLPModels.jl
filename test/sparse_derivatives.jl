@@ -1,11 +1,12 @@
 list_sparse_jac_backend = (
-  ADNLPModels.ForwardDiffADJacobian,
-  ADNLPModels.SparseForwardADJacobian,
-  ADNLPModels.SparseADJacobian,
+  (ADNLPModels.SparseForwardADJacobian, Dict(:alg => SparseDiffTools.GreedyD1Color())),
+  (ADNLPModels.SparseForwardADJacobian, Dict(:alg => SparseDiffTools.AcyclicColoring())),
+  (ADNLPModels.ForwardDiffADJacobian, Dict()),
+  (ADNLPModels.SparseADJacobian, Dict()),
 )
 dt = (Float32, Float64)
 @testset "Basic Jacobian derivative with backend=$(backend) and T=$(T)" for T in dt,
-  backend in list_sparse_jac_backend
+  (backend, kw) in list_sparse_jac_backend
 
   c!(cx, x) = begin
     cx[1] = x[1] - 1
@@ -16,7 +17,7 @@ dt = (Float32, Float64)
   x0 = T[-1.2; 1.0]
   nvar = 2
   ncon = 3
-  nlp = ADNLPModel!(x -> sum(x), x0, c!, zeros(T, ncon), zeros(T, ncon))
+  nlp = ADNLPModel!(x -> sum(x), x0, c!, zeros(T, ncon), zeros(T, ncon), jacobian_backend = backend; kw...)
 
   x = rand(T, 2)
   rows, cols = zeros(Int, nlp.meta.nln_nnzj), zeros(Int, nlp.meta.nln_nnzj)
