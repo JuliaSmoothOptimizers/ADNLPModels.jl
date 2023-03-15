@@ -2,6 +2,11 @@ using ADNLPModels, LinearAlgebra, NLPModels, NLPModelsModifiers, NLPModelsTest, 
 using ADNLPModels:
   gradient, gradient!, jacobian, hessian, Jprod, Jtprod, directional_second_derivative, Hvprod
 
+using SparseDiffTools
+@testset "Basic Jacobian derivative test" begin
+  include("sparse_derivatives.jl")
+end
+
 for problem in NLPModelsTest.nlp_problems ∪ ["GENROSE"]
   include("nlp/problems/$(lowercase(problem)).jl")
 end
