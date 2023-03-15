@@ -1,5 +1,5 @@
 struct SparseForwardADJacobian{Tv, Ti, T, T2, T3, T4, T5} <: ADNLPModels.ADBackend
-  cfJ::ForwardColorJacCache{T, T2, T3, T4, T5, SparseMatrixCSC{Ti, Tv}}
+  cfJ::ForwardColorJacCache{T, T2, T3, T4, T5, SparseMatrixCSC{Tv, Ti}}
 end
 
 function SparseForwardADJacobian(nvar, f, ncon, c!; x0::AbstractVector = rand(nvar), alg::SparseDiffTools.SparseDiffToolsColoringAlgorithm = SparseDiffTools.GreedyD1Color(), kwargs...)
@@ -7,17 +7,16 @@ function SparseForwardADJacobian(nvar, f, ncon, c!; x0::AbstractVector = rand(nv
   output = similar(x0, ncon)
   sparsity_pattern = Symbolics.jacobian_sparsity(c!, output, x0)
   colors = matrix_colors(sparsity_pattern, alg)
+  jac = SparseMatrixCSC{Tv, Int}(sparsity_pattern.nrows, sparsity_pattern.ncols, sparsity_pattern.colptr, sparsity_pattern.rowval, similar(Tv, sparsity_pattern.nzval)) 
+  dx = zeros(Tv, ncon)
   sparsity_pattern = Tv.(sparsity_pattern)
-  dx = copy(output)
-  dx .= 0
-  sparsity_pattern = Tv.(sparsity_pattern)
-  cfJ = ForwardColorJacCache(c!, x0, colorvec = colors, dx = dx, sparsity = sparsity_pattern) 
+  cfJ = ForwardColorJacCache(c!, x0, colorvec = colors, dx = dx, sparsity = jac) 
 
   SparseForwardADJacobian(cfJ)
 end
 
 function get_nln_nnzj(b::SparseForwardADJacobian, nvar, ncon)
-  length(b.cfJ.sparsity.nzval)
+  nnz(b.cfJ.sparsity)
 end
 
 function jac_structure!(
@@ -26,7 +25,7 @@ function jac_structure!(
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
 )
-  rows .= b.cfJ.sparsity.rowval
+  rows .= rowvals(b.cfJ.sparsity)
   for i = 1:(nlp.meta.nvar)
     for j = b.cfJ.sparsity.colptr[i]:(b.cfJ.sparsity.colptr[i + 1] - 1)
       cols[j] = i
@@ -42,7 +41,7 @@ function jac_coord!(
   vals::AbstractVector,
 )
   forwarddiff_color_jacobian!(b.cfJ.sparsity, nlp.c!, x, b.cfJ)
-  vals .= b.cfJ.sparsity.nzval
+  vals .= nonzeros(b.cfJ.sparsity)
   return vals
 end
 
