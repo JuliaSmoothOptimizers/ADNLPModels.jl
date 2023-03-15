@@ -17,7 +17,15 @@ dt = (Float32, Float64)
   x0 = T[-1.2; 1.0]
   nvar = 2
   ncon = 3
-  nlp = ADNLPModel!(x -> sum(x), x0, c!, zeros(T, ncon), zeros(T, ncon), jacobian_backend = backend; kw...)
+  nlp = ADNLPModel!(
+    x -> sum(x),
+    x0,
+    c!,
+    zeros(T, ncon),
+    zeros(T, ncon),
+    jacobian_backend = backend;
+    kw...,
+  )
 
   x = rand(T, 2)
   rows, cols = zeros(Int, nlp.meta.nln_nnzj), zeros(Int, nlp.meta.nln_nnzj)
