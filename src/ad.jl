@@ -21,7 +21,7 @@ where the `kwargs` are either the different backends as listed below or argument
   - `jprod_backend = ForwardDiffADJprod`;
   - `jtprod_backend = ForwardDiffADJtprod`;
   - `jacobian_backend = SparseForwardADJacobian`;
-  - `hessian_backend = ForwardDiffADHessian`;
+  - `hessian_backend = SparseForwardADHessian`;
   - `ghjvprod_backend = ForwardDiffADGHjvprod`;
   - `hprod_residual_backend = ForwardDiffADHvprod` for `ADNLSModel` and `EmptyADbackend` otherwise;
   - `jprod_residual_backend = ForwardDiffADJprod` for `ADNLSModel` and `EmptyADbackend` otherwise;
@@ -74,7 +74,7 @@ function ADModelBackend(
   jprod_backend::Type{JvB} = ForwardDiffADJprod,
   jtprod_backend::Type{JtvB} = ForwardDiffADJtprod,
   jacobian_backend::Type{JB} = SparseForwardADJacobian,
-  hessian_backend::Type{HB} = ForwardDiffADHessian,
+  hessian_backend::Type{HB} = SparseForwardADHessian,
   ghjvprod_backend::Type{GHJ} = ForwardDiffADGHjvprod,
   kwargs...,
 ) where {GB, HvB, JvB, JtvB, JB, HB, GHJ}
@@ -105,7 +105,7 @@ function ADModelNLSBackend(
   jprod_backend::Type{JvB} = ForwardDiffADJprod,
   jtprod_backend::Type{JtvB} = ForwardDiffADJtprod,
   jacobian_backend::Type{JB} = SparseForwardADJacobian,
-  hessian_backend::Type{HB} = ForwardDiffADHessian,
+  hessian_backend::Type{HB} = SparseForwardADHessian,
   ghjvprod_backend::Type{GHJ} = ForwardDiffADGHjvprod,
   hprod_residual_backend::Type{HvBLS} = ForwardDiffADHvprod,
   jprod_residual_backend::Type{JvBLS} = ForwardDiffADJprod,
