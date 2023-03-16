@@ -190,10 +190,12 @@ function hess_structure!(
   cols::AbstractVector{<:Integer},
 )
   n = nlp.meta.nvar
-  for i = 1:n
-    for j = i:n
-      rows[i + (j-1)*n] = i
-      cols[i + (j-1)*n] = j
+  pos = 0
+  for j = 1:n
+    for i = j:n
+      pos += 1
+      rows[pos] = i
+      cols[pos] = j
     end
   end
   return rows, cols
@@ -284,10 +286,12 @@ function jac_structure!(
   cols::AbstractVector{<:Integer},
 )
   m, n = nlp.meta.nnln, nlp.meta.nvar
-  for i = 1:m
-    for j = 1:n
-      rows[i + (j-1)*m] = i
-      cols[i + (j-1)*m] = j
+  pos = 0
+  for j = 1:n
+    for i = 1:m
+      pos += 1
+      rows[pos] = i
+      cols[pos] = j
     end
   end
   return rows, cols
