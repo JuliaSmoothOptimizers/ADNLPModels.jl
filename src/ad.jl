@@ -119,7 +119,7 @@ function ADModelNLSBackend(
     F!(Fx, x)
     return Fx
   end
-  f = x -> sum(F(x) .^ 2)
+  f = x -> mapreduce(Fi -> Fi^2, +, F(x)) / 2
   return ADModelBackend(
     GB(nvar, f, ncon, c!; kwargs...),
     HvB(nvar, f, ncon, c!; kwargs...),
@@ -169,7 +169,7 @@ function get_nln_nnzh(b::ADModelBackend, nvar)
 end
 
 function get_nln_nnzh(::ADBackend, nvar)
-  nvar * (nvar + 1) / 2
+  div(nvar * (nvar + 1), 2)
 end
 
 throw_error(b) =
@@ -182,6 +182,7 @@ Jprod(b::ADBackend, ::Any, ::Any, ::Any) = throw_error(b)
 Jtprod(b::ADBackend, ::Any, ::Any, ::Any) = throw_error(b)
 Hvprod(b::ADBackend, ::Any, ::Any, ::Any) = throw_error(b)
 directional_second_derivative(::ADBackend, ::Any, ::Any, ::Any, ::Any) = throw_error(b)
+
 function hess_structure!(
   b::ADBackend,
   nlp::ADModel,
@@ -189,9 +190,12 @@ function hess_structure!(
   cols::AbstractVector{<:Integer},
 )
   n = nlp.meta.nvar
-  I = ((i, j) for i = 1:n, j = 1:n if i ≥ j)
-  rows .= getindex.(I, 1)
-  cols .= getindex.(I, 2)
+  for i = 1:n
+    for j = i:n
+      rows[i + (j-1)*n] = i
+      cols[i + (j-1)*n] = j
+    end
+  end
   return rows, cols
 end
 
@@ -203,15 +207,16 @@ function hess_coord!(
   obj_weight::Real,
   vals::AbstractVector,
 )
-  ℓ(x) =
-    if length(y) > 0
-      c = get_c(nlp, b)
-      obj_weight * nlp.f(x) + dot(c(x), y)
-    else
-      obj_weight * nlp.f(x)
-    end
-  return hess_coord!(b, nlp, x, ℓ, vals)
+  if nlp.meta.ncon == 0
+    hess_coord!(b, nlp, x, obj_weight, vals)
+  else
+    c = get_c(nlp, b)
+    ℓ(x) = obj_weight * nlp.f(x) + dot(c(x), y)
+    hess_coord!(b, nlp, x, ℓ, vals)
+  end
+  return vals
 end
+
 function hess_coord!(
   b::ADBackend,
   nlp::AbstractADNLPModel,
@@ -222,6 +227,7 @@ function hess_coord!(
   ℓ(x) = obj_weight * nlp.f(x)
   return hess_coord!(b, nlp, x, ℓ, vals)
 end
+
 function hess_coord!(
   b::ADBackend,
   nls::AbstractADNLSModel,
@@ -231,15 +237,15 @@ function hess_coord!(
   vals::AbstractVector,
 )
   F = get_F(nls, b)
-  ℓ(x) =
-    if length(y) > 0
-      c = get_c(nls, b)
-      obj_weight * sum(F(x) .^ 2) / 2 + dot(c(x), y)
-    else
-      obj_weight * sum(F(x) .^ 2) / 2
-    end
-  return hess_coord!(b, nls, x, ℓ, vals)
+  if nls.meta.ncon == 0
+    hess_coord!(b, nls, x, obj_weight, vals)
+  else
+    c = get_c(nls, b)
+    ℓ(x) = obj_weight * mapreduce(Fi -> Fi^2, +, F(x)) / 2 + dot(c(x), y)
+    hess_coord!(b, nls, x, ℓ, vals)
+  end
 end
+
 function hess_coord!(
   b::ADBackend,
   nls::AbstractADNLSModel,
@@ -248,9 +254,10 @@ function hess_coord!(
   vals::AbstractVector,
 )
   F = get_F(nls, b)
-  ℓ(x) = obj_weight * sum(F(x) .^ 2) / 2
+  ℓ(x) = obj_weight * mapreduce(Fi -> Fi^2, +, F(x)) / 2
   return hess_coord!(b, nls, x, ℓ, vals)
 end
+
 function hess_coord!(
   b::ADBackend,
   nlp::ADModel,
@@ -260,8 +267,9 @@ function hess_coord!(
 )
   Hx = hessian(b, ℓ, x)
   k = 1
-  for j = 1:(nlp.meta.nvar)
-    for i = j:(nlp.meta.nvar)
+  n = nlp.meta.nvar
+  for j = 1:n
+    for i = j:n
       vals[k] = Hx[i, j]
       k += 1
     end
@@ -276,14 +284,18 @@ function jac_structure!(
   cols::AbstractVector{<:Integer},
 )
   m, n = nlp.meta.nnln, nlp.meta.nvar
-  I = ((i, j) for i = 1:m, j = 1:n)
-  rows .= getindex.(I, 1)[:]
-  cols .= getindex.(I, 2)[:]
+  for i = 1:m
+    for j = 1:n
+      rows[i + (j-1)*m] = i
+      cols[i + (j-1)*m] = j
+    end
+  end
   return rows, cols
 end
+
 function jac_coord!(b::ADBackend, nlp::ADModel, x::AbstractVector, vals::AbstractVector)
   c = get_c(nlp, b)
   Jx = jacobian(b, c, x)
-  vals .= Jx[:]
+  vals .= view(Jx, :)
   return vals
 end
