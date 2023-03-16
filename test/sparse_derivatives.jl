@@ -57,8 +57,8 @@ end
 
 # ----- Hessian -----
 list_sparse_hess_backend = (
-  (ADNLPModels.SparseForwardADHessian, Dict(:alg => SparseDiffTools.GreedyD1Color())),
-  (ADNLPModels.SparseForwardADHessian, Dict(:alg => SparseDiffTools.AcyclicColoring())),
+  # (ADNLPModels.SparseForwardADHessian, Dict(:alg => SparseDiffTools.GreedyD1Color())),
+  # (ADNLPModels.SparseForwardADHessian, Dict(:alg => SparseDiffTools.AcyclicColoring())),
   (ADNLPModels.ForwardDiffADHessian, Dict()),
   # (ADNLPModels.SparseADHessian, Dict()),  # We need https://github.com/JuliaSymbolics/Symbolics.jl/pull/862
 )
