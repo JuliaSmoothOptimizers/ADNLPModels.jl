@@ -71,7 +71,7 @@ function get_lag(nlp::AbstractADNLPModel, b::ADBackend, obj_weight::Real, y::Abs
   end
   c = get_c(nlp, b)
   yview = (length(y) == nlp.meta.nnln) ? y : view(y, (nlp.meta.nlin + 1):(nlp.meta.ncon))
-  ℓ(x; obj_weight = obj_weight, y = yview) = obj_weight * nlp.f(x) + dot(c(x), yview)
+  ℓ(x; obj_weight = obj_weight, y = yview) = obj_weight * nlp.f(x) + dot(c(x), y)
   return ℓ
 end
 
@@ -87,7 +87,7 @@ function get_lag(nls::AbstractADNLSModel, b::ADBackend, obj_weight::Real, y::Abs
   F = get_F(nls, b)
   c = get_c(nls, b)
   yview = (length(y) == nls.meta.nnln) ? y : view(y, (nls.meta.nlin + 1):(nls.meta.ncon))
-  ℓ(x; obj_weight = obj_weight, y = yview) = obj_weight * sum(F(x) .^ 2) / 2 + dot(c(x), yview)
+  ℓ(x; obj_weight = obj_weight, y = yview) = obj_weight * sum(F(x) .^ 2) / 2 + dot(c(x), y)
   return ℓ
 end
 
