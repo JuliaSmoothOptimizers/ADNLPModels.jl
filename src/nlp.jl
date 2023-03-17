@@ -670,7 +670,7 @@ end
 function NLPModels.hess(nlp::ADNLPModel, x::AbstractVector; obj_weight::Real = one(eltype(x)))
   @lencheck nlp.meta.nvar x
   increment!(nlp, :neval_hess)
-  ℓ(x) = obj_weight * nlp.f(x)
+  ℓ = get_lag(nlp, nlp.adbackend.hessian_backend, obj_weight)
   Hx = hessian(nlp.adbackend.hessian_backend, ℓ, x)
   return Symmetric(Hx, :L)
 end
@@ -684,13 +684,7 @@ function NLPModels.hess(
   @lencheck nlp.meta.nvar x
   @lencheck nlp.meta.ncon y
   increment!(nlp, :neval_hess)
-  ℓ(x) =
-    if nlp.meta.nnln > 0
-      c = get_c(nlp, nlp.adbackend.hessian_backend)
-      obj_weight * nlp.f(x) + dot(c(x), view(y, (nlp.meta.nlin + 1):(nlp.meta.ncon)))
-    else
-      obj_weight * nlp.f(x)
-    end
+  ℓ = get_lag(nlp, nlp.adbackend.hessian_backend, obj_weight, y)
   Hx = hessian(nlp.adbackend.hessian_backend, ℓ, x)
   return Symmetric(Hx, :L)
 end
@@ -747,7 +741,7 @@ function NLPModels.hprod!(
   n = nlp.meta.nvar
   @lencheck n x v Hv
   increment!(nlp, :neval_hprod)
-  ℓ(x) = obj_weight * nlp.f(x)
+  ℓ = get_lag(nlp, nlp.adbackend.hprod_backend, obj_weight)
   Hv .= Hvprod(nlp.adbackend.hprod_backend, ℓ, x, v)
   return Hv
 end
@@ -764,13 +758,7 @@ function NLPModels.hprod!(
   @lencheck n x v Hv
   @lencheck nlp.meta.ncon y
   increment!(nlp, :neval_hprod)
-  ℓ(x) =
-    if nlp.meta.nnln > 0
-      c = get_c(nlp, nlp.adbackend.hprod_backend)
-      obj_weight * nlp.f(x) + dot(c(x), view(y, (nlp.meta.nlin + 1):(nlp.meta.ncon)))
-    else
-      obj_weight * nlp.f(x)
-    end
+  ℓ = get_lag(nlp, nlp.adbackend.hprod_backend, obj_weight, y)
   Hv .= Hvprod(nlp.adbackend.hprod_backend, ℓ, x, v)
   return Hv
 end

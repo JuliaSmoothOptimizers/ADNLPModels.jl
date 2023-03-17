@@ -203,61 +203,26 @@ end
 
 function hess_coord!(
   b::ADBackend,
-  nlp::AbstractADNLPModel,
+  nlp::ADModel,
   x::AbstractVector,
   y::AbstractVector,
   obj_weight::Real,
   vals::AbstractVector,
 )
-  if nlp.meta.ncon == 0
-    hess_coord!(b, nlp, x, obj_weight, vals)
-  else
-    c = get_c(nlp, b)
-    ℓ(x) = obj_weight * nlp.f(x) + dot(c(x), y)
-    hess_coord!(b, nlp, x, ℓ, vals)
-  end
+  ℓ = get_lag(nlp, b, obj_weight, y)
+  hess_coord!(b, nlp, x, ℓ, vals)
   return vals
 end
 
 function hess_coord!(
   b::ADBackend,
-  nlp::AbstractADNLPModel,
+  nlp::ADModel,
   x::AbstractVector,
   obj_weight::Real,
   vals::AbstractVector,
 )
-  ℓ(x) = obj_weight * nlp.f(x)
+  ℓ = get_lag(nlp, b, obj_weight)
   return hess_coord!(b, nlp, x, ℓ, vals)
-end
-
-function hess_coord!(
-  b::ADBackend,
-  nls::AbstractADNLSModel,
-  x::AbstractVector,
-  y::AbstractVector,
-  obj_weight::Real,
-  vals::AbstractVector,
-)
-  F = get_F(nls, b)
-  if nls.meta.ncon == 0
-    hess_coord!(b, nls, x, obj_weight, vals)
-  else
-    c = get_c(nls, b)
-    ℓ(x) = obj_weight * mapreduce(Fi -> Fi^2, +, F(x)) / 2 + dot(c(x), y)
-    hess_coord!(b, nls, x, ℓ, vals)
-  end
-end
-
-function hess_coord!(
-  b::ADBackend,
-  nls::AbstractADNLSModel,
-  x::AbstractVector,
-  obj_weight::Real,
-  vals::AbstractVector,
-)
-  F = get_F(nls, b)
-  ℓ(x) = obj_weight * mapreduce(Fi -> Fi^2, +, F(x)) / 2
-  return hess_coord!(b, nls, x, ℓ, vals)
 end
 
 function hess_coord!(

@@ -936,8 +936,7 @@ end
 function NLPModels.hess(nls::ADNLSModel, x::AbstractVector; obj_weight::Real = one(eltype(x)))
   @lencheck nls.meta.nvar x
   increment!(nls, :neval_hess)
-  F = get_F(nls, nls.adbackend.hessian_backend)
-  ℓ(x) = obj_weight * sum(F(x) .^ 2) / 2
+  ℓ = get_lag(nls, nls.adbackend.hessian_backend, obj_weight)
   Hx = hessian(nls.adbackend.hessian_backend, ℓ, x)
   return Symmetric(Hx, :L)
 end
@@ -951,14 +950,7 @@ function NLPModels.hess(
   @lencheck nls.meta.nvar x
   @lencheck nls.meta.ncon y
   increment!(nls, :neval_hess)
-  F = get_F(nls, nls.adbackend.hessian_backend)
-  ℓ(x) =
-    if nls.meta.nnln > 0
-      c = get_c(nls, nls.adbackend.hessian_backend)
-      obj_weight * sum(F(x) .^ 2) / 2 + dot(view(y, (nls.meta.nlin + 1):(nls.meta.ncon)), c(x))
-    else
-      obj_weight * sum(F(x) .^ 2) / 2
-    end
+  ℓ = get_lag(nls, nls.adbackend.hessian_backend, obj_weight, y)
   Hx = hessian(nls.adbackend.hessian_backend, ℓ, x)
   return Symmetric(Hx, :L)
 end
@@ -1014,8 +1006,7 @@ function NLPModels.hprod!(
 )
   @lencheck nls.meta.nvar x v Hv
   increment!(nls, :neval_hprod)
-  F = get_F(nls, nls.adbackend.hprod_backend)
-  ℓ(x) = obj_weight * sum(F(x) .^ 2) / 2
+  ℓ = get_lag(nls, nls.adbackend.hprod_backend, obj_weight)
   Hv .= Hvprod(nls.adbackend.hprod_backend, ℓ, x, v)
   return Hv
 end
@@ -1031,14 +1022,7 @@ function NLPModels.hprod!(
   @lencheck nls.meta.nvar x v Hv
   @lencheck nls.meta.ncon y
   increment!(nls, :neval_hprod)
-  F = get_F(nls, nls.adbackend.hprod_backend)
-  ℓ(x) =
-    if nls.meta.nnln > 0
-      c = get_c(nls, nls.adbackend.hprod_backend)
-      obj_weight * sum(F(x) .^ 2) / 2 + dot(view(y, (nls.meta.nlin + 1):(nls.meta.ncon)), c(x))
-    else
-      obj_weight * sum(F(x) .^ 2) / 2
-    end
+  ℓ = get_lag(nls, nls.adbackend.hprod_backend, obj_weight, y)
   Hv .= Hvprod(nls.adbackend.hprod_backend, ℓ, x, v)
   return Hv
 end

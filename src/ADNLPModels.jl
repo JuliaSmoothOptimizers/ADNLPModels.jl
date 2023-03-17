@@ -57,6 +57,41 @@ end
 get_F(nls::AbstractADNLSModel, ::ADBackend) = get_F(nls)
 
 """
+    get_lag(nlp, b::ADBackend, obj_weight)
+    get_lag(nlp, b::ADBackend, obj_weight, y)
+
+Return the lagrangian function `ℓ(x) = obj_weight * f(x) + c(x)ᵀy`.
+"""
+function get_lag(nlp::AbstractADNLPModel, b::ADBackend, obj_weight::Real)
+  return ℓ(x; obj_weight = obj_weight) = obj_weight * nlp.f(x)
+end
+function get_lag(nlp::AbstractADNLPModel, b::ADBackend, obj_weight::Real, y::AbstractVector)
+  if nlp.meta.nnln == 0
+    return get_lag(nlp, b, obj_weight)
+  end
+  c = get_c(nlp, b)
+  yview = (length(y) == nlp.meta.nnln) ? y : view(y, (nlp.meta.nlin + 1):(nlp.meta.ncon))
+  ℓ(x; obj_weight = obj_weight, y = yview) = obj_weight * nlp.f(x) + dot(c(x), y)
+  return ℓ
+end
+
+function get_lag(nls::AbstractADNLSModel, b::ADBackend, obj_weight::Real)
+  F = get_F(nls, b)
+  ℓ(x; obj_weight = obj_weight) = obj_weight * mapreduce(Fi -> Fi^2, +, F(x)) / 2
+  return ℓ
+end
+function get_lag(nls::AbstractADNLSModel, b::ADBackend, obj_weight::Real, y::AbstractVector)
+  if nls.meta.nnln == 0
+    return get_lag(nls, b, obj_weight)
+  end
+  F = get_F(nls, b)
+  c = get_c(nls, b)
+  yview = (length(y) == nls.meta.nnln) ? y : view(y, (nls.meta.nlin + 1):(nls.meta.ncon))
+  ℓ(x; obj_weight = obj_weight, y = yview) = obj_weight * sum(F(x) .^ 2) / 2 + dot(c(x), y)
+  return ℓ
+end
+
+"""
     get_adbackend(nlp)
 
 Returns the value `adbackend` from nlp.
