@@ -30,9 +30,9 @@ benchmarked_optimized_backends = Dict(
   :jtprod_backend => Dict(),
   :jacobian_backend => Dict(
     :sparse => ADNLPModels.SparseForwardADJacobian,
-    :forward => ADNLPModels.ForwardDiffADJacobian,
+    # :forward => ADNLPModels.ForwardDiffADJacobian, # slower
     # :reverse => ADNLPModels.ReverseDiffADJacobian, # fails somehow
-    :zygote => ADNLPModels.ZygoteADJacobian,
+    # :zygote => ADNLPModels.ZygoteADJacobian,
   ),
   :hessian_backend => Dict(),
   :ghjvprod_backend => Dict(),

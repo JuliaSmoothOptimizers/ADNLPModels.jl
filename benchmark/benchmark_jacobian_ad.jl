@@ -27,7 +27,7 @@ include("utils.jl")
 # - backend name (see `values(tested_backs)`);
 # - backend (see `set_back_list(Val(f), test_back)`)
 problem_sets = Dict(
-  :all => all_cons_problems,
+  #:all => all_cons_problems, # crash
   #:scalable => scalable_cons_problems,
 )
 benchs = [
@@ -79,8 +79,6 @@ for f in benchs
   end
 end
 
-const nscal = nn * 10
-
 @info "Prepare benchmark"
 for f in benchs
   for s in keys(problem_sets)
@@ -91,7 +89,7 @@ for f in benchs
     for backend in back_list
       problems = problem_sets[s]
       for T in data_types
-        @info "Run $backend with T=$T"
+        @info "Prepare $backend with T=$T"
         if !(backend == :jump && T != Float64)
           for pb in problems
             nlp = set_problem(pb, test_back, backend, f, s, nscal, T)
