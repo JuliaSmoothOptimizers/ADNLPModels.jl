@@ -67,7 +67,7 @@ function get_lag(nlp::AbstractADNLPModel, ::ADBackend, obj_weight::Real)
 end
 function get_lag(nlp::AbstractADNLPModel, b::ADBackend, obj_weight::Real, y::AbstractVector)
   if nlp.meta.nnln == 0
-    return get_lag(nlp, obj_weight)
+    return get_lag(nlp, b, obj_weight)
   end
   c = get_c(nlp, b)
   yview = (length(y) == nlp.meta.nnln) ? y : view(y, (nlp.meta.nlin + 1):(nlp.meta.ncon))
@@ -79,13 +79,13 @@ function get_lag(nls::AbstractADNLSModel, b::ADBackend, obj_weight::Real)
   F = get_F(nls, b)
   return ℓ(x; obj_weight = obj_weight) = obj_weight * mapreduce(Fi -> Fi^2, +, F(x)) / 2
 end
-function get_lag(nls::AbstractADNLSModel, ::ADBackend, obj_weight::Real, y::AbstractVector)
+function get_lag(nls::AbstractADNLSModel, b::ADBackend, obj_weight::Real, y::AbstractVector)
   if nls.meta.nnln == 0
-    return get_lag(nls, obj_weight)
+    return get_lag(nls, b, obj_weight)
   end
   F = get_F(nls, b)
   c = get_c(nls, b)
-  yview = (length(y) == nlp.meta.nnln) ? y : view(y, (nls.meta.nlin + 1):(nls.meta.ncon))
+  yview = (length(y) == nls.meta.nnln) ? y : view(y, (nls.meta.nlin + 1):(nls.meta.ncon))
   ℓ(x; obj_weight = obj_weight, y = y) = obj_weight * sum(F(x) .^ 2) / 2 + dot(c(x), yview)
   return ℓ
 end
