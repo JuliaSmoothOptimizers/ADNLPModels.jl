@@ -158,8 +158,9 @@ function ADNLSModel!(
   nnzh = get_nln_nnzh(adbackend, nvar)
 
   meta = NLPModelMeta{T, S}(nvar, x0 = x0, nnzh = nnzh, name = name, minimize = minimize)
+  nls_nnzj = get_residual_nnzj(adbackend, nvar, nequ)
   nls_meta =
-    NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
+    NLSMeta{T, S}(nequ, nvar, nnzj = nls_nnzj, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F!, x -> T[])
 end
 
@@ -202,8 +203,9 @@ function ADNLSModel!(
     name = name,
     minimize = minimize,
   )
+  nls_nnzj = get_residual_nnzj(adbackend, nvar, nequ)
   nls_meta =
-    NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
+    NLSMeta{T, S}(nequ, nvar, nnzj = nls_nnzj, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F!, x -> T[])
 end
 
@@ -263,8 +265,9 @@ function ADNLSModel!(
     name = name,
     minimize = minimize,
   )
+  nls_nnzj = get_residual_nnzj(adbackend, nvar, nequ)
   nls_meta =
-    NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
+    NLSMeta{T, S}(nequ, nvar, nnzj = nls_nnzj, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F!, c!)
 end
 
@@ -374,8 +377,9 @@ function ADNLSModel!(
     nln_nnzj = nln_nnzj,
     minimize = minimize,
   )
+  nls_nnzj = get_residual_nnzj(adbackend, nvar, nequ)
   nls_meta =
-    NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
+    NLSMeta{T, S}(nequ, nvar, nnzj = nls_nnzj, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F!, clinrows, clincols, clinvals, c!)
 end
 
@@ -523,8 +527,9 @@ function ADNLSModel!(
     name = name,
     minimize = minimize,
   )
+  nls_nnzj = get_residual_nnzj(adbackend, nvar, nequ)
   nls_meta =
-    NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
+    NLSMeta{T, S}(nequ, nvar, nnzj = nls_nnzj, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F!, c!)
 end
 
@@ -626,8 +631,9 @@ function ADNLSModel!(
     nnzh = nnzh,
     minimize = minimize,
   )
+  nls_nnzj = get_residual_nnzj(adbackend, nvar, nequ)
   nls_meta =
-    NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
+    NLSMeta{T, S}(nequ, nvar, nnzj = nls_nnzj, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F!, clinrows, clincols, clinvals, c!)
 end
 
@@ -684,33 +690,20 @@ function NLPModels.residual!(nls::ADNLSModel, x::AbstractVector, Fx::AbstractVec
   return Fx
 end
 
-function NLPModels.jac_residual(nls::ADNLSModel, x::AbstractVector)
-  @lencheck nls.meta.nvar x
-  increment!(nls, :neval_jac_residual)
-  F = get_F(nls, nls.adbackend.jacobian_residual_backend)
-  return jacobian(nls.adbackend.jacobian_residual_backend, F, x)
-end
-
 function NLPModels.jac_structure_residual!(
   nls::ADNLSModel,
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
 )
   @lencheck nls.nls_meta.nnzj rows cols
-  m, n = nls.nls_meta.nequ, nls.meta.nvar
-  I = ((i, j) for i = 1:m, j = 1:n)
-  rows .= getindex.(I, 1)[:]
-  cols .= getindex.(I, 2)[:]
-  return rows, cols
+  return jac_structure_residual!(nls.adbackend.jacobian_residual_backend, nls, rows, cols)
 end
 
 function NLPModels.jac_coord_residual!(nls::ADNLSModel, x::AbstractVector, vals::AbstractVector)
   @lencheck nls.meta.nvar x
   @lencheck nls.nls_meta.nnzj vals
   increment!(nls, :neval_jac_residual)
-  F = get_F(nls, nls.adbackend.jacobian_residual_backend)
-  Jx = jacobian(nls.adbackend.jacobian_residual_backend, F, x)
-  vals .= Jx[:]
+  jac_coord_residual!(nls.adbackend.jacobian_residual_backend, nls, x, vals)
   return vals
 end
 

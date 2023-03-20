@@ -59,6 +59,32 @@ function jac_coord!(
   return vals
 end
 
+function jac_structure_residual!(
+  b::SparseForwardADJacobian,
+  nls::AbstractADNLSModel,
+  rows::AbstractVector{<:Integer},
+  cols::AbstractVector{<:Integer},
+)
+  rows .= rowvals(b.cfJ.sparsity)
+  for i = 1:(nls.meta.nvar)
+    for j = b.cfJ.sparsity.colptr[i]:(b.cfJ.sparsity.colptr[i + 1] - 1)
+      cols[j] = i
+    end
+  end
+  return rows, cols
+end
+
+function jac_coord_residual!(
+  b::SparseForwardADJacobian,
+  nls::AbstractADNLSModel,
+  x::AbstractVector,
+  vals::AbstractVector,
+)
+  forwarddiff_color_jacobian!(b.cfJ.sparsity, nls.F!, x, b.cfJ)
+  vals .= nonzeros(b.cfJ.sparsity)
+  return vals
+end
+
 struct SparseADJacobian{J} <: ADBackend
   nnzj::Int
   rows::Vector{Int}
@@ -93,7 +119,25 @@ function jac_structure!(
   cols .= b.cols
   return rows, cols
 end
+
 function jac_coord!(b::SparseADJacobian, ::ADModel, x::AbstractVector, vals::AbstractVector)
+  _fun = eval(b.cfJ[2])
+  Base.invokelatest(_fun, vals, x)
+  return vals
+end
+
+function jac_structure_residual!(
+  b::SparseADJacobian,
+  ::AbstractADNLSModel,
+  rows::AbstractVector{<:Integer},
+  cols::AbstractVector{<:Integer},
+)
+  rows .= b.rows
+  cols .= b.cols
+  return rows, cols
+end
+
+function jac_coord_residual!(b::SparseADJacobian, ::AbstractADNLSModel, x::AbstractVector, vals::AbstractVector)
   _fun = eval(b.cfJ[2])
   Base.invokelatest(_fun, vals, x)
   return vals

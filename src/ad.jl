@@ -26,7 +26,7 @@ where the `kwargs` are either the different backends as listed below or argument
   - `hprod_residual_backend = ForwardDiffADHvprod` for `ADNLSModel` and `EmptyADbackend` otherwise;
   - `jprod_residual_backend = ForwardDiffADJprod` for `ADNLSModel` and `EmptyADbackend` otherwise;
   - `jtprod_residual_backend = ForwardDiffADJtprod` for `ADNLSModel` and `EmptyADbackend` otherwise;
-  - `jacobian_residual_backend = ForwardDiffADJacobian` for `ADNLSModel` and `EmptyADbackend` otherwise;
+  - `jacobian_residual_backend = SparseForwardADJacobian` for `ADNLSModel` and `EmptyADbackend` otherwise;
   - `hessian_residual_backend = ForwardDiffADHessian` for `ADNLSModel` and `EmptyADbackend` otherwise.
 
 """
@@ -110,7 +110,7 @@ function ADModelNLSBackend(
   hprod_residual_backend::Type{HvBLS} = ForwardDiffADHvprod,
   jprod_residual_backend::Type{JvBLS} = ForwardDiffADJprod,
   jtprod_residual_backend::Type{JtvBLS} = ForwardDiffADJtprod,
-  jacobian_residual_backend::Type{JBLS} = ForwardDiffADJacobian,
+  jacobian_residual_backend::Type{JBLS} = SparseForwardADJacobian,
   hessian_residual_backend::Type{HBLS} = ForwardDiffADHessian,
   kwargs...,
 ) where {GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS}
@@ -155,6 +155,15 @@ end
 
 function get_nln_nnzj(::ADBackend, nvar, ncon)
   nvar * ncon
+end
+
+"""
+    get_residual_nnzj(b::ADModelBackend, nvar, nequ)
+
+Return `get_nln_nnzj(b.jacobian_residual_backend, nvar, nequ)`.
+"""
+function get_residual_nnzj(b::ADModelBackend, nvar, nequ)
+  get_nln_nnzj(b.jacobian_residual_backend, nvar, nequ)
 end
 
 """
@@ -251,6 +260,25 @@ function jac_structure!(
   cols::AbstractVector{<:Integer},
 )
   m, n = nlp.meta.nnln, nlp.meta.nvar
+  return jac_dense!(m, n, rows, cols)
+end
+
+function jac_structure_residual!(
+  b::ADBackend,
+  nls::AbstractADNLSModel,
+  rows::AbstractVector{<:Integer},
+  cols::AbstractVector{<:Integer},
+)
+  m, n = nls.nls_meta.nequ, nls.meta.nvar
+  return jac_dense!(m, n, rows, cols)
+end
+
+function jac_dense!(
+  m::Integer,
+  n::Integer,
+  rows::AbstractVector{<:Integer},
+  cols::AbstractVector{<:Integer},
+)
   pos = 0
   for j = 1:n
     for i = 1:m
@@ -265,6 +293,13 @@ end
 function jac_coord!(b::ADBackend, nlp::ADModel, x::AbstractVector, vals::AbstractVector)
   c = get_c(nlp, b)
   Jx = jacobian(b, c, x)
+  vals .= view(Jx, :)
+  return vals
+end
+
+function jac_coord_residual!(b::ADBackend, nls::AbstractADNLSModel, x::AbstractVector, vals::AbstractVector)
+  F = get_F(nls, b)
+  Jx = jacobian(b, F, x)
   vals .= view(Jx, :)
   return vals
 end
