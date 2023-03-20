@@ -697,20 +697,14 @@ function NLPModels.jac_structure_residual!(
   cols::AbstractVector{<:Integer},
 )
   @lencheck nls.nls_meta.nnzj rows cols
-  m, n = nls.nls_meta.nequ, nls.meta.nvar
-  I = ((i, j) for i = 1:m, j = 1:n)
-  rows .= getindex.(I, 1)[:]
-  cols .= getindex.(I, 2)[:]
-  return rows, cols
+  return jac_structure_residual!(nls.adbackend.jacobian_residual_backend, nls, rows, cols)
 end
 
 function NLPModels.jac_coord_residual!(nls::ADNLSModel, x::AbstractVector, vals::AbstractVector)
   @lencheck nls.meta.nvar x
   @lencheck nls.nls_meta.nnzj vals
   increment!(nls, :neval_jac_residual)
-  F = get_F(nls, nls.adbackend.jacobian_residual_backend)
-  Jx = jacobian(nls.adbackend.jacobian_residual_backend, F, x)
-  vals .= Jx[:]
+  jac_coord_residual!(nls.adbackend.jacobian_residual_backend, nls, x, vals)
   return vals
 end
 

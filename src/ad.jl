@@ -251,6 +251,25 @@ function jac_structure!(
   cols::AbstractVector{<:Integer},
 )
   m, n = nlp.meta.nnln, nlp.meta.nvar
+  return jac_dense!(m, n, rows, cols)
+end
+
+function jac_structure_residual!(
+  b::ADBackend,
+  nls::AbstractADNLSModel,
+  rows::AbstractVector{<:Integer},
+  cols::AbstractVector{<:Integer},
+)
+  m, n = nls.nls_meta.nequ, nls.meta.nvar
+  return jac_dense!(m, n, rows, cols)
+end
+
+function jac_dense!(
+  m::Integer,
+  n::Integer,
+  rows::AbstractVector{<:Integer},
+  cols::AbstractVector{<:Integer},
+)
   pos = 0
   for j = 1:n
     for i = 1:m
@@ -265,6 +284,13 @@ end
 function jac_coord!(b::ADBackend, nlp::ADModel, x::AbstractVector, vals::AbstractVector)
   c = get_c(nlp, b)
   Jx = jacobian(b, c, x)
+  vals .= view(Jx, :)
+  return vals
+end
+
+function jac_coord_residual!(b::ADBackend, nls::AbstractADNLSModel, x::AbstractVector, vals::AbstractVector)
+  F = get_F(nls, b)
+  Jx = jacobian(b, F, x)
   vals .= view(Jx, :)
   return vals
 end
