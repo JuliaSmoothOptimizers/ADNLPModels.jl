@@ -137,7 +137,12 @@ function jac_structure_residual!(
   return rows, cols
 end
 
-function jac_coord_residual!(b::SparseADJacobian, ::AbstractADNLSModel, x::AbstractVector, vals::AbstractVector)
+function jac_coord_residual!(
+  b::SparseADJacobian,
+  ::AbstractADNLSModel,
+  x::AbstractVector,
+  vals::AbstractVector,
+)
   _fun = eval(b.cfJ[2])
   Base.invokelatest(_fun, vals, x)
   return vals
