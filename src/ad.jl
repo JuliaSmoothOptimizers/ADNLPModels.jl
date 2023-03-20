@@ -297,7 +297,12 @@ function jac_coord!(b::ADBackend, nlp::ADModel, x::AbstractVector, vals::Abstrac
   return vals
 end
 
-function jac_coord_residual!(b::ADBackend, nls::AbstractADNLSModel, x::AbstractVector, vals::AbstractVector)
+function jac_coord_residual!(
+  b::ADBackend,
+  nls::AbstractADNLSModel,
+  x::AbstractVector,
+  vals::AbstractVector,
+)
   F = get_F(nls, b)
   Jx = jacobian(b, F, x)
   vals .= view(Jx, :)
