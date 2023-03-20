@@ -158,6 +158,15 @@ function get_nln_nnzj(::ADBackend, nvar, ncon)
 end
 
 """
+    get_residual_nnzj(b::ADModelBackend, nvar, nequ)
+
+Return `get_nln_nnzj(b.jacobian_residual_backend, nvar, nequ)`.
+"""
+function get_residual_nnzj(b::ADModelBackend, nvar, nequ)
+  get_nln_nnzj(b.jacobian_residual_backend, nvar, nequ)
+end
+
+"""
     get_nln_nnzh(::ADBackend, nvar)
     get_nln_nnzh(b::ADModelBackend, nvar)
 

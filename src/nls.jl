@@ -158,8 +158,9 @@ function ADNLSModel!(
   nnzh = get_nln_nnzh(adbackend, nvar)
 
   meta = NLPModelMeta{T, S}(nvar, x0 = x0, nnzh = nnzh, name = name, minimize = minimize)
+  nls_nnzj = get_residual_nnzj(adbackend, nvar, nequ)
   nls_meta =
-    NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
+    NLSMeta{T, S}(nequ, nvar, nnzj = nls_nnzj, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F!, x -> T[])
 end
 
@@ -202,8 +203,9 @@ function ADNLSModel!(
     name = name,
     minimize = minimize,
   )
+  nls_nnzj = get_residual_nnzj(adbackend, nvar, nequ)
   nls_meta =
-    NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
+    NLSMeta{T, S}(nequ, nvar, nnzj = nls_nnzj, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F!, x -> T[])
 end
 
@@ -263,8 +265,9 @@ function ADNLSModel!(
     name = name,
     minimize = minimize,
   )
+  nls_nnzj = get_residual_nnzj(adbackend, nvar, nequ)
   nls_meta =
-    NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
+    NLSMeta{T, S}(nequ, nvar, nnzj = nls_nnzj, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F!, c!)
 end
 
@@ -374,8 +377,9 @@ function ADNLSModel!(
     nln_nnzj = nln_nnzj,
     minimize = minimize,
   )
+  nls_nnzj = get_residual_nnzj(adbackend, nvar, nequ)
   nls_meta =
-    NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
+    NLSMeta{T, S}(nequ, nvar, nnzj = nls_nnzj, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F!, clinrows, clincols, clinvals, c!)
 end
 
@@ -523,8 +527,9 @@ function ADNLSModel!(
     name = name,
     minimize = minimize,
   )
+  nls_nnzj = get_residual_nnzj(adbackend, nvar, nequ)
   nls_meta =
-    NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
+    NLSMeta{T, S}(nequ, nvar, nnzj = nls_nnzj, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F!, c!)
 end
 
@@ -626,8 +631,9 @@ function ADNLSModel!(
     nnzh = nnzh,
     minimize = minimize,
   )
+  nls_nnzj = get_residual_nnzj(adbackend, nvar, nequ)
   nls_meta =
-    NLSMeta{T, S}(nequ, nvar, nnzj = nequ * nvar, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
+    NLSMeta{T, S}(nequ, nvar, nnzj = nls_nnzj, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
   return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F!, clinrows, clincols, clinvals, c!)
 end
 
