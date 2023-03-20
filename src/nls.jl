@@ -690,13 +690,6 @@ function NLPModels.residual!(nls::ADNLSModel, x::AbstractVector, Fx::AbstractVec
   return Fx
 end
 
-function NLPModels.jac_residual(nls::ADNLSModel, x::AbstractVector)
-  @lencheck nls.meta.nvar x
-  increment!(nls, :neval_jac_residual)
-  F = get_F(nls, nls.adbackend.jacobian_residual_backend)
-  return jacobian(nls.adbackend.jacobian_residual_backend, F, x)
-end
-
 function NLPModels.jac_structure_residual!(
   nls::ADNLSModel,
   rows::AbstractVector{<:Integer},
