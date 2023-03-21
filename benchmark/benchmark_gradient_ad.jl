@@ -7,7 +7,7 @@ TODO:
 =#
 using Pkg
 Pkg.activate(".")
-Pkg.add(url = "https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl", rev = "sparse-jc")
+Pkg.add(url = "https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl", rev = "main")
 using ADNLPModels
 
 using Dates, DelimitedFiles, JLD2, LinearAlgebra, Printf, SparseArrays
@@ -32,10 +32,10 @@ include("additional_grad_backends.jl")
 # - GenericReverseDiffADGradient: generic
 
 # update with the new ones
-benchmarked_generic_backends[:gradient_backend] = Dict(
-  :forward => GenericForwardDiffADGradient,
-  :reverse => GenericReverseDiffADGradient,
-  :zygote => ADNLPModels.ZygoteADGradient,
+benchmarked_generic_backends["gradient_backend"] = Dict(
+  "forward" => GenericForwardDiffADGradient,
+  "reverse" => GenericReverseDiffADGradient,
+  "zygote" => ADNLPModels.ZygoteADGradient,
 )
 
 ########################################################
@@ -45,23 +45,23 @@ benchmarked_generic_backends[:gradient_backend] = Dict(
 # - backend name (see `values(tested_backs)`);
 # - backend (see `set_back_list(Val(f), test_back)`)
 problem_sets = Dict(
-  #:all => all_problems,
-  :scalable => scalable_problems,
+  #"all" => all_problems,
+  "scalable" => scalable_problems,
 )
 benchs = [
-  :optimized,
-  #:generic,
+  "optimized",
+  #"generic",
 ]
 data_types = [Float64] # [Float16, Float32, Float64]
 tested_backs = Dict(
-  :gradient_backend => :grad!,
+  "gradient_backend" => :grad!,
 )
 const nscal = nn * 10
 name = "$(today())_adnlpmodels_benchmark_grad"
-if :all in keys(problem_sets)
+if "all" in keys(problem_sets)
   name *= "_all"
 end
-if :scalable in keys(problem_sets)
+if "scalable" in keys(problem_sets)
   name *= "_nscal_$(nscal)"
 end
 if data_types == [Float64]
@@ -81,10 +81,10 @@ for f in benchs
     for test_back in keys(tested_backs)
       back_name = tested_backs[test_back]
       SUITE[f][s][back_name] = BenchmarkGroup()
-      for backend in set_back_list(Val(f), test_back)
+      for backend in set_back_list(Val(Symbol(f)), test_back)
         SUITE[f][s][back_name][backend] = BenchmarkGroup()
         for T in data_types
-          if is_jump_available(Val(backend), T)
+          if is_jump_available(Val(Symbol(backend)), T)
             SUITE[f][s][back_name][backend][T] = BenchmarkGroup()
             problems = problem_sets[s]
             for pb in problems
@@ -101,20 +101,22 @@ end
 for f in benchs
   for s in keys(problem_sets)
 
-    test_back = :gradient_backend
+    test_back = "gradient_backend"
     back_name = tested_backs[test_back]
-    back_list = set_back_list(Val(f), test_back)
+    back_list = set_back_list(Val(Symbol(f)), test_back)
     for backend in back_list
       problems = problem_sets[s]
       for T in data_types
-        if !(backend == :jump && T != Float64)
+        if !(backend == "jump" && T != Float64)
           for pb in problems
-            nlp = set_problem(pb, test_back, backend, f, s, nscal, T)
+            #nlp = set_problem(pb, test_back, backend, f, s, nscal, T)
             # add some asserts to make sure it is ok
-            @info " $(pb): $(eltype(nlp.meta.x0)) with $(nlp.meta.nvar) vars and $(nlp.meta.ncon) cons"
-            x = nlp.meta.x0
-            g = similar(x)
-            SUITE[f][s][back_name][backend][T][pb] = @benchmarkable grad!($nlp, $x, $g)
+            n = eval(Meta.parse("OptimizationProblems.get_" * pb * "_nvar(n = $(nscal))"))
+            m = eval(Meta.parse("OptimizationProblems.get_" * pb * "_ncon(n = $(nscal))"))
+            @info " $(pb): $T with $n vars and $m cons"
+            # x = nlp.meta.x0
+            g = zeros(T, n)
+            SUITE[f][s][back_name][backend][T][pb] = @benchmarkable grad!(nlp, get_x0(nlp), $g) setup=(nlp = set_problem($pb, $(test_back), $backend, $(f), $s, $nscal, $T))
           end
         end
       end
