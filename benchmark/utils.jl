@@ -1,5 +1,5 @@
 function get_optimized_list(optimized_backend)
-  return union(keys(optimized_backend), [:jump])
+  return union(keys(optimized_backend), ["jump"])
 end
 
 is_jump_available(::Val{:jump}, T) = (T == Float64)
@@ -21,21 +21,21 @@ scalable_cons_problems = meta[(meta.variable_nvar .== true) .&& (meta.ncon .> 5)
 #
 ###################################################
 benchmarked_optimized_backends = Dict(
-  :gradient_backend => Dict(
-    :forward => ADNLPModels.ForwardDiffADGradient,
-    :reverse => ADNLPModels.ReverseDiffADGradient,
+  "gradient_backend" => Dict(
+    "forward" => ADNLPModels.ForwardDiffADGradient,
+    "reverse" => ADNLPModels.ReverseDiffADGradient,
   ),
-  :hprod_backend => Dict(),
-  :jprod_backend => Dict(),
-  :jtprod_backend => Dict(),
-  :jacobian_backend => Dict(
-    :sparse => ADNLPModels.SparseForwardADJacobian,
-    # :forward => ADNLPModels.ForwardDiffADJacobian, # slower
-    # :reverse => ADNLPModels.ReverseDiffADJacobian, # fails somehow
-    # :zygote => ADNLPModels.ZygoteADJacobian,
+  "hprod_backend" => Dict(),
+  "jprod_backend" => Dict(),
+  "jtprod_backend" => Dict(),
+  "jacobian_backend" => Dict(
+    "sparse" => ADNLPModels.SparseForwardADJacobian,
+    # "forward" => ADNLPModels.ForwardDiffADJacobian, # slower
+    # "reverse" => ADNLPModels.ReverseDiffADJacobian, # fails somehow
+    # "zygote" => ADNLPModels.ZygoteADJacobian,
   ),
-  :hessian_backend => Dict(),
-  :ghjvprod_backend => Dict(),
+  "hessian_backend" => Dict(),
+  "ghjvprod_backend" => Dict(),
 )
 
 ###################################################
@@ -44,54 +44,54 @@ benchmarked_optimized_backends = Dict(
 #
 ###################################################
 benchmarked_generic_backends = Dict(
-  :gradient_backend => Dict(
-    :zygote => ADNLPModels.ZygoteADGradient,
+  "gradient_backend" => Dict(
+    "zygote" => ADNLPModels.ZygoteADGradient,
   ),
-  :hprod_backend => Dict(
-    :forward => ADNLPModels.ForwardDiffADHvprod,
-    :reverse => ADNLPModels.ReverseDiffADHvprod,
+  "hprod_backend" => Dict(
+    "forward" => ADNLPModels.ForwardDiffADHvprod,
+    "reverse" => ADNLPModels.ReverseDiffADHvprod,
   ),
-  :jprod_backend => Dict(
-    :forward => ADNLPModels.ForwardDiffADJprod,
-    :reverse => ADNLPModels.ReverseDiffADJprod,
-    :zygote => ADNLPModels.ZygoteADJprod,
+  "jprod_backend" => Dict(
+    "forward" => ADNLPModels.ForwardDiffADJprod,
+    "reverse" => ADNLPModels.ReverseDiffADJprod,
+    "zygote" => ADNLPModels.ZygoteADJprod,
   ),
-  :jtprod_backend => Dict(
-    :forward => ADNLPModels.ForwardDiffADJtprod,
-    :reverse => ADNLPModels.ReverseDiffADJtprod,
-    :zygote => ADNLPModels.ZygoteADJtprod,
+  "jtprod_backend" => Dict(
+    "forward" => ADNLPModels.ForwardDiffADJtprod,
+    "reverse" => ADNLPModels.ReverseDiffADJtprod,
+    "zygote" => ADNLPModels.ZygoteADJtprod,
   ),
-  :jacobian_backend => Dict(
-    :forward => ADNLPModels.ForwardDiffADJacobian,
-    :reverse => ADNLPModels.ReverseDiffADJacobian,
-    :zygote => ADNLPModels.ZygoteADJacobian,
-    :sym => ADNLPModels.SparseADJacobian, # out of memory for large problems
+  "jacobian_backend" => Dict(
+    "forward" => ADNLPModels.ForwardDiffADJacobian,
+    "reverse" => ADNLPModels.ReverseDiffADJacobian,
+    "zygote" => ADNLPModels.ZygoteADJacobian,
+    "sym" => ADNLPModels.SparseADJacobian, # out of memory for large problems
   ),
-  :hessian_backend => Dict(
-    :forward => ADNLPModels.ForwardDiffADHessian,
-    :reverse => ADNLPModels.ReverseDiffADHessian,
-    :zygote => ADNLPModels.ZygoteADHessian,
+  "hessian_backend" => Dict(
+    "forward" => ADNLPModels.ForwardDiffADHessian,
+    "reverse" => ADNLPModels.ReverseDiffADHessian,
+    "zygote" => ADNLPModels.ZygoteADHessian,
   ),
-  :ghjvprod_backend => Dict(
-    :forward => ADNLPModels.ForwardDiffADGHjvprod,
+  "ghjvprod_backend" => Dict(
+    "forward" => ADNLPModels.ForwardDiffADGHjvprod,
   ),
 )
 
-function set_back_list(::Val{:optimized}, test_back::Symbol)
+function set_back_list(::Val{:optimized}, test_back::String)
   return get_optimized_list(benchmarked_optimized_backends[test_back])
 end
 
-function get_back(::Val{:optimized}, test_back::Symbol, backend::Symbol)
+function get_back(::Val{:optimized}, test_back::String, backend::String)
   # test_back must be a key in benchmarked_optimized_backends
   # backend must be a key in benchmarked_optimized_backends[test_back]
   return benchmarked_optimized_backends[test_back][backend]
 end
 
-function set_back_list(::Val{:generic}, test_back::Symbol)
+function set_back_list(::Val{:generic}, test_back::String)
   return keys(benchmarked_generic_backends[test_back])
 end
 
-function get_back(::Val{:generic}, test_back::Symbol, backend::Symbol)
+function get_back(::Val{:generic}, test_back::String, backend::String)
   # test_back must be a key in benchmarked_generic_backends
   # backend must be a key in benchmarked_generic_backends[test_back]
   return benchmarked_generic_backends[test_back][backend]
@@ -116,21 +116,21 @@ end
 # keys list all the accepted keywords to define backends
 # values are generic backend to be used by default in this benchmark
 all_backend_structure = Dict(
-  :gradient_backend => GenericForwardDiffADGradient,
-  :hprod_backend => ADNLPModels.ForwardDiffADHvprod,
-  :jprod_backend => ADNLPModels.ForwardDiffADJprod,
-  :jtprod_backend => ADNLPModels.ForwardDiffADJtprod,
-  :jacobian_backend => ADNLPModels.ForwardDiffADJacobian,
-  :hessian_backend => ADNLPModels.ForwardDiffADHessian,
-  :ghjvprod_backend => ADNLPModels.ForwardDiffADGHjvprod,
+  "gradient_backend" => GenericForwardDiffADGradient,
+  "hprod_backend" => ADNLPModels.ForwardDiffADHvprod,
+  "jprod_backend" => ADNLPModels.ForwardDiffADJprod,
+  "jtprod_backend" => ADNLPModels.ForwardDiffADJtprod,
+  "jacobian_backend" => ADNLPModels.ForwardDiffADJacobian,
+  "hessian_backend" => ADNLPModels.ForwardDiffADHessian,
+  "ghjvprod_backend" => ADNLPModels.ForwardDiffADGHjvprod,
 )
 
 """
 Return an ADNLPModel with `back_struct` as an AD backend for `test_back ∈ keys(all_backend_structure)`
 """
-function set_adnlp(pb::String, test_back::Symbol, back_struct::Type{<:ADNLPModels.ADBackend}, n::Integer = nn, T::DataType = Float64)
+function set_adnlp(pb::String, test_back::String, back_struct::Type{<:ADNLPModels.ADBackend}, n::Integer = nn, T::DataType = Float64)
   pbs = Meta.parse(pb)
-  backend_structure = Dict{Symbol, Any}()
+  backend_structure = Dict{String, Any}()
   for k in keys(all_backend_structure)
     if k == test_back
       push!(backend_structure, k => back_struct)
@@ -141,24 +141,24 @@ function set_adnlp(pb::String, test_back::Symbol, back_struct::Type{<:ADNLPModel
   return OptimizationProblems.ADNLPProblems.eval(pbs)(
     ;type = Val(T),
     n = n,
-    gradient_backend = backend_structure[:gradient_backend],
-    hprod_backend = backend_structure[:hprod_backend],
-    jprod_backend = backend_structure[:jprod_backend],
-    jtprod_backend = backend_structure[:jtprod_backend],
-    jacobian_backend = backend_structure[:jacobian_backend],
-    hessian_backend = backend_structure[:hessian_backend],
-    ghjvprod_backend = backend_structure[:ghjvprod_backend],
+    gradient_backend = backend_structure["gradient_backend"],
+    hprod_backend = backend_structure["hprod_backend"],
+    jprod_backend = backend_structure["jprod_backend"],
+    jtprod_backend = backend_structure["jtprod_backend"],
+    jacobian_backend = backend_structure["jacobian_backend"],
+    hessian_backend = backend_structure["hessian_backend"],
+    ghjvprod_backend = backend_structure["ghjvprod_backend"],
   )
 end
 
-function set_adnlp(pb::String, f::Symbol, test_back::Symbol, backend::Symbol, n::Integer = nn, T::DataType = Float64)
-  back_struct = get_back(Val(f), test_back, backend)
+function set_adnlp(pb::String, f::String, test_back::String, backend::String, n::Integer = nn, T::DataType = Float64)
+  back_struct = get_back(Val(Symbol(f)), test_back, backend)
   return set_adnlp(pb, test_back, back_struct, n, T)
 end
 
-function set_problem(pb::String, test_back::Symbol, backend::Symbol, f::Symbol, s::Symbol, n::Integer = nn, T::DataType = Float64)
-  nlp = if backend == :jump
-    model = if s == :scalable
+function set_problem(pb::String, test_back::String, backend::String, f::String, s::String, n::Integer = nn, T::DataType = Float64)
+  nlp = if backend == "jump"
+    model = if s == "scalable"
       OptimizationProblems.PureJuMP.eval(Meta.parse(pb))(n = n)
     else
       OptimizationProblems.PureJuMP.eval(Meta.parse(pb))()
