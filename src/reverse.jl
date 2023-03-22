@@ -65,8 +65,9 @@ function ReverseDiffADJprod(
 )
   return ReverseDiffADJprod()
 end
-function Jprod(::ReverseDiffADJprod, f, x, v)
-  return vec(ReverseDiff.jacobian(t -> f(x + t[1] * v), [0.0]))
+function Jprod!(::ReverseDiffADJprod, Jv, f, x, v)
+  Jv .= vec(ReverseDiff.jacobian(t -> f(x + t[1] * v), [0.0]))
+  return Jv
 end
 
 function ReverseDiffADJtprod(
@@ -78,8 +79,9 @@ function ReverseDiffADJtprod(
 )
   return ReverseDiffADJtprod()
 end
-function Jtprod(::ReverseDiffADJtprod, f, x, v)
-  return ReverseDiff.gradient(x -> dot(f(x), v), x)
+function Jtprod!(::ReverseDiffADJtprod, Jtv, f, x, v)
+  Jtv .= ReverseDiff.gradient(x -> dot(f(x), v), x)
+  return Jtv
 end
 
 function ReverseDiffADHvprod(
@@ -91,6 +93,7 @@ function ReverseDiffADHvprod(
 )
   return ReverseDiffADHvprod()
 end
-function Hvprod(::ReverseDiffADHvprod, f, x, v)
-  return ForwardDiff.derivative(t -> ReverseDiff.gradient(f, x + t * v), 0)
+function Hvprod!(::ReverseDiffADHvprod, Hv, f, x, v)
+  Hv .= ForwardDiff.derivative(t -> ReverseDiff.gradient(f, x + t * v), 0)
+  return Hv
 end

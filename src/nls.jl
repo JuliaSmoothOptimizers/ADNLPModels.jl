@@ -351,16 +351,17 @@ function ADNLSModel!(
   ncon = length(lcon)
   @lencheck ncon ucon y0
 
-  adbackend = ADModelNLSBackend(nvar, F!, nequ, ncon, c!; x0 = x0, kwargs...)
-
-  nnzh = get_nln_nnzh(adbackend, nvar)
-
   nlin = maximum(clinrows)
   lin = 1:nlin
   lin_nnzj = length(clinvals)
+  @lencheck lin_nnzj clinrows clincols
+
+  adbackend = ADModelNLSBackend(nvar, F!, nequ, ncon - nlin, c!; x0 = x0, kwargs...)
+
+  nnzh = get_nln_nnzh(adbackend, nvar)
+
   nln_nnzj = get_nln_nnzj(adbackend, nvar, ncon - nlin)
   nnzj = lin_nnzj + nln_nnzj
-  @lencheck lin_nnzj clinrows clincols
 
   meta = NLPModelMeta{T, S}(
     nvar,
@@ -603,16 +604,17 @@ function ADNLSModel!(
   @lencheck nvar lvar uvar
   @lencheck ncon ucon y0
 
-  adbackend = ADModelNLSBackend(nvar, F!, nequ, ncon, c!; x0 = x0, kwargs...)
-
-  nnzh = get_nln_nnzh(adbackend, nvar)
-
   nlin = maximum(clinrows)
   lin = 1:nlin
   lin_nnzj = length(clinvals)
+  @lencheck lin_nnzj clinrows clincols
+
+  adbackend = ADModelNLSBackend(nvar, F!, nequ, ncon - nlin, c!; x0 = x0, kwargs...)
+
+  nnzh = get_nln_nnzh(adbackend, nvar)
+
   nln_nnzj = get_nln_nnzj(adbackend, nvar, ncon - nlin)
   nnzj = lin_nnzj + nln_nnzj
-  @lencheck lin_nnzj clinrows clincols
 
   meta = NLPModelMeta{T, S}(
     nvar,
@@ -717,7 +719,7 @@ function NLPModels.jprod_residual!(
   @lencheck nls.nls_meta.nequ Jv
   increment!(nls, :neval_jprod_residual)
   F = get_F(nls, nls.adbackend.jprod_residual_backend)
-  Jv .= Jprod(nls.adbackend.jprod_residual_backend, F, x, v)
+  Jprod!(nls.adbackend.jprod_residual_backend, Jv, F, x, v)
   return Jv
 end
 
@@ -731,7 +733,7 @@ function NLPModels.jtprod_residual!(
   @lencheck nls.nls_meta.nequ v
   increment!(nls, :neval_jtprod_residual)
   F = get_F(nls, nls.adbackend.jtprod_residual_backend)
-  Jtv .= Jtprod(nls.adbackend.jtprod_residual_backend, F, x, v)
+  Jtprod!(nls.adbackend.jtprod_residual_backend, Jtv, F, x, v)
   return Jtv
 end
 
@@ -796,7 +798,7 @@ function NLPModels.hprod_residual!(
   @lencheck nls.meta.nvar x v Hiv
   increment!(nls, :neval_hprod_residual)
   F = get_F(nls, nls.adbackend.hprod_residual_backend)
-  Hiv .= Hvprod(nls.adbackend.hprod_residual_backend, x -> F(x)[i], x, v)
+  Hvprod!(nls.adbackend.hprod_residual_backend, Hiv, x -> F(x)[i], x, v)
   return Hiv
 end
 
@@ -874,7 +876,7 @@ function NLPModels.jprod_nln!(
   @lencheck nls.meta.nnln Jv
   increment!(nls, :neval_jprod_nln)
   c = get_c(nls, nls.adbackend.jprod_backend)
-  Jv .= Jprod(nls.adbackend.jprod_backend, c, x, v)
+  Jprod!(nls.adbackend.jprod_backend, Jv, c, x, v)
   return Jv
 end
 
@@ -922,7 +924,7 @@ function NLPModels.jtprod_nln!(
   @lencheck nls.meta.nnln v
   increment!(nls, :neval_jtprod_nln)
   c = get_c(nls, nls.adbackend.jtprod_backend)
-  Jtv .= Jtprod(nls.adbackend.jtprod_backend, c, x, v)
+  Jtprod!(nls.adbackend.jtprod_backend, Jtv, c, x, v)
   return Jtv
 end
 
@@ -1000,7 +1002,7 @@ function NLPModels.hprod!(
   @lencheck nls.meta.nvar x v Hv
   increment!(nls, :neval_hprod)
   ℓ = get_lag(nls, nls.adbackend.hprod_backend, obj_weight)
-  Hv .= Hvprod(nls.adbackend.hprod_backend, ℓ, x, v)
+  Hvprod!(nls.adbackend.hprod_backend, Hv, ℓ, x, v)
   return Hv
 end
 
@@ -1016,7 +1018,7 @@ function NLPModels.hprod!(
   @lencheck nls.meta.ncon y
   increment!(nls, :neval_hprod)
   ℓ = get_lag(nls, nls.adbackend.hprod_backend, obj_weight, y)
-  Hv .= Hvprod(nls.adbackend.hprod_backend, ℓ, x, v)
+  Hvprod!(nls.adbackend.hprod_backend, Hv, ℓ, x, v)
   return Hv
 end
 
@@ -1053,7 +1055,7 @@ function NLPModels.jth_hprod!(
     fill!(Hv, zero(T))
   else
     c = get_c(nls, nls.adbackend.hprod_backend)
-    Hv .= Hvprod(nls.adbackend.hprod_backend, x -> c(x)[j - nls.meta.nlin], x, v)
+    Hvprod!(nls.adbackend.hprod_backend, Hv, x -> c(x)[j - nls.meta.nlin], x, v)
   end
   return Hv
 end

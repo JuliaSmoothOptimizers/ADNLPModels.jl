@@ -92,8 +92,9 @@ struct ZygoteADJtprod <: ImmutableADbackend end
     )
       return ZygoteADJprod()
     end
-    function Jprod(::ZygoteADJprod, f, x, v)
-      return vec(Zygote.jacobian(t -> f(x + t * v), 0)[1])
+    function Jprod!(::ZygoteADJprod, Jv, f, x, v)
+      Jv .= vec(Zygote.jacobian(t -> f(x + t * v), 0)[1])
+      return Jv
     end
 
     function ZygoteADJtprod(
@@ -105,9 +106,14 @@ struct ZygoteADJtprod <: ImmutableADbackend end
     )
       return ZygoteADJtprod()
     end
-    function Jtprod(::ZygoteADJtprod, f, x, v)
+    function Jtprod!(::ZygoteADJtprod, Jtv, f, x, v)
       g = Zygote.gradient(x -> dot(f(x), v), x)[1]
-      return g === nothing ? zero(x) : g
+      if g === nothing
+        Jtv .= zero(x)
+      else
+        Jtv .= g
+      end
+      return Jtv
     end
   end
 end

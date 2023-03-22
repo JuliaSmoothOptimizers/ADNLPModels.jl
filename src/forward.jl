@@ -61,8 +61,9 @@ function ForwardDiffADJprod(
 )
   return ForwardDiffADJprod()
 end
-function Jprod(::ForwardDiffADJprod, f, x, v)
-  return ForwardDiff.derivative(t -> f(x + t * v), 0)
+function Jprod!(::ForwardDiffADJprod, Jv, f, x, v)
+  Jv .= ForwardDiff.derivative(t -> f(x + t * v), 0)
+  return Jv
 end
 
 struct ForwardDiffADJtprod <: ADBackend end
@@ -75,8 +76,9 @@ function ForwardDiffADJtprod(
 )
   return ForwardDiffADJtprod()
 end
-function Jtprod(::ForwardDiffADJtprod, f, x, v)
-  return ForwardDiff.gradient(x -> dot(f(x), v), x)
+function Jtprod!(::ForwardDiffADJtprod, Jtv, f, x, v)
+  Jtv .= ForwardDiff.gradient(x -> dot(f(x), v), x)
+  return Jtv
 end
 
 struct ForwardDiffADHvprod <: ADBackend end
@@ -89,8 +91,9 @@ function ForwardDiffADHvprod(
 )
   return ForwardDiffADHvprod()
 end
-function Hvprod(::ForwardDiffADHvprod, f, x, v)
-  return ForwardDiff.derivative(t -> ForwardDiff.gradient(f, x + t * v), 0)
+function Hvprod!(::ForwardDiffADHvprod, Hv, f, x, v)
+  Hv .= ForwardDiff.derivative(t -> ForwardDiff.gradient(f, x + t * v), 0)
+  return Hv
 end
 
 struct ForwardDiffADGHjvprod <: ADBackend end
