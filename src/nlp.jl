@@ -617,7 +617,7 @@ function NLPModels.jprod_nln!(
   @lencheck nlp.meta.nnln Jv
   increment!(nlp, :neval_jprod_nln)
   c = get_c(nlp, nlp.adbackend.jprod_backend)
-  Jv .= Jprod(nlp.adbackend.jprod_backend, c, x, v)
+  Jprod!(nlp.adbackend.jprod_backend, Jv, c, x, v)
   return Jv
 end
 
@@ -665,7 +665,7 @@ function NLPModels.jtprod_nln!(
   @lencheck nlp.meta.nnln v
   increment!(nlp, :neval_jtprod_nln)
   c = get_c(nlp, nlp.adbackend.jtprod_backend)
-  Jtv .= Jtprod(nlp.adbackend.jtprod_backend, c, x, v)
+  Jtprod!(nlp.adbackend.jtprod_backend, Jtv, c, x, v)
   return Jtv
 end
 
@@ -744,7 +744,7 @@ function NLPModels.hprod!(
   @lencheck n x v Hv
   increment!(nlp, :neval_hprod)
   ℓ = get_lag(nlp, nlp.adbackend.hprod_backend, obj_weight)
-  Hv .= Hvprod(nlp.adbackend.hprod_backend, ℓ, x, v)
+  Hvprod!(nlp.adbackend.hprod_backend, Hv, ℓ, x, v)
   return Hv
 end
 
@@ -761,7 +761,7 @@ function NLPModels.hprod!(
   @lencheck nlp.meta.ncon y
   increment!(nlp, :neval_hprod)
   ℓ = get_lag(nlp, nlp.adbackend.hprod_backend, obj_weight, y)
-  Hv .= Hvprod(nlp.adbackend.hprod_backend, ℓ, x, v)
+  Hvprod!(nlp.adbackend.hprod_backend, Hv, ℓ, x, v)
   return Hv
 end
 
@@ -798,7 +798,7 @@ function NLPModels.jth_hprod!(
     fill!(Hv, zero(T))
   else
     c = get_c(nlp, nlp.adbackend.hprod_backend)
-    Hv .= Hvprod(nlp.adbackend.hprod_backend, x -> c(x)[j - nlp.meta.nlin], x, v)
+    Hvprod!(nlp.adbackend.hprod_backend, Hv, x -> c(x)[j - nlp.meta.nlin], x, v)
   end
   return Hv
 end

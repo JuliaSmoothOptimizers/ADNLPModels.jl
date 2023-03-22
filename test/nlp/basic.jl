@@ -44,8 +44,8 @@ function test_autodiff_backend_error()
     @test_throws ArgumentError gradient!(adbackend.gradient_backend, [1.0], sum, [1.0])
     @test_throws ArgumentError jacobian(adbackend.jacobian_backend, identity, [1.0])
     @test_throws ArgumentError hessian(adbackend.hessian_backend, sum, [1.0])
-    @test_throws ArgumentError Jprod(adbackend.jprod_backend, [1.0], identity, [1.0])
-    @test_throws ArgumentError Jtprod(adbackend.jtprod_backend, [1.0], identity, [1.0])
+    @test_throws ArgumentError Jprod!(adbackend.jprod_backend, [1.0], [1.0], identity, [1.0])
+    @test_throws ArgumentError Jtprod!(adbackend.jtprod_backend, [1.0], [1.0], identity, [1.0])
   end
 end
 
