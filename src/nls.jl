@@ -351,16 +351,17 @@ function ADNLSModel!(
   ncon = length(lcon)
   @lencheck ncon ucon y0
 
-  adbackend = ADModelNLSBackend(nvar, F!, nequ, ncon, c!; x0 = x0, kwargs...)
-
-  nnzh = get_nln_nnzh(adbackend, nvar)
-
   nlin = maximum(clinrows)
   lin = 1:nlin
   lin_nnzj = length(clinvals)
+  @lencheck lin_nnzj clinrows clincols
+
+  adbackend = ADModelNLSBackend(nvar, F!, nequ, ncon - nlin, c!; x0 = x0, kwargs...)
+
+  nnzh = get_nln_nnzh(adbackend, nvar)
+
   nln_nnzj = get_nln_nnzj(adbackend, nvar, ncon - nlin)
   nnzj = lin_nnzj + nln_nnzj
-  @lencheck lin_nnzj clinrows clincols
 
   meta = NLPModelMeta{T, S}(
     nvar,
@@ -603,16 +604,17 @@ function ADNLSModel!(
   @lencheck nvar lvar uvar
   @lencheck ncon ucon y0
 
-  adbackend = ADModelNLSBackend(nvar, F!, nequ, ncon, c!; x0 = x0, kwargs...)
-
-  nnzh = get_nln_nnzh(adbackend, nvar)
-
   nlin = maximum(clinrows)
   lin = 1:nlin
   lin_nnzj = length(clinvals)
+  @lencheck lin_nnzj clinrows clincols
+
+  adbackend = ADModelNLSBackend(nvar, F!, nequ, ncon - nlin, c!; x0 = x0, kwargs...)
+
+  nnzh = get_nln_nnzh(adbackend, nvar)
+
   nln_nnzj = get_nln_nnzj(adbackend, nvar, ncon - nlin)
   nnzj = lin_nnzj + nln_nnzj
-  @lencheck lin_nnzj clinrows clincols
 
   meta = NLPModelMeta{T, S}(
     nvar,
