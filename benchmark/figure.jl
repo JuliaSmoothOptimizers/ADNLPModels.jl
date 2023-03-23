@@ -1,7 +1,7 @@
 using Pkg; Pkg.activate(".")
 using JLD2, BenchmarkTools, DataFrames, Plots, Dates
 
-name = "2023-03-16_adnlpmodels_benchmark_jac_nscal_1000_mono"
+name = "2023-03-23_adnlpmodels_benchmark_jprod_optimized_nscal_1000_mono"
 @load "$name.jld2" result
 
 # track the main table:
