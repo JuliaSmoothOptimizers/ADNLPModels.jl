@@ -25,7 +25,6 @@ function ReverseDiffADGradient(
   cfg = ReverseDiff.compile(f_tape)
   return ReverseDiffADGradient(cfg)
 end
-gradient(adbackend::ReverseDiffADGradient, f, x) = ReverseDiff.gradient(f, x, adbackend.cfg)
 function gradient!(adbackend::ReverseDiffADGradient, g, f, x)
   return ReverseDiff.gradient!(g, adbackend.cfg, x)
 end
