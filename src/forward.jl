@@ -1,3 +1,9 @@
+struct GenericForwardDiffADGradient <: ADBackend end
+GenericForwardDiffADGradient(args...; kwargs...) = GenericForwardDiffADGradient()
+function gradient!(::GenericForwardDiffADGradient, g, f, x)
+  return ForwardDiff.gradient!(g, f, x)
+end
+
 struct ForwardDiffADGradient <: ADBackend
   cfg
 end
@@ -50,18 +56,41 @@ function ForwardDiffADHessian(
 end
 hessian(::ForwardDiffADHessian, f, x) = ForwardDiff.hessian(f, x)
 
-struct ForwardDiffADJprod <: ADBackend end
-function ForwardDiffADJprod(
+struct GenericForwardDiffADJprod <: ADBackend end
+function GenericForwardDiffADJprod(
   nvar::Integer,
   f,
   ncon::Integer = 0,
   c::Function = (args...) -> [];
   kwargs...,
 )
-  return ForwardDiffADJprod()
+  return GenericForwardDiffADJprod()
 end
-function Jprod!(::ForwardDiffADJprod, Jv, f, x, v)
+function Jprod!(::GenericForwardDiffADJprod, Jv, f, x, v)
   Jv .= ForwardDiff.derivative(t -> f(x + t * v), 0)
+  return Jv
+end
+
+struct ForwardDiffADJprod{T} <: InPlaceADbackend
+  tmp_in::Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}
+  tmp_out::Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}
+end
+
+function ForwardDiffADJprod(
+  nvar::Integer,
+  f,
+  ncon::Integer = 0,
+  c!::Function = (args...) -> [];
+  x0::AbstractVector{T} = rand(nvar),
+  kwargs...,
+) where {T}
+  tmp_in = Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(undef, nvar)
+  tmp_out = Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(undef, ncon)
+  return ForwardDiffADJprod(tmp_in, tmp_out)
+end
+
+function Jprod!(b::ForwardDiffADJprod, Jv, c!, x, v)
+  SparseDiffTools.auto_jacvec!(Jv, c!, x, v, b.tmp_in, b.tmp_out)
   return Jv
 end
 

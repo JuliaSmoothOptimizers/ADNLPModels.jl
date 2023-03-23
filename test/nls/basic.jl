@@ -361,7 +361,16 @@ function autodiff_nls_test(name; kwargs...)
   end
 end
 
-autodiff_nls_test("ForwardDiff")
+autodiff_nls_test("OptimizedAD")
+autodiff_nls_test(
+  "ForwardDiff",
+  gradient_backend = ADNLPModels.GenericForwardDiffADGradient,
+  hprod_backend = ADNLPModels.ForwardDiffADHvprod,
+  jprod_backend = ADNLPModels.GenericForwardDiffADJprod,
+  jtprod_backend = ADNLPModels.ForwardDiffADJtprod,
+  jacobian_backend = ADNLPModels.ForwardDiffADJacobian,
+  hessian_backend = ADNLPModels.ForwardDiffADHessian,
+)
 autodiff_nls_test(
   "ReverseDiff",
   gradient_backend = ADNLPModels.ReverseDiffADGradient,

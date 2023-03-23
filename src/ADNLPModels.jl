@@ -55,6 +55,7 @@ function get_F(nls::AbstractADNLSModel)
   return F
 end
 get_F(nls::AbstractADNLSModel, ::ADBackend) = get_F(nls)
+get_F(nls::AbstractADNLSModel, ::InPlaceADbackend) = nls.F!
 
 """
     get_lag(nlp, b::ADBackend, obj_weight)

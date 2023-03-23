@@ -15,7 +15,18 @@ for problem in NLPModelsTest.nls_problems
   include("nls/problems/$(lowercase(problem)).jl")
 end
 
-ForwardDiffAD(nvar, f, ncon = 0) = ADNLPModels.ADModelBackend(nvar, f, ncon)
+OptimizedAD(nvar, f, ncon = 0) = ADNLPModels.ADModelBackend(nvar, f, ncon)
+ForwardDiffAD(nvar, f, ncon = 0) = ADNLPModels.ADModelBackend(
+  nvar,
+  f,
+  ncon,
+  gradient_backend = ADNLPModels.GenericForwardDiffADGradient,
+  hprod_backend = ADNLPModels.ForwardDiffADHvprod,
+  jprod_backend = ADNLPModels.GenericForwardDiffADJprod,
+  jtprod_backend = ADNLPModels.ForwardDiffADJtprod,
+  jacobian_backend = ADNLPModels.ForwardDiffADJacobian,
+  hessian_backend = ADNLPModels.ForwardDiffADHessian,
+)
 ReverseDiffAD(nvar, f, ncon = 0) = ADNLPModels.ADModelBackend(
   nvar,
   f,
