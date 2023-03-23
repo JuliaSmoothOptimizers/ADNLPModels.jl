@@ -20,25 +20,6 @@ using ReverseDiff, Zygote, ForwardDiff
 
 include("utils.jl")
 
-#=
-struct ForwardDiffAD{T, F} <: ADBackend where {T, F <: Function}
-  r!::F
-  tmp_in::Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}
-  tmp_out::Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}
-end
-
-function ForwardDiffAD(r!::F, T::DataType, nvar::Int, nequ::Int) where {F <: Function}
-  tmp_in = Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(undef, nvar)
-  tmp_out = Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(undef, nequ)
-  ForwardDiffAD{T, F}(r!, tmp_in, tmp_out)
-end
-
-function jprod_residual!(Jv::AbstractVector{T}, fd::ForwardDiffAD{T}, x::AbstractVector{T}, v::AbstractVector{T}, args...) where T
-  SparseDiffTools.auto_jacvec!(Jv, fd.r!, x, v, fd.tmp_in, fd.tmp_out)
-  Jv
-end
-=#
-
 using SparseDiffTools, ReverseDiff, ForwardDiff
 
 struct OptimizedForwardDiffADJprod{T} <: ADNLPModels.InPlaceADbackend
@@ -60,19 +41,17 @@ function OptimizedForwardDiffADJprod(
   return OptimizedForwardDiffADJprod(c!, tmp_in, tmp_out)
 end
 
-function ADNLPModels.Jprod(b::OptimizedForwardDiffADJprod, c!, x, v)
-  ncon = length(b.tmp_out)
-  Jv = similar(x, ncon)
+function ADNLPModels.Jprod!(b::OptimizedForwardDiffADJprod, Jv, c!, x, v)
   SparseDiffTools.auto_jacvec!(Jv, b.r!, x, v, b.tmp_in, b.tmp_out)
-  @show ncon length(Jv) length(x)
   return Jv
 end
 
-struct OptimizedReverseDiffADJprod{T} <: ADNLPModels.InPlaceADbackend
+struct OptimizedReverseDiffADJprod{T, S} <: ADNLPModels.InPlaceADbackend
   ϕ!
   tmp_in::Vector{ReverseDiff.TrackedReal{T, T, Nothing}}
   tmp_out::Vector{ReverseDiff.TrackedReal{T, T, Nothing}}
-  z::Vector{T}
+  _tmp_out::S
+  z::Vector{T} # vector of length 1
 end
 
 function OptimizedReverseDiffADJprod(
@@ -83,29 +62,34 @@ function OptimizedReverseDiffADJprod(
   x0::AbstractVector{T} = rand(n),
   kwargs...,
 ) where {T}
+  
+  tmp_in = Vector{ReverseDiff.TrackedReal{T, T, Nothing}}(undef, nvar)
+  tmp_out = Vector{ReverseDiff.TrackedReal{T, T, Nothing}}(undef, ncon)
+  _tmp_out = similar(x0, ncon)
+  z = [zero(T)]
+
   # ... auxiliary function for J(x) * v
   # ... J(x) * v is the derivative at t = 0 of t ↦ r(x + tv)
-  ϕ!(out, t, x, v, tmp_in) = begin
+  ϕ!(out, t; x = x0, v = x0, tmp_in = tmp_in, c! = c!) = begin
     # here t is a vector of ReverseDiff.TrackedReal
-    tmp_in .= x .+ t[1] .* v
+    tmp_in .= (t[1] .* v .+ x)
     c!(out, tmp_in)
     out
   end
-  tmp_in = Vector{ReverseDiff.TrackedReal{T, T, Nothing}}(undef, nvar)
-  tmp_out = Vector{ReverseDiff.TrackedReal{T, T, Nothing}}(undef, ncon)
-  return OptimizedReverseDiffADJprod(c!, tmp_in, tmp_out, [zero(T)])
+
+  #cfg = ReverseDiff.JacobianConfig(_tmp_out, z)
+  #tape = ReverseDiff.JacobianTape(ϕ!, _tmp_out, z, cfg)
+  return OptimizedReverseDiffADJprod(ϕ!, tmp_in, tmp_out, _tmp_out, z)
 end
 
-function ADNLPModels.Jprod(b::OptimizedReverseDiffADJprod, c!, x, v)
-  ncon = length(b.tmp_out)
-  Jv = similar(x, ncon)
-  ReverseDiff.jacobian!(Jv, (out, t) -> b.ϕ!(out, t, x, v, b._tmp_input), b.tmp_out, b.z)
+function ADNLPModels.Jprod!(b::OptimizedReverseDiffADJprod, Jv, c!, x, v)
+  ReverseDiff.jacobian!(Jv, (out, t) -> b.ϕ!(out, t, x = x, v = v), b._tmp_out, b.z) #, cfg)
   return Jv
 end
 
 benchmarked_optimized_backends["jprod_backend"] = Dict(
   "forward" => OptimizedForwardDiffADJprod,
-  #"reverse" => OptimizedReverseDiffADJprod,
+  "reverse" => OptimizedReverseDiffADJprod,
 )
 
 ########################################################
@@ -116,7 +100,7 @@ benchmarked_optimized_backends["jprod_backend"] = Dict(
 # - backend (see `set_back_list(Val(f), test_back)`)
 problem_sets = Dict(
   #"all" => setdiff(all_cons_problems, ["camshape"]), # crash
-  "scalable" => scalable_cons_problems,
+  "scalable" => setdiff(scalable_cons_problems, ["camshape"]),
 )
 benchs = [
   "optimized",
@@ -126,7 +110,7 @@ data_types = [Float64] # [Float16, Float32, Float64]
 tested_backs = Dict(
   "jprod_backend" => :jprod,
 )
-const nscal = nn
+const nscal = nn * 10
 name = "$(today())_adnlpmodels_benchmark_jprod"
 if "all" in keys(problem_sets)
   name *= "_all"
