@@ -14,7 +14,6 @@ function ForwardDiffADGradient(
   cfg = ForwardDiff.GradientConfig(f, x0)
   return ForwardDiffADGradient(cfg)
 end
-gradient(adbackend::ForwardDiffADGradient, f, x) = ForwardDiff.gradient(f, x, adbackend.cfg)
 function gradient!(adbackend::ForwardDiffADGradient, g, f, x)
   return ForwardDiff.gradient!(g, f, x, adbackend.cfg)
 end
