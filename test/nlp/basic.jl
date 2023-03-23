@@ -12,7 +12,7 @@ ReverseDiffAD() = ADNLPModels.ADModelBackend(
   ADNLPModels.ReverseDiffADGradient(nothing),
   ADNLPModels.ReverseDiffADHvprod(),
   ADNLPModels.ReverseDiffADJprod(),
-  ADNLPModels.ReverseDiffADJtprod(),
+  ADNLPModels.GenericReverseDiffADJtprod(),
   ADNLPModels.ReverseDiffADJacobian(0),
   ADNLPModels.ReverseDiffADHessian(0),
   ADNLPModels.ForwardDiffADGHjvprod(),
@@ -406,7 +406,7 @@ test_autodiff_model(
   gradient_backend = ADNLPModels.ReverseDiffADGradient,
   hprod_backend = ADNLPModels.ReverseDiffADHvprod,
   jprod_backend = ADNLPModels.ReverseDiffADJprod,
-  jtprod_backend = ADNLPModels.ReverseDiffADJtprod,
+  jtprod_backend = ADNLPModels.GenericReverseDiffADJtprod,
   jacobian_backend = ADNLPModels.ReverseDiffADJacobian,
   hessian_backend = ADNLPModels.ReverseDiffADHessian,
 )
