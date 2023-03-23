@@ -43,7 +43,21 @@ function nlsmodelstest_autodiff(name; kwargs...)
   end
 end
 
-nlsmodelstest_autodiff("ForwardDiff")
+nlsmodelstest_autodiff("OptimizedAD")
+nlsmodelstest_autodiff(
+  "ForwardDiff",
+  gradient_backend = ADNLPModels.GenericForwardDiffADGradient,
+  hprod_backend = ADNLPModels.ForwardDiffADHvprod,
+  jprod_backend = ADNLPModels.GenericForwardDiffADJprod,
+  jtprod_backend = ADNLPModels.ForwardDiffADJtprod,
+  jacobian_backend = ADNLPModels.ForwardDiffADJacobian,
+  hessian_backend = ADNLPModels.ForwardDiffADHessian,
+  hprod_residual_backend = ADNLPModels.ForwardDiffADHvprod,
+  jprod_residual_backend = ADNLPModels.GenericForwardDiffADJprod,
+  jtprod_residual_backend = ADNLPModels.ForwardDiffADJtprod,
+  jacobian_residual_backend = ADNLPModels.ForwardDiffADJacobian,
+  hessian_residual_backend = ADNLPModels.ForwardDiffADHessian,
+)
 nlsmodelstest_autodiff(
   "ReverseDiff",
   gradient_backend = ADNLPModels.ReverseDiffADGradient,
@@ -52,6 +66,11 @@ nlsmodelstest_autodiff(
   jtprod_backend = ADNLPModels.ReverseDiffADJtprod,
   jacobian_backend = ADNLPModels.ReverseDiffADJacobian,
   hessian_backend = ADNLPModels.ReverseDiffADHessian,
+  hprod_residual_backend = ADNLPModels.ReverseDiffADHvprod,
+  jprod_residual_backend = ADNLPModels.GenericReverseDiffADJprod,
+  jtprod_residual_backend = ADNLPModels.ReverseDiffADJtprod,
+  jacobian_residual_backend = ADNLPModels.ReverseDiffADJacobian,
+  hessian_residual_backend = ADNLPModels.ReverseDiffADHessian,
 )
 nlsmodelstest_autodiff(
   "Zygote",
@@ -60,4 +79,8 @@ nlsmodelstest_autodiff(
   jtprod_backend = ADNLPModels.ZygoteADJtprod,
   jacobian_backend = ADNLPModels.ZygoteADJacobian,
   hessian_backend = ADNLPModels.ZygoteADHessian,
+  jprod_residual_backend = ADNLPModels.ZygoteADJprod,
+  jtprod_residual_backend = ADNLPModels.ZygoteADJtprod,
+  jacobian_residual_backend = ADNLPModels.ZygoteADJacobian,
+  hessian_residual_backend = ADNLPModels.ZygoteADHessian,
 )

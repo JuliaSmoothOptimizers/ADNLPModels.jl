@@ -391,7 +391,16 @@ test_autodiff_backend_error()
 # Automatically loads the code for Zygote with Requires
 import Zygote
 
-test_autodiff_model("ForwardDiff")
+test_autodiff_model("OptimizedAD")
+test_autodiff_model(
+  "ForwardDiff",
+  gradient_backend = ADNLPModels.GenericForwardDiffADGradient,
+  hprod_backend = ADNLPModels.ForwardDiffADHvprod,
+  jprod_backend = ADNLPModels.GenericForwardDiffADJprod,
+  jtprod_backend = ADNLPModels.ForwardDiffADJtprod,
+  jacobian_backend = ADNLPModels.ForwardDiffADJacobian,
+  hessian_backend = ADNLPModels.ForwardDiffADHessian,
+)
 test_autodiff_model(
   "ReverseDiff",
   gradient_backend = ADNLPModels.ReverseDiffADGradient,
