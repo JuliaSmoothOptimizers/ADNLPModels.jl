@@ -84,8 +84,10 @@ function ForwardDiffADJprod(
   x0::AbstractVector{T} = rand(nvar),
   kwargs...,
 ) where {T}
-  tmp_in = Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(undef, nvar)
-  tmp_out = Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(undef, ncon)
+  tmp_in =
+    Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(undef, nvar)
+  tmp_out =
+    Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(undef, ncon)
   return ForwardDiffADJprod(tmp_in, tmp_out)
 end
 
@@ -136,8 +138,10 @@ function ForwardDiffADHvprod(
   x0::AbstractVector{T} = rand(nvar),
   kwargs...,
 ) where {T}
-  tmp_in = Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(undef, nvar)
-  tmp_out = Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(undef, nvar)
+  tmp_in =
+    Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(undef, nvar)
+  tmp_out =
+    Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(undef, nvar)
   return ForwardDiffADHvprod(tmp_in, tmp_out)
 end
 
