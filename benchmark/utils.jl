@@ -5,15 +5,30 @@ end
 is_jump_available(::Val{:jump}, T) = (T == Float64)
 is_jump_available(::Val, T) = true
 
+###################################################
+#
+#
+#
+###################################################
 const meta = OptimizationProblems.meta
 const nn = OptimizationProblems.default_nvar # 100 # default parameter for scalable problems
 
 # Scalable problems from OptimizationProblem.jl
 scalable_problems = meta[meta.variable_nvar .== true, :name] # problems that are scalable
+
 all_problems = meta[meta.nvar .> 5, :name] # all problems with ≥ 5 variables
 all_problems = setdiff(all_problems, scalable_problems) # avoid duplicate problems
+
 all_cons_problems = meta[(meta.nvar .> 5) .&& (meta.ncon .> 5), :name] # all problems with ≥ 5 variables
 scalable_cons_problems = meta[(meta.variable_nvar .== true) .&& (meta.ncon .> 5), :name] # problems that are scalable
+all_cons_problems = setdiff(all_cons_problems, scalable_cons_problems) # avoid duplicate problems
+
+pre_problem_sets = Dict(
+  "all" => all_problems, # all problems with ≥ 5 variables and not scalable
+  "scalable" => scalable_problems, # problems that are scalable
+  "all_cons" => all_cons_problems, # all problems with ≥ 5 variables anc cons and not scalable
+  "scalable_cons" => scalable_cons_problems, # scalable problems with ≥ 5 variables anc cons
+)
 
 ###################################################
 #
@@ -25,9 +40,16 @@ benchmarked_optimized_backends = Dict(
     "forward" => ADNLPModels.ForwardDiffADGradient,
     "reverse" => ADNLPModels.ReverseDiffADGradient,
   ),
-  "hprod_backend" => Dict(),
-  "jprod_backend" => Dict(),
-  "jtprod_backend" => Dict(),
+  "hprod_backend" => Dict(
+    "forward" => OptForwardDiffADHvprod,
+  ),
+  "jprod_backend" => Dict(
+    "forward" => ADNLPModels.ForwardDiffADJprod,
+    "reverse" => ADNLPModels.ReverseDiffADJprod,
+  ),
+  "jtprod_backend" => Dict(
+    "reverse" => OptimizedReverseDiffADJtprod,
+  ),
   "jacobian_backend" => Dict(
     "sparse" => ADNLPModels.SparseForwardADJacobian,
     # "forward" => ADNLPModels.ForwardDiffADJacobian, # slower
@@ -45,15 +67,17 @@ benchmarked_optimized_backends = Dict(
 ###################################################
 benchmarked_generic_backends = Dict(
   "gradient_backend" => Dict(
+    "forward" => ADNLPModels.GenericForwardDiffADGradient,
+    "reverse" => GenericReverseDiffADGradient,
     "zygote" => ADNLPModels.ZygoteADGradient,
   ),
   "hprod_backend" => Dict(
-    "forward" => ADNLPModels.ForwardDiffADHvprod,
+    "forward" => ADNLPModels.ForwardDiffADHvprod, # ADNLPModels.GenericForwardDiffADHvprod
     "reverse" => ADNLPModels.ReverseDiffADHvprod,
   ),
   "jprod_backend" => Dict(
-    "forward" => ADNLPModels.ForwardDiffADJprod,
-    "reverse" => ADNLPModels.ReverseDiffADJprod,
+    "forward" => ADNLPModels.GenericForwardDiffADJprod,
+    "reverse" => ADNLPModels.GenericReverseDiffADJprod,
     "zygote" => ADNLPModels.ZygoteADJprod,
   ),
   "jtprod_backend" => Dict(
@@ -95,22 +119,6 @@ function get_back(::Val{:generic}, test_back::String, backend::String)
   # test_back must be a key in benchmarked_generic_backends
   # backend must be a key in benchmarked_generic_backends[test_back]
   return benchmarked_generic_backends[test_back][backend]
-end
-
-struct GenericForwardDiffADGradient <: ADNLPModels.ADBackend end
-function GenericForwardDiffADGradient(
-  nvar::Integer,
-  f,
-  ncon::Integer = 0,
-  c::Function = (args...) -> [];
-  x0::AbstractVector = rand(nvar),
-  kwargs...,
-)
-  return GenericForwardDiffADGradient()
-end
-ADNLPModels.gradient(::GenericForwardDiffADGradient, f, x) = ForwardDiff.gradient(f, x)
-function ADNLPModels.gradient!(::GenericForwardDiffADGradient, g, f, x)
-  return ForwardDiff.gradient!(g, f, x)
 end
 
 # keys list all the accepted keywords to define backends

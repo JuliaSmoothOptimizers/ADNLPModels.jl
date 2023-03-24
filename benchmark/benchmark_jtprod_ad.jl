@@ -16,53 +16,10 @@ using BenchmarkTools, DataFrames, JuMP, Plots
 #JSO packages
 using NLPModels, BenchmarkProfiles, NLPModelsJuMP, OptimizationProblems, SolverBenchmark
 #This package
-using ReverseDiff, Zygote, ForwardDiff
+using ForwardDiff, ReverseDiff, SparseDiffTools, Zygote
 
+include("additional_backends.jl")
 include("utils.jl")
-
-using SparseDiffTools, ReverseDiff, ForwardDiff
-
-struct OptimizedReverseDiffADJtprod{T, S, GT} <: ADNLPModels.InPlaceADbackend
-  #ψ::F2
-  #gcfg::GC  # gradient config
-  gtape::GT  # compiled gradient tape
-  _tmp_out::Vector{ReverseDiff.TrackedReal{T, T, Nothing}}
-  _rval::S  # temporary storage for jtprod
-end
-
-function OptimizedReverseDiffADJtprod(
-  nvar::Integer,
-  f,
-  ncon::Integer = 0,
-  c!::Function = (args...) -> [];
-  x0::AbstractVector{T} = rand(nvar),
-  y0::AbstractVector{T} = rand(ncon),
-  kwargs...,
-) where {T}
-  _tmp_out = Vector{ReverseDiff.TrackedReal{T, T, Nothing}}(undef, ncon)
-  _rval = similar(x0, ncon)  # temporary storage for jtprod
-
-  ψ(x, u; tmp_out = _tmp_out) = begin
-    # here x is a vector of ReverseDiff.TrackedReal
-    c!(tmp_out, x)
-    dot(tmp_out, u)
-  end
-
-  # u = similar(x0, nequ)  # just for GradientConfig
-  gcfg = ReverseDiff.GradientConfig((x0, y0))
-  gtape = ReverseDiff.compile(ReverseDiff.GradientTape(ψ, (x0, y0), gcfg))
-
-  return OptimizedReverseDiffADJtprod(gtape, _tmp_out, _rval)
-end
-
-function ADNLPModels.Jtprod!(b::OptimizedReverseDiffADJtprod, Jtv, c!, x, v)
-  ReverseDiff.gradient!((Jtv, b._rval), b.gtape, (x, v))
-  return Jtv
-end
-
-benchmarked_optimized_backends["jtprod_backend"] = Dict(
-  "reverse" => OptimizedReverseDiffADJtprod,
-)
 
 ########################################################
 # There are 6 levels:

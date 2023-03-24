@@ -16,81 +16,10 @@ using BenchmarkTools, DataFrames, JuMP, Plots
 #JSO packages
 using NLPModels, BenchmarkProfiles, NLPModelsJuMP, OptimizationProblems, SolverBenchmark
 #This package
-using ReverseDiff, Zygote, ForwardDiff
+using SparseDiffTools, ReverseDiff, Zygote, ForwardDiff
 
+include("additional_backends.jl")
 include("utils.jl")
-
-using SparseDiffTools, ReverseDiff, ForwardDiff
-
-struct OptimizedForwardDiffADJprod{T} <: ADNLPModels.InPlaceADbackend
-  r!
-  tmp_in::Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}
-  tmp_out::Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}
-end
-
-function OptimizedForwardDiffADJprod(
-  nvar::Integer,
-  f,
-  ncon::Integer = 0,
-  c!::Function = (args...) -> [];
-  x0::AbstractVector{T} = rand(n),
-  kwargs...,
-) where {T}
-  tmp_in = Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(undef, nvar)
-  tmp_out = Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(undef, ncon)
-  return OptimizedForwardDiffADJprod(c!, tmp_in, tmp_out)
-end
-
-function ADNLPModels.Jprod!(b::OptimizedForwardDiffADJprod, Jv, c!, x, v)
-  SparseDiffTools.auto_jacvec!(Jv, b.r!, x, v, b.tmp_in, b.tmp_out)
-  return Jv
-end
-
-struct OptimizedReverseDiffADJprod{T, S} <: ADNLPModels.InPlaceADbackend
-  ϕ!
-  tmp_in::Vector{ReverseDiff.TrackedReal{T, T, Nothing}}
-  tmp_out::Vector{ReverseDiff.TrackedReal{T, T, Nothing}}
-  _tmp_out::S
-  z::Vector{T} # vector of length 1
-end
-
-function OptimizedReverseDiffADJprod(
-  nvar::Integer,
-  f,
-  ncon::Integer = 0,
-  c!::Function = (args...) -> [];
-  x0::AbstractVector{T} = rand(n),
-  kwargs...,
-) where {T}
-  
-  tmp_in = Vector{ReverseDiff.TrackedReal{T, T, Nothing}}(undef, nvar)
-  tmp_out = Vector{ReverseDiff.TrackedReal{T, T, Nothing}}(undef, ncon)
-  _tmp_out = similar(x0, ncon)
-  z = [zero(T)]
-
-  # ... auxiliary function for J(x) * v
-  # ... J(x) * v is the derivative at t = 0 of t ↦ r(x + tv)
-  ϕ!(out, t; x = x0, v = x0, tmp_in = tmp_in, c! = c!) = begin
-    # here t is a vector of ReverseDiff.TrackedReal
-    tmp_in .= (t[1] .* v .+ x)
-    c!(out, tmp_in)
-    out
-  end
-
-  #cfg = ReverseDiff.JacobianConfig(_tmp_out, z)
-  #tape = ReverseDiff.JacobianTape(ϕ!, _tmp_out, z, cfg)
-  return OptimizedReverseDiffADJprod(ϕ!, tmp_in, tmp_out, _tmp_out, z)
-end
-
-function ADNLPModels.Jprod!(b::OptimizedReverseDiffADJprod, Jv, c!, x, v)
-  ReverseDiff.jacobian!(Jv, (out, t) -> b.ϕ!(out, t, x = x, v = v), b._tmp_out, b.z) #, cfg)
-  return Jv
-end
-
-benchmarked_optimized_backends["jprod_backend"] = Dict(
-  "forward" => OptimizedForwardDiffADJprod,
-  "reverse" => OptimizedReverseDiffADJprod,
-)
 
 ########################################################
 # There are 6 levels:
