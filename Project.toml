@@ -1,6 +1,6 @@
 name = "ADNLPModels"
 uuid = "54578032-b7ea-4c30-94aa-7cbd1cce6c9a"
-version = "0.5.1"
+version = "0.6.0"
 
 [deps]
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
