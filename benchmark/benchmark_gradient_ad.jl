@@ -18,25 +18,8 @@ using NLPModels, BenchmarkProfiles, NLPModelsJuMP, OptimizationProblems, SolverB
 #This package
 using ReverseDiff, Zygote, ForwardDiff
 
+include("additional_backends.jl")
 include("utils.jl")
-
-# Available backends in ADNLPModels
-# - ForwardDiffADGradient: optimized backend
-# - ReverseDiffADGradient: optimized backend
-# - ZygoteADGradient: generic
-
-include("additional_grad_backends.jl")
-
-# Additional backends
-# - GenericForwardDiffADGradient: generic
-# - GenericReverseDiffADGradient: generic
-
-# update with the new ones
-benchmarked_generic_backends["gradient_backend"] = Dict(
-  "forward" => GenericForwardDiffADGradient,
-  "reverse" => GenericReverseDiffADGradient,
-  "zygote" => ADNLPModels.ZygoteADGradient,
-)
 
 ########################################################
 # There are 6 levels:

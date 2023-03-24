@@ -16,15 +16,12 @@ using BenchmarkTools, DataFrames, JuMP, Plots
 #JSO packages
 using NLPModels, BenchmarkProfiles, NLPModelsJuMP, OptimizationProblems, SolverBenchmark
 #This package
-using ReverseDiff, Zygote, ForwardDiff
+using SparseDiffTools, ReverseDiff, Zygote, ForwardDiff
 
+include("additional_backends.jl")
 include("utils.jl")
 
-using SparseDiffTools, ReverseDiff, ForwardDiff
-
-benchmarked_optimized_backends["hprod_backend"] = Dict(
-  "forward" => ADNLPModels.ForwardDiffADHvprod,
-)
+using ReverseDiff, ForwardDiff
 
 ########################################################
 # There are 6 levels:

@@ -18,6 +18,7 @@ using NLPModels, BenchmarkProfiles, NLPModelsJuMP, OptimizationProblems, SolverB
 #This package
 using ReverseDiff, Zygote, ForwardDiff
 
+include("additional_backends.jl")
 include("utils.jl")
 
 ########################################################
