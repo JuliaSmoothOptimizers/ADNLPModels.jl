@@ -85,7 +85,6 @@ function ReverseDiffADJprod(
   x0::AbstractVector{T} = rand(nvar),
   kwargs...,
 ) where {T}
-  
   tmp_in = Vector{ReverseDiff.TrackedReal{T, T, Nothing}}(undef, nvar)
   tmp_out = Vector{ReverseDiff.TrackedReal{T, T, Nothing}}(undef, ncon)
   _tmp_out = similar(x0, ncon)
