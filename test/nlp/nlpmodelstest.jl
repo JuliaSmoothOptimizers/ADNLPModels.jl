@@ -32,7 +32,7 @@ nlpmodelstest_autodiff("OptimizedAD")
 nlpmodelstest_autodiff(
   "ForwardDiff",
   gradient_backend = ADNLPModels.GenericForwardDiffADGradient,
-  hprod_backend = ADNLPModels.ForwardDiffADHvprod,
+  hprod_backend = ADNLPModels.GenericForwardDiffADHvprod,
   jprod_backend = ADNLPModels.GenericForwardDiffADJprod,
   jtprod_backend = ADNLPModels.ForwardDiffADJtprod,
   jacobian_backend = ADNLPModels.ForwardDiffADJacobian,

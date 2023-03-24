@@ -24,7 +24,7 @@ ReverseDiffAD() = ADNLPModels.ADModelBackend(
 )
 ZygoteAD() = ADNLPModels.ADModelBackend(
   ADNLPModels.ZygoteADGradient(),
-  ADNLPModels.ForwardDiffADHvprod(),
+  ADNLPModels.GenericForwardDiffADHvprod(),
   ADNLPModels.ZygoteADJprod(),
   ADNLPModels.ZygoteADJtprod(),
   ADNLPModels.ZygoteADJacobian(0),
@@ -395,7 +395,7 @@ test_autodiff_model("OptimizedAD")
 test_autodiff_model(
   "ForwardDiff",
   gradient_backend = ADNLPModels.GenericForwardDiffADGradient,
-  hprod_backend = ADNLPModels.ForwardDiffADHvprod,
+  hprod_backend = ADNLPModels.GenericForwardDiffADHvprod,
   jprod_backend = ADNLPModels.GenericForwardDiffADJprod,
   jtprod_backend = ADNLPModels.ForwardDiffADJtprod,
   jacobian_backend = ADNLPModels.ForwardDiffADJacobian,
