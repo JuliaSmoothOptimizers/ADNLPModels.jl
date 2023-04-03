@@ -14,7 +14,7 @@ abstract type AbstractADNLSModel{T, S} <: AbstractNLSModel{T, S} end
 const ADModel{T, S} = Union{AbstractADNLPModel{T, S}, AbstractADNLSModel{T, S}}
 
 include("ad.jl")
-include("sparse_derivatives.jl")
+include("sparse_jacobian.jl")
 include("forward.jl")
 include("reverse.jl")
 include("zygote.jl")

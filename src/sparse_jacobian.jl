@@ -1,12 +1,10 @@
+## ----- SparseDiffTools -----
+
 struct SparseForwardADJacobian{Tv, Ti, T, T2, T3, T4, T5} <: ADNLPModels.ADBackend
   cfJ::ForwardColorJacCache{T, T2, T3, T4, T5, SparseMatrixCSC{Tv, Ti}}
 end
 
-function SparseForwardADJacobian(
-  nvar,
-  f,
-  ncon,
-  c!;
+function SparseForwardADJacobian(nvar, f, ncon, c!;
   x0::AbstractVector = rand(nvar),
   alg::SparseDiffTools.SparseDiffToolsColoringAlgorithm = SparseDiffTools.GreedyD1Color(),
   kwargs...,
@@ -22,10 +20,9 @@ function SparseForwardADJacobian(
     sparsity_pattern.rowval,
     Tv.(sparsity_pattern.nzval),
   )
-  dx = zeros(Tv, ncon)
-  sparsity_pattern = Tv.(sparsity_pattern)
-  cfJ = ForwardColorJacCache(c!, x0, colorvec = colors, dx = dx, sparsity = jac)
 
+  dx = zeros(Tv, ncon)
+  cfJ = ForwardColorJacCache(c!, x0, colorvec=colors, dx=dx, sparsity=jac)
   SparseForwardADJacobian(cfJ)
 end
 
@@ -85,24 +82,28 @@ function jac_coord_residual!(
   return vals
 end
 
-struct SparseADJacobian{J} <: ADBackend
+## ----- Symbolics -----
+
+struct SparseADJacobian <: ADBackend
   nnzj::Int
   rows::Vector{Int}
   cols::Vector{Int}
-  cfJ::J
+  cfJ::Expr
 end
 
 function SparseADJacobian(nvar, f, ncon, c!; kwargs...)
   @variables xs[1:nvar] out[1:ncon]
   wi = Symbolics.scalarize(xs)
   wo = Symbolics.scalarize(out)
-  _fun = c!(wo, wi)
+  fun = c!(wo, wi)
   S = Symbolics.jacobian_sparsity(c!, wo, wi)
   rows, cols, _ = findnz(S)
-  vals = Symbolics.sparsejacobian_vals(_fun, wi, rows, cols)
-  nnzj = length(rows)
-  cfJ = Symbolics.build_function(vals, wi, expression = Val{false})
-  SparseADJacobian(nnzj, rows, cols, cfJ)
+  vals = Symbolics.sparsejacobian_vals(fun, wi, rows, cols)
+  nnzj = length(vals)
+  # cfJ is a Tuple{Expr, Expr}, cfJ[2] is the in-place function
+  # that we need to update a vector `vals` with the nonzeros of Jc(x).
+  cfJ = Symbolics.build_function(vals, wi)
+  SparseADJacobian(nnzj, rows, cols, cfJ[2])
 end
 
 function get_nln_nnzj(b::SparseADJacobian, nvar, ncon)
@@ -111,7 +112,7 @@ end
 
 function jac_structure!(
   b::SparseADJacobian,
-  ::ADModel,
+  nlp::ADModel,
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
 )
@@ -120,15 +121,14 @@ function jac_structure!(
   return rows, cols
 end
 
-function jac_coord!(b::SparseADJacobian, ::ADModel, x::AbstractVector, vals::AbstractVector)
-  _fun = eval(b.cfJ[2])
-  Base.invokelatest(_fun, vals, x)
+function jac_coord!(b::SparseADJacobian, nlp::ADModel, x::AbstractVector, vals::AbstractVector)
+  @eval $(b.cfJ)($vals, $x)
   return vals
 end
 
 function jac_structure_residual!(
   b::SparseADJacobian,
-  ::AbstractADNLSModel,
+  nls::AbstractADNLSModel,
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
 )
@@ -139,11 +139,10 @@ end
 
 function jac_coord_residual!(
   b::SparseADJacobian,
-  ::AbstractADNLSModel,
+  nls::AbstractADNLSModel,
   x::AbstractVector,
   vals::AbstractVector,
 )
-  _fun = eval(b.cfJ[2])
-  Base.invokelatest(_fun, vals, x)
+  @eval $(b.cfJ)($vals, $x)
   return vals
 end

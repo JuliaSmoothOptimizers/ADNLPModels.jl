@@ -33,7 +33,7 @@ dt = (Float32, Float64)
   jac_nln_structure!(nlp, rows, cols)
   jac_nln_coord!(nlp, x, vals)
   @test eltype(vals) == T
-  J = sparse(rows, cols, vals)
+  J = sparse(rows, cols, vals, ncon, nvar)
   @test J == [
     1 0
     -20*x[1] 10
@@ -46,7 +46,7 @@ dt = (Float32, Float64)
   ADNLPModels.jac_structure!(b, nlp, rows, cols)
   ADNLPModels.jac_coord!(b, nlp, x, vals)
   @test eltype(vals) == T
-  J = sparse(rows, cols, vals)
+  J = sparse(rows, cols, vals, ncon, nvar)
   @test J == [
     1 0
     -20*x[1] 10
