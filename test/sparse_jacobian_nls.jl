@@ -25,7 +25,7 @@ dt = (Float32, Float64)
   jac_structure_residual!(nls, rows, cols)
   jac_coord_residual!(nls, x, vals)
   @test eltype(vals) == T
-  J = sparse(rows, cols, vals)
+  J = sparse(rows, cols, vals, nequ, nvar)
   @test J == [
     1 0
     -20*x[1] 10
@@ -38,7 +38,7 @@ dt = (Float32, Float64)
   ADNLPModels.jac_structure_residual!(b, nls, rows, cols)
   ADNLPModels.jac_coord_residual!(b, nls, x, vals)
   @test eltype(vals) == T
-  J = sparse(rows, cols, vals)
+  J = sparse(rows, cols, vals, nequ, nvar)
   @test J == [
     1 0
     -20*x[1] 10

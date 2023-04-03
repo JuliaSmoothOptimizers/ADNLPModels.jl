@@ -4,8 +4,8 @@ using ADNLPModels:
 
 using SparseDiffTools
 @testset "Basic Jacobian derivative test" begin
-  include("sparse_derivatives.jl")
-  include("sparse_derivatives_nls.jl")
+  include("sparse_jacobian.jl")
+  include("sparse_jacobian_nls.jl")
 end
 
 for problem in NLPModelsTest.nlp_problems ∪ ["GENROSE"]
