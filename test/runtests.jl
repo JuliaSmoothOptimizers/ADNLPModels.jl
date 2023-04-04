@@ -8,6 +8,10 @@ using SparseDiffTools
   include("sparse_jacobian_nls.jl")
 end
 
+@testset "Basic Hessian derivative test" begin
+  include("sparse_hessian.jl")
+end
+
 for problem in NLPModelsTest.nlp_problems ∪ ["GENROSE"]
   include("nlp/problems/$(lowercase(problem)).jl")
 end
