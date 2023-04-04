@@ -107,10 +107,14 @@ For in-place constraints and residual function, use one of the following constru
     ADNLSModel!(F!, x0, nequ, lvar, uvar)
     ADNLSModel!(F!, x0, nequ, c!, lcon, ucon)
     ADNLSModel!(F!, x0, nequ, clinrows, clincols, clinvals, c!, lcon, ucon)
+    ADNLSModel!(F!, x0, nequ, clinrows, clincols, clinvals, lcon, ucon)
     ADNLSModel!(F!, x0, nequ, A, c!, lcon, ucon)
+    ADNLSModel!(F!, x0, nequ, A, lcon, ucon)
     ADNLSModel!(F!, x0, nequ, lvar, uvar, c!, lcon, ucon)
     ADNLSModel!(F!, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, c!, lcon, ucon)
+    ADNLSModel!(F!, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, lcon, ucon)
     ADNLSModel!(F!, x0, nequ, lvar, uvar, A, c!, lcon, ucon)
+    ADNLSModel!(F!, x0, nequ, lvar, uvar, A, clcon, ucon)
 
 where the constraint function has the signature `c!(output, input)`.
 
@@ -161,7 +165,7 @@ function ADNLSModel!(
   nls_nnzj = get_residual_nnzj(adbackend, nvar, nequ)
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nls_nnzj, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
-  return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F!, x -> T[])
+  return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F!, (cx, x) -> cx)
 end
 
 function ADNLSModel(F, x0::S, nequ::Integer, lvar::S, uvar::S; kwargs...) where {S}
@@ -206,7 +210,7 @@ function ADNLSModel!(
   nls_nnzj = get_residual_nnzj(adbackend, nvar, nequ)
   nls_meta =
     NLSMeta{T, S}(nequ, nvar, nnzj = nls_nnzj, nnzh = div(nvar * (nvar + 1), 2), lin = linequ)
-  return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F!, x -> T[])
+  return ADNLSModel(meta, nls_meta, NLSCounters(), adbackend, F!, (cx, x) -> cx)
 end
 
 function ADNLSModel(F, x0::S, nequ::Integer, c, lcon::S, ucon::S; kwargs...) where {S}
@@ -282,8 +286,14 @@ function ADNLSModel(
   ucon::S;
   kwargs...,
 ) where {S, Si}
-  T = eltype(S)
-  return ADNLSModel(F, x0, nequ, clinrows, clincols, clinvals, x -> T[], lcon, ucon; kwargs...)
+  function F!(output, x)
+    Fx = F(x)
+    for i = 1:length(Fx)
+      output[i] = Fx[i]
+    end
+    return output
+  end
+  return ADNLSModel!(F!, x0, nequ, clinrows, clincols, clinvals, lcon, ucon; kwargs...)
 end
 
 function ADNLSModel(
@@ -295,8 +305,14 @@ function ADNLSModel(
   ucon::S;
   kwargs...,
 ) where {S, Tv, Ti}
-  clinrows, clincols, clinvals = findnz(A)
-  return ADNLSModel(F, x0, nequ, clinrows, clincols, clinvals, lcon, ucon; kwargs...)
+  function F!(output, x)
+    Fx = F(x)
+    for i = 1:length(Fx)
+      output[i] = Fx[i]
+    end
+    return output
+  end
+  return ADNLSModel!(F!, x0, nequ, A, lcon, ucon; kwargs...)
 end
 
 function ADNLSModel(
@@ -328,6 +344,21 @@ function ADNLSModel(
   end
 
   return ADNLSModel!(F!, x0, nequ, clinrows, clincols, clinvals, c!, lcon, ucon; kwargs...)
+end
+
+function ADNLSModel!(
+  F!,
+  x0::S,
+  nequ::Integer,
+  clinrows::Si,
+  clincols::Si,
+  clinvals::S,
+  lcon::S,
+  ucon::S;
+  kwargs...,
+) where {S, Si}
+  T = eltype(S)
+  return ADNLSModel!(F!, x0, nequ, clinrows, clincols, clinvals, (cx, x) -> cx, lcon, ucon; kwargs...)
 end
 
 function ADNLSModel!(
@@ -412,6 +443,20 @@ function ADNLSModel!(
   return ADNLSModel!(F!, x0, nequ, clinrows, clincols, clinvals, c!, lcon, ucon; kwargs...)
 end
 
+function ADNLSModel!(
+  F!,
+  x0::S,
+  nequ::Integer,
+  A::AbstractSparseMatrix{Tv, Ti},
+  lcon::S,
+  ucon::S;
+  kwargs...,
+) where {S, Tv, Ti}
+  clinrows, clincols, clinvals = findnz(A)
+  T = eltype(S)
+  return ADNLSModel!(F!, x0, nequ, clinrows, clincols, clinvals, (cx, x) -> cx, lcon, ucon; kwargs...)
+end
+
 function ADNLSModel(
   F,
   x0::S,
@@ -425,9 +470,15 @@ function ADNLSModel(
   ucon::S;
   kwargs...,
 ) where {S, Si}
-  T = eltype(S)
-  return ADNLSModel(
-    F,
+  function F!(output, x)
+    Fx = F(x)
+    for i = 1:length(Fx)
+      output[i] = Fx[i]
+    end
+    return output
+  end
+  return ADNLSModel!(
+    F!,
     x0,
     nequ,
     lvar,
@@ -435,7 +486,35 @@ function ADNLSModel(
     clinrows,
     clincols,
     clinvals,
-    x -> T[],
+    lcon,
+    ucon;
+    kwargs...,
+  )
+end
+
+function ADNLSModel!(
+  F!,
+  x0::S,
+  nequ::Integer,
+  lvar::S,
+  uvar::S,
+  clinrows::Si,
+  clincols::Si,
+  clinvals::S,
+  lcon::S,
+  ucon::S;
+  kwargs...,
+) where {S, Si}
+  return ADNLSModel!(
+    F!,
+    x0,
+    nequ,
+    lvar,
+    uvar,
+    clinrows,
+    clincols,
+    clinvals,
+    (cx, x) -> cx,
     lcon,
     ucon;
     kwargs...,
@@ -453,8 +532,29 @@ function ADNLSModel(
   ucon::S;
   kwargs...,
 ) where {S, Tv, Ti}
+  function F!(output, x)
+    Fx = F(x)
+    for i = 1:length(Fx)
+      output[i] = Fx[i]
+    end
+    return output
+  end
+  return ADNLSModel!(F!, x0, nequ, lvar, uvar, A, lcon, ucon; kwargs...)
+end
+
+function ADNLSModel!(
+  F!,
+  x0::S,
+  nequ::Integer,
+  lvar::S,
+  uvar::S,
+  A::AbstractSparseMatrix{Tv, Ti},
+  lcon::S,
+  ucon::S;
+  kwargs...,
+) where {S, Tv, Ti}
   clinrows, clincols, clinvals = findnz(A)
-  return ADNLSModel(F, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, lcon, ucon; kwargs...)
+  return ADNLSModel!(F!, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, lcon, ucon; kwargs...)
 end
 
 function ADNLSModel(
