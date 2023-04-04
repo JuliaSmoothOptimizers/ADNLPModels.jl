@@ -4,25 +4,28 @@ struct SparseForwardADJacobian{Tv, Ti, T, T2, T3, T4, T5} <: ADNLPModels.ADBacke
   cfJ::ForwardColorJacCache{T, T2, T3, T4, T5, SparseMatrixCSC{Tv, Ti}}
 end
 
-function SparseForwardADJacobian(nvar, f, ncon, c!;
-  x0::AbstractVector = rand(nvar),
+function SparseForwardADJacobian(
+  nvar,
+  f,
+  ncon,
+  c!;
+  x0::AbstractVector{T} = rand(nvar),
   alg::SparseDiffTools.SparseDiffToolsColoringAlgorithm = SparseDiffTools.GreedyD1Color(),
   kwargs...,
-)
-  Tv = eltype(x0)
+) where T
   output = similar(x0, ncon)
-  sparsity_pattern = Symbolics.jacobian_sparsity(c!, output, x0)
-  colors = matrix_colors(sparsity_pattern, alg)
-  jac = SparseMatrixCSC{Tv, Int}(
-    sparsity_pattern.m,
-    sparsity_pattern.n,
-    sparsity_pattern.colptr,
-    sparsity_pattern.rowval,
-    Tv.(sparsity_pattern.nzval),
+  J = Symbolics.jacobian_sparsity(c!, output, x0)
+  colors = matrix_colors(J, alg)
+  jac = SparseMatrixCSC{T, Int}(
+    J.m,
+    J.n,
+    J.colptr,
+    J.rowval,
+    T.(J.nzval),
   )
 
-  dx = zeros(Tv, ncon)
-  cfJ = ForwardColorJacCache(c!, x0, colorvec=colors, dx=dx, sparsity=jac)
+  dx = zeros(T, ncon)
+  cfJ = ForwardColorJacCache(c!, x0, colorvec = colors, dx = dx, sparsity = jac)
   SparseForwardADJacobian(cfJ)
 end
 
@@ -84,11 +87,11 @@ end
 
 ## ----- Symbolics -----
 
-struct SparseADJacobian <: ADBackend
+struct SparseADJacobian{T} <: ADBackend
   nnzj::Int
   rows::Vector{Int}
   cols::Vector{Int}
-  cfJ::Expr
+  cfJ::T
 end
 
 function SparseADJacobian(nvar, f, ncon, c!; kwargs...)
@@ -96,13 +99,13 @@ function SparseADJacobian(nvar, f, ncon, c!; kwargs...)
   wi = Symbolics.scalarize(xs)
   wo = Symbolics.scalarize(out)
   fun = c!(wo, wi)
-  S = Symbolics.jacobian_sparsity(c!, wo, wi)
-  rows, cols, _ = findnz(S)
+  J = Symbolics.jacobian_sparsity(c!, wo, wi)
+  rows, cols, _ = findnz(J)
   vals = Symbolics.sparsejacobian_vals(fun, wi, rows, cols)
   nnzj = length(vals)
   # cfJ is a Tuple{Expr, Expr}, cfJ[2] is the in-place function
   # that we need to update a vector `vals` with the nonzeros of Jc(x).
-  cfJ = Symbolics.build_function(vals, wi)
+  cfJ = Symbolics.build_function(vals, wi, expression = Val{false})
   SparseADJacobian(nnzj, rows, cols, cfJ[2])
 end
 
