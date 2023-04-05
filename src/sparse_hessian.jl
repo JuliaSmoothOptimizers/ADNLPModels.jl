@@ -11,9 +11,9 @@ function SparseADHessian(nvar, f, ncon, c!; kwargs...)
   @variables xs[1:nvar], μs
   xsi = Symbolics.scalarize(xs)
   fun = μs * f(xsi)
+  @variables ys[1:ncon]
+  ysi = Symbolics.scalarize(ys)
   if ncon > 0
-    @variables ys[1:ncon]
-    ysi = Symbolics.scalarize(ys)
     cx = similar(ysi)
     fun = fun + dot(c!(cx, xsi), ysi)
   end
