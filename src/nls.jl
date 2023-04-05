@@ -358,7 +358,18 @@ function ADNLSModel!(
   kwargs...,
 ) where {S, Si}
   T = eltype(S)
-  return ADNLSModel!(F!, x0, nequ, clinrows, clincols, clinvals, (cx, x) -> cx, lcon, ucon; kwargs...)
+  return ADNLSModel!(
+    F!,
+    x0,
+    nequ,
+    clinrows,
+    clincols,
+    clinvals,
+    (cx, x) -> cx,
+    lcon,
+    ucon;
+    kwargs...,
+  )
 end
 
 function ADNLSModel!(
@@ -454,7 +465,18 @@ function ADNLSModel!(
 ) where {S, Tv, Ti}
   clinrows, clincols, clinvals = findnz(A)
   T = eltype(S)
-  return ADNLSModel!(F!, x0, nequ, clinrows, clincols, clinvals, (cx, x) -> cx, lcon, ucon; kwargs...)
+  return ADNLSModel!(
+    F!,
+    x0,
+    nequ,
+    clinrows,
+    clincols,
+    clinvals,
+    (cx, x) -> cx,
+    lcon,
+    ucon;
+    kwargs...,
+  )
 end
 
 function ADNLSModel(
@@ -477,19 +499,7 @@ function ADNLSModel(
     end
     return output
   end
-  return ADNLSModel!(
-    F!,
-    x0,
-    nequ,
-    lvar,
-    uvar,
-    clinrows,
-    clincols,
-    clinvals,
-    lcon,
-    ucon;
-    kwargs...,
-  )
+  return ADNLSModel!(F!, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, lcon, ucon; kwargs...)
 end
 
 function ADNLSModel!(

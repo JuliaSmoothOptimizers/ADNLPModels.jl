@@ -12,17 +12,11 @@ function SparseForwardADJacobian(
   x0::AbstractVector{T} = rand(nvar),
   alg::SparseDiffTools.SparseDiffToolsColoringAlgorithm = SparseDiffTools.GreedyD1Color(),
   kwargs...,
-) where T
+) where {T}
   output = similar(x0, ncon)
   J = Symbolics.jacobian_sparsity(c!, output, x0)
   colors = matrix_colors(J, alg)
-  jac = SparseMatrixCSC{T, Int}(
-    J.m,
-    J.n,
-    J.colptr,
-    J.rowval,
-    T.(J.nzval),
-  )
+  jac = SparseMatrixCSC{T, Int}(J.m, J.n, J.colptr, J.rowval, T.(J.nzval))
 
   dx = zeros(T, ncon)
   cfJ = ForwardColorJacCache(c!, x0, colorvec = colors, dx = dx, sparsity = jac)

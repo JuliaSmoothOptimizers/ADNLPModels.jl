@@ -1,6 +1,6 @@
 ## ----- Symbolics -----
 
-struct SparseADHessian{T,H} <: ADBackend
+struct SparseADHessian{T, H} <: ADBackend
   nnzh::Int
   rows::Vector{Int}
   cols::Vector{Int}
@@ -8,7 +8,7 @@ struct SparseADHessian{T,H} <: ADBackend
   cfH::H
 end
 
-function SparseADHessian(nvar, f, ncon, c!; x0::AbstractVector{T} = rand(nvar), kwargs...) where T
+function SparseADHessian(nvar, f, ncon, c!; x0::AbstractVector{T} = rand(nvar), kwargs...) where {T}
   @variables xs[1:nvar], μs
   xsi = Symbolics.scalarize(xs)
   fun = μs * f(xsi)
@@ -19,7 +19,7 @@ function SparseADHessian(nvar, f, ncon, c!; x0::AbstractVector{T} = rand(nvar), 
     fun = fun + dot(c!(cx, xsi), ysi)
   end
   H = Symbolics.hessian_sparsity(fun, ncon == 0 ? xsi : [xsi; ysi], full = false)
-  H = ncon == 0 ? H : H[1:nvar,1:nvar]
+  H = ncon == 0 ? H : H[1:nvar, 1:nvar]
   rows, cols, _ = findnz(H)
   vals = Symbolics.sparsehessian_vals(fun, xsi, rows, cols)
   nnzh = length(vals)
