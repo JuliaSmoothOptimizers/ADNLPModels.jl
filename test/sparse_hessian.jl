@@ -1,6 +1,12 @@
-list_sparse_hess_backend =
-  ((ADNLPModels.ForwardDiffADHessian, Dict()), (ADNLPModels.SparseSymbolicsADHessian, Dict()))
+list_sparse_hess_backend = (
+  (ADNLPModels.SparseForwardADHessian, Dict(:alg => SparseDiffTools.GreedyD1Color())),
+  (ADNLPModels.SparseForwardADHessian, Dict(:alg => SparseDiffTools.AcyclicColoring())),
+  (ADNLPModels.ForwardDiffADHessian, Dict()),
+  (ADNLPModels.SparseSymbolicsADHessian, Dict()),
+)
+
 dt = (Float32, Float64)
+
 @testset "Basic Hessian derivative with backend=$(backend) and T=$(T)" for T in dt,
   (backend, kw) in list_sparse_hess_backend
 
