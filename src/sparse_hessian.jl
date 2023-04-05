@@ -1,13 +1,14 @@
 ## ----- Symbolics -----
 
-struct SparseADHessian{T} <: ADBackend
+struct SparseADHessian{T,H} <: ADBackend
   nnzh::Int
   rows::Vector{Int}
   cols::Vector{Int}
-  cfH::T
+  y::AbstractVector{T}
+  cfH::H
 end
 
-function SparseADHessian(nvar, f, ncon, c!; kwargs...)
+function SparseADHessian(nvar, f, ncon, c!; x0::AbstractVector{T} = rand(nvar), kwargs...) where T
   @variables xs[1:nvar], μs
   xsi = Symbolics.scalarize(xs)
   fun = μs * f(xsi)
@@ -25,7 +26,8 @@ function SparseADHessian(nvar, f, ncon, c!; kwargs...)
   # cfH is a Tuple{Expr, Expr}, cfH[2] is the in-place function
   # that we need to update a vector `vals` with the nonzeros of ∇²ℓ(x, y, μ).
   cfH = Symbolics.build_function(vals, xsi, ysi, μs, expression = Val{false})
-  return SparseADHessian(nnzh, rows, cols, cfH[2])
+  y = zeros(T, ncon)
+  return SparseADHessian(nnzh, rows, cols, y, cfH[2])
 end
 
 function get_nln_nnzh(b::SparseADHessian, nvar)
@@ -58,11 +60,10 @@ end
 function hess_coord!(
   b::SparseADHessian,
   nlp::ADModel,
-  x::AbstractVector{T},
+  x::AbstractVector,
   obj_weight::Real,
   vals::AbstractVector,
-) where T
-  y = zeros(T, nlp.meta.ncon)
-  @eval $(b.cfH)($vals, $x, $y, $obj_weight)
+)
+  @eval $(b.cfH)($vals, $x, $(b.y), $obj_weight)
   return vals
 end
