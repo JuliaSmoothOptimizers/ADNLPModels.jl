@@ -8,7 +8,7 @@ struct SparseADHessian{T,H} <: ADBackend
   cfH::H
 end
 
-function SparseADHessian(nvar, f, ncon, c!; x0::AbstractVector{T} = rand(nvar), kwargs...)
+function SparseADHessian(nvar, f, ncon, c!; x0::AbstractVector{T} = rand(nvar), kwargs...) where T
   @variables xs[1:nvar], μs
   xsi = Symbolics.scalarize(xs)
   fun = μs * f(xsi)
