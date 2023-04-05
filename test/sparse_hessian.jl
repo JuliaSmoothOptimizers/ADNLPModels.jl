@@ -1,7 +1,5 @@
-list_sparse_hess_backend = (
-  (ADNLPModels.ForwardDiffADHessian, Dict()),
-  (ADNLPModels.SparseADHessian, Dict()),
-)
+list_sparse_hess_backend =
+  ((ADNLPModels.ForwardDiffADHessian, Dict()), (ADNLPModels.SparseADHessian, Dict()))
 dt = (Float32, Float64)
 @testset "Basic Hessian derivative with backend=$(backend) and T=$(T)" for T in dt,
   (backend, kw) in list_sparse_hess_backend
@@ -16,7 +14,7 @@ dt = (Float32, Float64)
   nvar = 2
   ncon = 3
   nlp = ADNLPModel!(
-    x -> x[1]*x[2]^2 + x[1]^2*x[2],
+    x -> x[1] * x[2]^2 + x[1]^2 * x[2],
     x0,
     c!,
     zeros(T, ncon),
@@ -33,7 +31,7 @@ dt = (Float32, Float64)
   hess_coord!(nlp, x, vals)
   @test eltype(vals) == T
   H = sparse(rows, cols, vals, nvar, nvar)
-  @test H == [2*x[2] 0; 2*(x[1]+x[2]) 2*x[1]]
+  @test H == [2*x[2] 0; 2*(x[1] + x[2]) 2*x[1]]
 
   # Test also the implementation of the backends
   b = nlp.adbackend.hessian_backend
