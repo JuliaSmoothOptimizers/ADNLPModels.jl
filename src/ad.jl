@@ -242,7 +242,7 @@ function hess_coord!(
   vals::AbstractVector,
 )
   c = get_c(nlp, b)
-  ℓ =  x -> c(x)[j - nlp.meta.nlin] 
+  ℓ = x -> c(x)[j - nlp.meta.nlin]
   Hx = hessian(b, ℓ, x)
   k = 1
   n = nlp.meta.nvar

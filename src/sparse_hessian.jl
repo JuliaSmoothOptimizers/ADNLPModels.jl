@@ -64,7 +64,7 @@ function hess_coord!(
   obj_weight::Real,
   vals::AbstractVector,
 )
-  b.y .= 0 
+  b.y .= 0
   @eval $(b.cfH)($vals, $x, $(b.y), $obj_weight)
   return vals
 end
