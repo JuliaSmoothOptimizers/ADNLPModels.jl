@@ -74,7 +74,7 @@ function ADModelBackend(
   jprod_backend::Type{JvB} = ForwardDiffADJprod,
   jtprod_backend::Type{JtvB} = ForwardDiffADJtprod,
   jacobian_backend::Type{JB} = SparseForwardADJacobian,
-  hessian_backend::Type{HB} = ForwardDiffADHessian,
+  hessian_backend::Type{HB} = ForwardDiffADHessian, # sparse alternative: SparseADHessian
   ghjvprod_backend::Type{GHJ} = ForwardDiffADGHjvprod,
   kwargs...,
 ) where {GB, HvB, JvB, JtvB, JB, HB, GHJ}
@@ -105,7 +105,7 @@ function ADModelNLSBackend(
   jprod_backend::Type{JvB} = ForwardDiffADJprod,
   jtprod_backend::Type{JtvB} = ForwardDiffADJtprod,
   jacobian_backend::Type{JB} = SparseForwardADJacobian,
-  hessian_backend::Type{HB} = ForwardDiffADHessian,
+  hessian_backend::Type{HB} = ForwardDiffADHessian, # sparse alternative: SparseADHessian
   ghjvprod_backend::Type{GHJ} = ForwardDiffADGHjvprod,
   hprod_residual_backend::Type{HvBLS} = ForwardDiffADHvprod,
   jprod_residual_backend::Type{JvBLS} = ForwardDiffADJprod,
@@ -238,6 +238,27 @@ function hess_coord!(
   b::ADBackend,
   nlp::ADModel,
   x::AbstractVector,
+  j::Integer,
+  vals::AbstractVector,
+)
+  c = get_c(nlp, b)
+  ℓ =  x -> c(x)[j - nlp.meta.nlin] 
+  Hx = hessian(b, ℓ, x)
+  k = 1
+  n = nlp.meta.nvar
+  for j = 1:n
+    for i = j:n
+      vals[k] = Hx[i, j]
+      k += 1
+    end
+  end
+  return vals
+end
+
+function hess_coord!(
+  b::ADBackend,
+  nlp::ADModel,
+  x::AbstractVector,
   ℓ::Function,
   vals::AbstractVector,
 )
@@ -251,6 +272,19 @@ function hess_coord!(
     end
   end
   return vals
+end
+
+function hprod!(
+  b::ADBackend,
+  nlp::ADModel,
+  x::AbstractVector,
+  v::AbstractVector,
+  j::Integer,
+  Hv::AbstractVector,
+)
+  c = get_c(nlp, b)
+  Hvprod!(b, Hv, x -> c(x)[j - nlp.meta.nlin], x, v)
+  return Hv
 end
 
 function jac_structure!(

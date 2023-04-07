@@ -669,28 +669,6 @@ function NLPModels.jtprod_nln!(
   return Jtv
 end
 
-function NLPModels.hess(nlp::ADNLPModel, x::AbstractVector; obj_weight::Real = one(eltype(x)))
-  @lencheck nlp.meta.nvar x
-  increment!(nlp, :neval_hess)
-  ℓ = get_lag(nlp, nlp.adbackend.hessian_backend, obj_weight)
-  Hx = hessian(nlp.adbackend.hessian_backend, ℓ, x)
-  return Symmetric(Hx, :L)
-end
-
-function NLPModels.hess(
-  nlp::ADNLPModel,
-  x::AbstractVector,
-  y::AbstractVector;
-  obj_weight::Real = one(eltype(x)),
-)
-  @lencheck nlp.meta.nvar x
-  @lencheck nlp.meta.ncon y
-  increment!(nlp, :neval_hess)
-  ℓ = get_lag(nlp, nlp.adbackend.hessian_backend, obj_weight, y)
-  Hx = hessian(nlp.adbackend.hessian_backend, ℓ, x)
-  return Symmetric(Hx, :L)
-end
-
 function NLPModels.hess_structure!(
   nlp::ADNLPModel,
   rows::AbstractVector{<:Integer},
@@ -778,8 +756,7 @@ function NLPModels.jth_hess_coord!(
   if j ≤ nlp.meta.nlin
     fill!(vals, zero(T))
   else
-    c = get_c(nlp, nlp.adbackend.hessian_backend)
-    hess_coord!(nlp.adbackend.hessian_backend, nlp, x, x -> c(x)[j - nlp.meta.nlin], vals)
+    hess_coord!(nlp.adbackend.hessian_backend, nlp, x, j, vals)
   end
   return vals
 end
@@ -797,8 +774,7 @@ function NLPModels.jth_hprod!(
   if j ≤ nlp.meta.nlin
     fill!(Hv, zero(T))
   else
-    c = get_c(nlp, nlp.adbackend.hprod_backend)
-    Hvprod!(nlp.adbackend.hprod_backend, Hv, x -> c(x)[j - nlp.meta.nlin], x, v)
+    hprod!(nlp.adbackend.hprod_backend, nlp, x, v, j, Hv)
   end
   return Hv
 end
