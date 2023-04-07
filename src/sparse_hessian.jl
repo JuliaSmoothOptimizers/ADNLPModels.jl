@@ -64,6 +64,22 @@ function hess_coord!(
   obj_weight::Real,
   vals::AbstractVector,
 )
+  b.y .= 0 
+  @eval $(b.cfH)($vals, $x, $(b.y), $obj_weight)
+  return vals
+end
+
+function hess_coord!(
+  b::SparseADHessian,
+  nlp::ADModel,
+  x::AbstractVector,
+  j::Integer,
+  vals::AbstractVector{T},
+) where {T}
+  for (w, k) in enumerate(nlp.meta.nln)
+    b.y[w] = k == j ? 1 : 0
+  end
+  obj_weight = zero(T)
   @eval $(b.cfH)($vals, $x, $(b.y), $obj_weight)
   return vals
 end
