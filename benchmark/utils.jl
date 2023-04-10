@@ -56,7 +56,9 @@ benchmarked_optimized_backends = Dict(
     # "reverse" => ADNLPModels.ReverseDiffADJacobian, # fails somehow
     # "zygote" => ADNLPModels.ZygoteADJacobian,
   ),
-  "hessian_backend" => Dict(),
+  "hessian_backend" => Dict(
+    "sym" => ADNLPModels.SparseADHessian, # out of memory for large problems
+  ),
   "ghjvprod_backend" => Dict(),
 )
 
