@@ -1,3 +1,31 @@
+using Enzyme
+# Enzyme gradient
+struct EnzymeADGradient <: ADNLPModels.ADBackend end
+function EnzymeADGradient(
+  nvar::Integer,
+  f,
+  ncon::Integer = 0,
+  c::Function = (args...) -> [];
+  x0::AbstractVector = rand(nvar),
+  kwargs...,
+)
+  return EnzymeADGradient()
+end
+function ADNLPModels.gradient!(::EnzymeADGradient, g, f, x)
+  autodiff(Reverse, f, Duplicated(x, g)) # gradient!(Reverse, g, f, x)
+  return g
+end
+
+#=
+using ADNLPModels, OptimizationProblems.ADNLPProblems, NLPModels
+for pb in scalable_problems
+  @info pb
+  (pb in ["elec", "brybnd", "clplatea", "clplateb", "clplatec", "curly", "curly10", "curly20", "curly30", "ncb20", "ncb20b", "sbrybnd"]) && continue
+  nlp = eval(Meta.parse(pb))(gradient_backend = EnzymeADGradient)
+  grad(nlp, get_x0(nlp))
+end
+=#
+
 # Generic ReverseDiff gradient
 struct GenericReverseDiffADGradient <: ADNLPModels.ADBackend end
 function GenericReverseDiffADGradient(
@@ -30,6 +58,7 @@ function ADNLPModels.gradient!(::GenericForwardDiffADGradient, g, f, x)
   return ForwardDiff.gradient!(g, f, x)
 end
 
+using SparseDiffTools
 # Hprod using ForwardDiff and SparseDiffTools
 # branch hprod2: https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl/pull/122/files
 struct OptForwardDiffADHvprod{T, F} <: ADNLPModels.ADBackend

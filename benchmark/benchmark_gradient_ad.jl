@@ -27,9 +27,10 @@ include("utils.jl")
 # - problem set (see `keys(problem_sets)`);
 # - backend name (see `values(tested_backs)`);
 # - backend (see `set_back_list(Val(f), test_back)`)
+problems_not_supported_enzyme = ["elec", "brybnd", "clplatea", "clplateb", "clplatec", "curly", "curly10", "curly20", "curly30", "ncb20", "ncb20b", "sbrybnd"]
 problem_sets = Dict(
   #"all" => all_problems,
-  "scalable" => scalable_problems,
+  "scalable" => setdiff(scalable_problems, problems_not_supported_enzyme),
 )
 benchs = [
   "optimized",
@@ -39,7 +40,7 @@ data_types = [Float64] # [Float16, Float32, Float64]
 tested_backs = Dict(
   "gradient_backend" => :grad!,
 )
-const nscal = nn * 10
+const nscal = nn * 1
 name = "$(today())_adnlpmodels_benchmark_grad"
 if "all" in keys(problem_sets)
   name *= "_all"
