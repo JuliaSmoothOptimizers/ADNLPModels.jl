@@ -26,6 +26,28 @@ for pb in scalable_problems
 end
 =#
 
+#=
+using Nabla # No longer maintained
+struct NablaADGradient{T} <: ADNLPModels.ADBackend
+  ∇f::T
+end
+function NablaADGradient(
+  nvar::Integer,
+  f,
+  ncon::Integer = 0,
+  c::Function = (args...) -> [];
+  x0::AbstractVector = rand(nvar),
+  kwargs...,
+)
+  ∇f = Nabla.∇(f)
+  return NablaADGradient(∇f)
+end
+function ADNLPModels.gradient!(b::NablaADGradient, g, f, x)
+  g = b.∇f(x) # https://github.com/invenia/Nabla.jl/issues/61
+  return g
+end # doesn't work on any problem...
+=#
+
 # Generic ReverseDiff gradient
 struct GenericReverseDiffADGradient <: ADNLPModels.ADBackend end
 function GenericReverseDiffADGradient(
