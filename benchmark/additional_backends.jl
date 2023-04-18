@@ -148,3 +148,68 @@ function ADNLPModels.Jtprod!(b::OptimizedReverseDiffADJtprod, Jtv, c!, x, v)
   ReverseDiff.gradient!((Jtv, b._rval), b.gtape, (x, v))
   return Jtv
 end
+
+using ForwardDiff, SparseDiffTools
+struct OptimizedForwardDiffADJtprod{Tag, GT, S} <: ADNLPModels.InPlaceADbackend
+  cfg::ForwardDiff.GradientConfig{Tag}
+  ψ::GT
+  _tmp_out::S
+end
+
+function OptimizedForwardDiffADJtprod(
+  nvar::Integer,
+  f,
+  ncon::Integer = 0,
+  c!::Function = (args...) -> [];
+  x0::AbstractVector{T} = rand(nvar),
+  y0::AbstractVector{T} = rand(eltype(x0), ncon),
+  kwargs...,
+) where {T}
+  function ψ(x; u = y0, tmp_out = similar(x, ncon))
+    c!(tmp_out, x)
+    dot(tmp_out, u)
+  end
+
+  tag = ForwardDiff.Tag(ψ, typeof(x0))
+  cfg = ForwardDiff.GradientConfig(ψ, x0, ForwardDiff.Chunk(x0), tag)
+
+  _tmp_out = similar(cfg.duals, ncon)
+
+  return OptimizedForwardDiffADJtprod(cfg, ψ, _tmp_out)
+end
+
+function ADNLPModels.Jtprod!(b::OptimizedForwardDiffADJtprod{Tag, T, GT}, Jtv, c!, x, v) where {Tag, T, GT}
+  ydual = ForwardDiff.vector_mode_dual_eval!(x -> b.ψ(x, u = v, tmp_out = b._tmp_out), b.cfg, x)
+  #=
+    ydual, xdual = cfg.duals
+    seed!(xdual, x, cfg.seeds)
+    seed!(ydual, y)
+    f!(ydual, xdual)
+  =#
+  ForwardDiff.extract_gradient!(Tag, Jtv, ydual)
+  return Jtv
+end
+
+#=
+using ADNLPModels, OptimizationProblems, OptimizationProblems.ADNLPProblems, NLPModels
+
+const meta = OptimizationProblems.meta
+const nn = OptimizationProblems.default_nvar # 100 # default parameter for scalable problems
+
+# Scalable problems from OptimizationProblem.jl
+scalable_problems = meta[meta.variable_nvar .== true, :name] # problems that are scalable
+
+all_problems = meta[meta.nvar .> 5, :name] # all problems with ≥ 5 variables
+all_problems = setdiff(all_problems, scalable_problems) # avoid duplicate problems
+
+all_cons_problems = meta[(meta.nvar .> 5) .&& (meta.ncon .> 5), :name] # all problems with ≥ 5 variables
+scalable_cons_problems = meta[(meta.variable_nvar .== true) .&& (meta.ncon .> 5), :name] # problems that are scalable
+all_cons_problems = setdiff(all_cons_problems, scalable_cons_problems) # avoid duplicate problems
+
+for pb in scalable_cons_problems[1:1]
+  @info pb
+  (pb in []) && continue
+  nlp = eval(Meta.parse(pb))(jtprod_backend = OptimizedForwardDiffADJtprod)
+  jtprod(nlp, get_x0(nlp), get_y0(nlp))
+end
+=#

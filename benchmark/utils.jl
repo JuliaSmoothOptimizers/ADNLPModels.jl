@@ -50,6 +50,7 @@ benchmarked_optimized_backends = Dict(
   ),
   "jtprod_backend" => Dict(
     "reverse" => OptimizedReverseDiffADJtprod,
+    "forward" => OptimizedForwardDiffADJtprod,
   ),
   "jacobian_backend" => Dict(
     "sparse" => ADNLPModels.SparseForwardADJacobian,

@@ -40,7 +40,7 @@ data_types = [Float64] # [Float16, Float32, Float64]
 tested_backs = Dict(
   "gradient_backend" => :grad!,
 )
-const nscal = nn * 1
+const nscal = nn * 10
 name = "$(today())_adnlpmodels_benchmark_grad"
 if "all" in keys(problem_sets)
   name *= "_all"
