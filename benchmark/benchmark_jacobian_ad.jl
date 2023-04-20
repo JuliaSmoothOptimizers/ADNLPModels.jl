@@ -7,7 +7,7 @@ TODO:
 =#
 using Pkg
 Pkg.activate(".")
-Pkg.add(url = "https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl", rev = "sparse-jc")
+Pkg.add(url = "https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl", rev = "main")
 using ADNLPModels
 
 using Dates, DelimitedFiles, JLD2, LinearAlgebra, Printf, SparseArrays
@@ -29,7 +29,7 @@ include("utils.jl")
 # - backend (see `set_back_list(Val(f), test_back)`)
 problem_sets = Dict(
   #"all" => all_cons_problems, # crash
-  #"scalable" => scalable_cons_problems,
+  "scalable" => scalable_cons_problems,
 )
 benchs = [
   "optimized",
