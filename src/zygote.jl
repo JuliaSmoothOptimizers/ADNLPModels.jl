@@ -5,6 +5,9 @@ end
 struct ZygoteADHessian <: ImmutableADbackend
   nnzh::Int
 end
+struct ZygoteADHessianReverse <: ImmutableADbackend
+  nnzh::Int
+end
 struct ZygoteADJprod <: ImmutableADbackend end
 struct ZygoteADJtprod <: ImmutableADbackend end
 
@@ -81,6 +84,21 @@ struct ZygoteADJtprod <: ImmutableADbackend end
         x -> gradient(ZygoteADGradient(), f, x),
         x,
       )
+    end
+
+    function ZygoteADHessianReverse(
+      nvar::Integer,
+      f,
+      ncon::Integer = 0,
+      c::Function = (args...) -> [];
+      kwargs...,
+    )
+      @assert nvar > 0
+      nnzh = nvar * (nvar + 1) / 2
+      return ZygoteADHessianReverse(nnzh)
+    end
+    function ADNLPModels.hessian(::ZygoteADHessianReverse, f, x)
+      return Zygote.hessian_reverse(f, x)
     end
 
     function ZygoteADJprod(

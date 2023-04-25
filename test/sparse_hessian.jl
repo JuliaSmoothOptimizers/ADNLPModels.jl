@@ -47,3 +47,39 @@ dt = (Float32, Float64)
   H = sparse(rows, cols, vals, nvar, nvar)
   @test H == [x[2] 0; x[1]+x[2] x[1]] + y[2] * [-20 0; 0 0]
 end
+
+@testset "Test Zygote Hessian backends" begin
+  T = Float64
+  c!(cx, x) = begin
+    cx[1] = x[1] - 1
+    cx[2] = 10 * (x[2] - x[1]^2)
+    cx[3] = x[2] + 1
+    cx
+  end
+  x0 = T[-1.2; 1.0]
+  nvar = 2
+  ncon = 3
+  nlp_fo = ADNLPModel!(
+    x -> x[1] * x[2]^2 + x[1]^2 * x[2],
+    x0,
+    c!,
+    zeros(T, ncon),
+    zeros(T, ncon),
+    hessian_backend = ADNLPModels.ZygoteADHessian
+  )
+
+  nlp_re = ADNLPModel!(
+    x -> x[1] * x[2]^2 + x[1]^2 * x[2],
+    x0,
+    c!,
+    zeros(T, ncon),
+    zeros(T, ncon),
+    hessian_backend = ADNLPModels.ZygoteADHessianReverse
+  )
+
+  x = rand(T, nlp_re.meta.nvar)
+  y = rand(T, nlp_re.meta.ncon)
+
+  @test hess(nlp_fo, x) == hess(nlp_re, x)
+  # @test hess(nlp_fo, x, y) == hess(nlp_re, x, y)
+end
