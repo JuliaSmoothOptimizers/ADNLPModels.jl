@@ -1,7 +1,11 @@
 ## ----- SparseDiffTools -----
 
-struct SparseForwardADHessian{T, T2, T3, T4} <: ADNLPModels.ADBackend
-  cfH::ForwardAutoColorHesCache{T, T2, T3, T4}
+struct SparseForwardADHessian <: ADNLPModels.ADBackend
+  d::BitVector
+  rowval::Vector{Int}
+  colptr::Vector{Int}
+  colors::Vector{Int}
+  ncolors::Int
 end
 
 function SparseForwardADHessian(nvar, f, ncon, c!;
@@ -9,9 +13,9 @@ function SparseForwardADHessian(nvar, f, ncon, c!;
   alg::SparseDiffTools.SparseDiffToolsColoringAlgorithm = SparseDiffTools.GreedyD1Color(),
   kwargs...,
 )
-  @variables xs[1:nvar], μs
+  @variables xs[1:nvar]
   xsi = Symbolics.scalarize(xs)
-  fun = μs * f(xsi)
+  fun = f(xsi)
   if ncon > 0
     @variables ys[1:ncon]
     ysi = Symbolics.scalarize(ys)
@@ -22,25 +26,13 @@ function SparseForwardADHessian(nvar, f, ncon, c!;
   H = ncon == 0 ? S : S[1:nvar,1:nvar]
   rows, cols, _ = findnz(H)
   colors = matrix_colors(H, alg)
-  Tv = eltype(x0)
-  hess = SparseMatrixCSC{Tv, Int}(H.m, H.n, H.colptr, H.rowval, Tv.(H.nzval))
-
-  # Create a ForwardColorJacCache
-  chunksize = ForwardDiff.pickchunksize(maximum(colors))
-  chunk = ForwardDiff.Chunk(chunksize)
-  tag = ForwardDiff.Tag(SparseDiffTools.AutoAutoTag(), Tv)
-  jacobian_config = ForwardDiff.JacobianConfig(f, x0, chunk, tag)
-  gradient_config = ForwardDiff.GradientConfig(f, jacobian_config.duals, chunk, tag)
-  outer_tag = SparseDiffTools.get_tag(jacobian_config.duals)
-  g! = (G, x) -> ForwardDiff.gradient!(G, f, x, gradient_config, Val(false))
-  jac_cache = ForwardColorJacCache(g!, x0; colorvec=colors, sparsity=hess, tag=outer_tag)
-
-  cfH = ForwardAutoColorHesCache(jac_cache, g!, hess, colors)
-  return SparseForwardADHessian(cfH)
+  d = BitVector(undef, nvar)
+  ncolors = maximum(colors)
+  return SparseForwardADHessian(d, H.rowval, H.colptr, colors, ncolors)
 end
 
 function get_nln_nnzh(b::SparseForwardADHessian, nvar)
-  nnz(b.cfH.sparsity)
+  return length(b.rowval)
 end
 
 function hess_structure!(
@@ -49,13 +41,35 @@ function hess_structure!(
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
 )
-  rows .= rowvals(b.cfH.sparsity)
+  rows .= b.rowval
   for i = 1:(nlp.meta.nvar)
-    for j = b.cfH.sparsity.colptr[i]:(b.cfH.sparsity.colptr[i + 1] - 1)
+    for j = b.colptr[i]:(b.colptr[i + 1] - 1)
       cols[j] = i
     end
   end
   return rows, cols
+end
+
+function sparse_hess_coord!(
+  ℓ::Function,
+  b::SparseForwardADHessian,
+  x::AbstractVector,
+  vals::AbstractVector
+  )
+  nvar = length(x)
+  for icol = 1 : b.ncolors
+    b.d .= (b.colors .== icol)
+    res = ForwardDiff.derivative(t -> ForwardDiff.gradient(ℓ, x + t * b.d), 0)
+    for j = 1 : nvar
+      if b.colors[j] == icol
+        for k = b.colptr[j] : b.colptr[j+1] - 1
+          i = b.rowval[k]
+          vals[k] = res[i]
+        end
+      end
+    end
+  end
+  return vals
 end
 
 function hess_coord!(
@@ -67,9 +81,7 @@ function hess_coord!(
   vals::AbstractVector,
 )
   ℓ = get_lag(nlp, b, obj_weight, y)
-  autoauto_color_hessian!(b.cfH.sparsity, ℓ, x, b.cfH)
-  vals .= nonzeros(b.cfH.sparsity)
-  return vals
+  sparse_hess_coord!(ℓ, b, x, vals)
 end
 
 function hess_coord!(
@@ -80,9 +92,7 @@ function hess_coord!(
   vals::AbstractVector,
 )
   ℓ(x) = obj_weight * nlp.f(x)
-  autoauto_color_hessian!(b.cfH.sparsity, ℓ, x, b.cfH)
-  vals .= nonzeros(b.cfH.sparsity)
-  return vals
+  sparse_hess_coord!(ℓ, b, x, vals)
 end
 
 ## ----- Symbolics -----
