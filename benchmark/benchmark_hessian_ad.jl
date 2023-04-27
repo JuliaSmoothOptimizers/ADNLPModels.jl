@@ -113,3 +113,42 @@ end
 result = run(SUITE)
 
 @save "$name.jld2" result
+
+#=
+
+for problem in scalable_cons_problems
+  nlp = OptimizationProblems.ADNLPProblems.eval(Meta.parse(problem))()
+  n = nlp.meta.nvar
+  b = SparseForwardADHessian(n, nlp.f, nlp.meta.nnln, nlp.c!)
+  nnzh = length(b.rowval)
+  nlp_ju = MathOptNLPModel(OptimizationProblems.PureJuMP.eval(Meta.parse(problem))())
+  @info "$problem nvar=$(n) ADnnzh=$(nnzh) ADpercentage=$(nnzh/(n * (n + 1))) JuMPnnzh=$(nlp_ju.meta.nnzh) JuMPpercentage=$(nlp_ju.meta.nnzh/(n * (n + 1)))"
+  x = get_x0(nlp) .+ rand()
+  y = get_y0(nlp) .+ rand()
+  @show norm(hess(nlp, x, y) - hess(nlp_ju, x, y))
+end
+
+[ Info: camshape nnzh=595 nvar=100 percentage=0.05891089108910891
+[ Info: chain nnzh=50 nvar=100 percentage=0.0049504950495049506
+[ Info: chain nnzh=192 nvar=100 percentage=0.01900990099009901
+[ Info: channel nnzh=384 nvar=96 percentage=0.041237113402061855
+[ Info: channel nnzh=1728 nvar=96 percentage=0.18556701030927836
+[ Info: clnlbeam nnzh=66 nvar=99 percentage=0.006666666666666667
+[ Info: clnlbeam nnzh=130 nvar=99 percentage=0.013131313131313131
+[ Info: controlinvestment nnzh=50 nvar=100 percentage=0.0049504950495049506
+[ Info: controlinvestment nnzh=444 nvar=100 percentage=0.04396039603960396
+[ Info: elec nnzh=4950 nvar=99 percentage=0.5
+[ Info: elec nnzh=5049 nvar=99 percentage=0.51
+[ Info: hovercraft1d nnzh=32 nvar=98 percentage=0.0032982890125747267
+[ Info: hovercraft1d nnzh=32 nvar=98 percentage=0.0032982890125747267
+[ Info: polygon nnzh=5050 nvar=100 percentage=0.5
+[ Info: polygon nnzh=12596 nvar=100 percentage=1.2471287128712871
+[ Info: polygon1 nnzh=300 nvar=100 percentage=0.0297029702970297
+[ Info: polygon1 nnzh=350 nvar=100 percentage=0.034653465346534656
+[ Info: polygon3 nnzh=200 nvar=100 percentage=0.019801980198019802
+[ Info: polygon3 nnzh=600 nvar=100 percentage=0.0594059405940594
+[ Info: robotarm nnzh=138 nvar=109 percentage=0.011509591326105087
+[ Info: robotarm nnzh=306 nvar=109 percentage=0.025521267723102585
+[ Info: structural nnzh=0 nvar=600 percentage=0.0
+[ Info: structural nnzh=0 nvar=600 percentage=0.0
+=#

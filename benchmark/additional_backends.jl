@@ -213,3 +213,100 @@ for pb in scalable_cons_problems[1:1]
   jtprod(nlp, get_x0(nlp), get_y0(nlp))
 end
 =#
+
+using Symbolics
+
+struct SparseForwardADHessian <: ADNLPModels.ADBackend
+  d::BitVector
+  rowval::Vector{Int}
+  colptr::Vector{Int}
+  colors::Vector{Int}
+  ncolors::Int
+end
+
+function SparseForwardADHessian(nvar, f, ncon, c!;
+  x0=rand(nvar),
+  alg::SparseDiffTools.SparseDiffToolsColoringAlgorithm = SparseDiffTools.GreedyD1Color(),
+  kwargs...,
+)
+  Symbolics.@variables xs[1:nvar]
+  xsi = Symbolics.scalarize(xs)
+  fun = f(xsi)
+  if ncon > 0
+    Symbolics.@variables ys[1:ncon]
+    ysi = Symbolics.scalarize(ys)
+    cx = similar(ysi)
+    fun = fun + dot(c!(cx,xsi), ysi)
+  end
+  S = Symbolics.hessian_sparsity(fun, ncon == 0 ? xsi : [xsi; ysi], full=false)
+  H = ncon == 0 ? S : S[1:nvar,1:nvar]
+  rows, cols, _ = findnz(H)
+  colors = matrix_colors(H, alg)
+  d = BitVector(undef, nvar)
+  ncolors = maximum(colors)
+  return SparseForwardADHessian(d, H.rowval, H.colptr, colors, ncolors)
+end
+
+function ADNLPModels.get_nln_nnzh(b::SparseForwardADHessian, nvar)
+  return length(b.rowval)
+end
+
+function ADNLPModels.hess_structure!(
+  b::SparseForwardADHessian,
+  nlp::ADNLPModels.ADModel,
+  rows::AbstractVector{<:Integer},
+  cols::AbstractVector{<:Integer},
+)
+  rows .= b.rowval
+  for i = 1:(nlp.meta.nvar)
+    for j = b.colptr[i]:(b.colptr[i + 1] - 1)
+      cols[j] = i
+    end
+  end
+  return rows, cols
+end
+
+function sparse_hess_coord!(
+  ℓ::Function,
+  b::SparseForwardADHessian,
+  x::AbstractVector,
+  vals::AbstractVector
+  )
+  nvar = length(x)
+  for icol = 1 : b.ncolors
+    b.d .= (b.colors .== icol)
+    res = ForwardDiff.derivative(t -> ForwardDiff.gradient(ℓ, x + t * b.d), 0)
+    for j = 1 : nvar
+      if b.colors[j] == icol
+        for k = b.colptr[j] : b.colptr[j+1] - 1
+          i = b.rowval[k]
+          vals[k] = res[i]
+        end
+      end
+    end
+  end
+  return vals
+end
+
+function ADNLPModels.hess_coord!(
+  b::SparseForwardADHessian,
+  nlp::ADNLPModels.ADModel,
+  x::AbstractVector,
+  y::AbstractVector,
+  obj_weight::Real,
+  vals::AbstractVector,
+)
+  ℓ = ADNLPModels.get_lag(nlp, b, obj_weight, y)
+  sparse_hess_coord!(ℓ, b, x, vals)
+end
+
+function hess_coord!(
+  b::SparseForwardADHessian,
+  nlp::ADNLPModels.ADModel,
+  x::AbstractVector,
+  obj_weight::Real,
+  vals::AbstractVector,
+)
+  ℓ(x) = obj_weight * nlp.f(x)
+  sparse_hess_coord!(ℓ, b, x, vals)
+end
