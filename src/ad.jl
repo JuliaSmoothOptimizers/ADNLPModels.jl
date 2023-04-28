@@ -74,7 +74,7 @@ function ADModelBackend(
   jprod_backend::Type{JvB} = ForwardDiffADJprod,
   jtprod_backend::Type{JtvB} = ForwardDiffADJtprod,
   jacobian_backend::Type{JB} = SparseForwardADJacobian,
-  hessian_backend::Type{HB} = ForwardDiffADHessian, # sparse alternative: SparseADHessian
+  hessian_backend::Type{HB} = ForwardDiffADHessian, # sparse alternative: SparseSymbolicsADHessian
   ghjvprod_backend::Type{GHJ} = ForwardDiffADGHjvprod,
   kwargs...,
 ) where {GB, HvB, JvB, JtvB, JB, HB, GHJ}
@@ -105,7 +105,7 @@ function ADModelNLSBackend(
   jprod_backend::Type{JvB} = ForwardDiffADJprod,
   jtprod_backend::Type{JtvB} = ForwardDiffADJtprod,
   jacobian_backend::Type{JB} = SparseForwardADJacobian,
-  hessian_backend::Type{HB} = ForwardDiffADHessian, # sparse alternative: SparseADHessian
+  hessian_backend::Type{HB} = ForwardDiffADHessian, # sparse alternative: SparseSymbolicsADHessian
   ghjvprod_backend::Type{GHJ} = ForwardDiffADGHjvprod,
   hprod_residual_backend::Type{HvBLS} = ForwardDiffADHvprod,
   jprod_residual_backend::Type{JvBLS} = ForwardDiffADJprod,

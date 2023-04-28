@@ -1,6 +1,6 @@
 ## ----- Symbolics -----
 
-struct SparseADHessian{T, H} <: ADBackend
+struct SparseSymbolicsADHessian{T, H} <: ADBackend
   nnzh::Int
   rows::Vector{Int}
   cols::Vector{Int}
@@ -8,7 +8,7 @@ struct SparseADHessian{T, H} <: ADBackend
   cfH::H
 end
 
-function SparseADHessian(nvar, f, ncon, c!; x0::AbstractVector{T} = rand(nvar), kwargs...) where {T}
+function SparseSymbolicsADHessian(nvar, f, ncon, c!; x0::AbstractVector{T} = rand(nvar), kwargs...) where {T}
   @variables xs[1:nvar], μs
   xsi = Symbolics.scalarize(xs)
   fun = μs * f(xsi)
@@ -27,15 +27,15 @@ function SparseADHessian(nvar, f, ncon, c!; x0::AbstractVector{T} = rand(nvar), 
   # that we need to update a vector `vals` with the nonzeros of ∇²ℓ(x, y, μ).
   cfH = Symbolics.build_function(vals, xsi, ysi, μs, expression = Val{false})
   y = zeros(T, ncon)
-  return SparseADHessian(nnzh, rows, cols, y, cfH[2])
+  return SparseSymbolicsADHessian(nnzh, rows, cols, y, cfH[2])
 end
 
-function get_nln_nnzh(b::SparseADHessian, nvar)
+function get_nln_nnzh(b::SparseSymbolicsADHessian, nvar)
   b.nnzh
 end
 
 function hess_structure!(
-  b::SparseADHessian,
+  b::SparseSymbolicsADHessian,
   nlp::ADModel,
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
@@ -46,7 +46,7 @@ function hess_structure!(
 end
 
 function hess_coord!(
-  b::SparseADHessian,
+  b::SparseSymbolicsADHessian,
   nlp::ADModel,
   x::AbstractVector,
   y::AbstractVector,
@@ -58,7 +58,7 @@ function hess_coord!(
 end
 
 function hess_coord!(
-  b::SparseADHessian,
+  b::SparseSymbolicsADHessian,
   nlp::ADModel,
   x::AbstractVector,
   obj_weight::Real,
@@ -70,7 +70,7 @@ function hess_coord!(
 end
 
 function hess_coord!(
-  b::SparseADHessian,
+  b::SparseSymbolicsADHessian,
   nlp::ADModel,
   x::AbstractVector,
   j::Integer,
