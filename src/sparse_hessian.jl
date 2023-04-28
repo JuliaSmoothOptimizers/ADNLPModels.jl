@@ -89,10 +89,26 @@ function hess_coord!(
   obj_weight::Real,
   vals::AbstractVector,
 )
-  ℓ(x) = obj_weight * nlp.f(x)
+  ℓ = get_lag(nlp, b, obj_weight)
   sparse_hess_coord!(ℓ, b, x, vals)
 end
 
+function hess_coord!(
+  b::SparseADHessian,
+  nlp::ADModel,
+  x::AbstractVector,
+  j::Integer,
+  vals::AbstractVector{T},
+) where {T}
+  y = zeros(T, nlp.meta.nnln)
+  for (w, k) in enumerate(nlp.meta.nln)
+    y[w] = k == j ? 1 : 0
+  end
+  obj_weight = zero(T)
+  ℓ = get_lag(nlp, b, obj_weight, y)
+  sparse_hess_coord!(ℓ, b, x, vals)
+  return vals
+end
 ## ----- Symbolics -----
 
 struct SparseSymbolicsADHessian{T, H} <: ADBackend
