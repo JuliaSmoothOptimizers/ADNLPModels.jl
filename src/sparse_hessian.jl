@@ -6,8 +6,12 @@ struct SparseADHessian <: ADNLPModels.ADBackend
   ncolors::Int
 end
 
-function SparseADHessian(nvar, f, ncon, c!;
-  x0=rand(nvar),
+function SparseADHessian(
+  nvar,
+  f,
+  ncon,
+  c!;
+  x0 = rand(nvar),
   alg::SparseDiffTools.SparseDiffToolsColoringAlgorithm = SparseDiffTools.GreedyD1Color(),
   kwargs...,
 )
@@ -18,10 +22,10 @@ function SparseADHessian(nvar, f, ncon, c!;
     @variables ys[1:ncon]
     ysi = Symbolics.scalarize(ys)
     cx = similar(ysi)
-    fun = fun + dot(c!(cx,xsi), ysi)
+    fun = fun + dot(c!(cx, xsi), ysi)
   end
-  S = Symbolics.hessian_sparsity(fun, ncon == 0 ? xsi : [xsi; ysi], full=false)
-  H = ncon == 0 ? S : S[1:nvar,1:nvar]
+  S = Symbolics.hessian_sparsity(fun, ncon == 0 ? xsi : [xsi; ysi], full = false)
+  H = ncon == 0 ? S : S[1:nvar, 1:nvar]
   rows, cols, _ = findnz(H)
   colors = matrix_colors(H, alg)
   d = BitVector(undef, nvar)
@@ -52,15 +56,15 @@ function sparse_hess_coord!(
   ℓ::Function,
   b::SparseADHessian,
   x::AbstractVector,
-  vals::AbstractVector
-  )
+  vals::AbstractVector,
+)
   nvar = length(x)
-  for icol = 1 : b.ncolors
+  for icol = 1:(b.ncolors)
     b.d .= (b.colors .== icol)
     res = ForwardDiff.derivative(t -> ForwardDiff.gradient(ℓ, x + t * b.d), 0)
-    for j = 1 : nvar
+    for j = 1:nvar
       if b.colors[j] == icol
-        for k = b.colptr[j] : b.colptr[j+1] - 1
+        for k = b.colptr[j]:(b.colptr[j + 1] - 1)
           i = b.rowval[k]
           vals[k] = res[i]
         end
@@ -119,7 +123,14 @@ struct SparseSymbolicsADHessian{T, H} <: ADBackend
   cfH::H
 end
 
-function SparseSymbolicsADHessian(nvar, f, ncon, c!; x0::AbstractVector{T} = rand(nvar), kwargs...) where {T}
+function SparseSymbolicsADHessian(
+  nvar,
+  f,
+  ncon,
+  c!;
+  x0::AbstractVector{T} = rand(nvar),
+  kwargs...,
+) where {T}
   @variables xs[1:nvar], μs
   xsi = Symbolics.scalarize(xs)
   fun = μs * f(xsi)
