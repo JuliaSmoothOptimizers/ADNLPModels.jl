@@ -118,7 +118,12 @@ function jac_structure!(
   return rows, cols
 end
 
-function jac_coord!(b::SparseSymbolicsADJacobian, nlp::ADModel, x::AbstractVector, vals::AbstractVector)
+function jac_coord!(
+  b::SparseSymbolicsADJacobian,
+  nlp::ADModel,
+  x::AbstractVector,
+  vals::AbstractVector,
+)
   @eval $(b.cfJ)($vals, $x)
   return vals
 end
