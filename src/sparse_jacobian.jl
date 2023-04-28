@@ -81,14 +81,14 @@ end
 
 ## ----- Symbolics -----
 
-struct SparseADJacobian{T} <: ADBackend
+struct SparseSymbolicsADJacobian{T} <: ADBackend
   nnzj::Int
   rows::Vector{Int}
   cols::Vector{Int}
   cfJ::T
 end
 
-function SparseADJacobian(nvar, f, ncon, c!; kwargs...)
+function SparseSymbolicsADJacobian(nvar, f, ncon, c!; kwargs...)
   @variables xs[1:nvar] out[1:ncon]
   wi = Symbolics.scalarize(xs)
   wo = Symbolics.scalarize(out)
@@ -100,15 +100,15 @@ function SparseADJacobian(nvar, f, ncon, c!; kwargs...)
   # cfJ is a Tuple{Expr, Expr}, cfJ[2] is the in-place function
   # that we need to update a vector `vals` with the nonzeros of Jc(x).
   cfJ = Symbolics.build_function(vals, wi, expression = Val{false})
-  SparseADJacobian(nnzj, rows, cols, cfJ[2])
+  SparseSymbolicsADJacobian(nnzj, rows, cols, cfJ[2])
 end
 
-function get_nln_nnzj(b::SparseADJacobian, nvar, ncon)
+function get_nln_nnzj(b::SparseSymbolicsADJacobian, nvar, ncon)
   b.nnzj
 end
 
 function jac_structure!(
-  b::SparseADJacobian,
+  b::SparseSymbolicsADJacobian,
   nlp::ADModel,
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
@@ -118,13 +118,13 @@ function jac_structure!(
   return rows, cols
 end
 
-function jac_coord!(b::SparseADJacobian, nlp::ADModel, x::AbstractVector, vals::AbstractVector)
+function jac_coord!(b::SparseSymbolicsADJacobian, nlp::ADModel, x::AbstractVector, vals::AbstractVector)
   @eval $(b.cfJ)($vals, $x)
   return vals
 end
 
 function jac_structure_residual!(
-  b::SparseADJacobian,
+  b::SparseSymbolicsADJacobian,
   nls::AbstractADNLSModel,
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
@@ -135,7 +135,7 @@ function jac_structure_residual!(
 end
 
 function jac_coord_residual!(
-  b::SparseADJacobian,
+  b::SparseSymbolicsADJacobian,
   nls::AbstractADNLSModel,
   x::AbstractVector,
   vals::AbstractVector,
