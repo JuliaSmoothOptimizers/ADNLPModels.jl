@@ -1,6 +1,4 @@
-## ----- SparseDiffTools -----
-
-struct SparseForwardADHessian <: ADNLPModels.ADBackend
+struct SparseADHessian <: ADNLPModels.ADBackend
   d::BitVector
   rowval::Vector{Int}
   colptr::Vector{Int}
@@ -8,7 +6,7 @@ struct SparseForwardADHessian <: ADNLPModels.ADBackend
   ncolors::Int
 end
 
-function SparseForwardADHessian(nvar, f, ncon, c!;
+function SparseADHessian(nvar, f, ncon, c!;
   x0=rand(nvar),
   alg::SparseDiffTools.SparseDiffToolsColoringAlgorithm = SparseDiffTools.GreedyD1Color(),
   kwargs...,
@@ -28,15 +26,15 @@ function SparseForwardADHessian(nvar, f, ncon, c!;
   colors = matrix_colors(H, alg)
   d = BitVector(undef, nvar)
   ncolors = maximum(colors)
-  return SparseForwardADHessian(d, H.rowval, H.colptr, colors, ncolors)
+  return SparseADHessian(d, H.rowval, H.colptr, colors, ncolors)
 end
 
-function get_nln_nnzh(b::SparseForwardADHessian, nvar)
+function get_nln_nnzh(b::SparseADHessian, nvar)
   return length(b.rowval)
 end
 
 function hess_structure!(
-  b::SparseForwardADHessian,
+  b::SparseADHessian,
   nlp::ADModel,
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
@@ -52,7 +50,7 @@ end
 
 function sparse_hess_coord!(
   ℓ::Function,
-  b::SparseForwardADHessian,
+  b::SparseADHessian,
   x::AbstractVector,
   vals::AbstractVector
   )
@@ -73,7 +71,7 @@ function sparse_hess_coord!(
 end
 
 function hess_coord!(
-  b::SparseForwardADHessian,
+  b::SparseADHessian,
   nlp::ADModel,
   x::AbstractVector,
   y::AbstractVector,
@@ -85,7 +83,7 @@ function hess_coord!(
 end
 
 function hess_coord!(
-  b::SparseForwardADHessian,
+  b::SparseADHessian,
   nlp::ADModel,
   x::AbstractVector,
   obj_weight::Real,
