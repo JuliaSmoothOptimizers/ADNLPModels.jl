@@ -1,6 +1,6 @@
 list_sparse_jac_backend = (
-  (ADNLPModels.SparseForwardADJacobian, Dict(:alg => SparseDiffTools.GreedyD1Color())),
-  (ADNLPModels.SparseForwardADJacobian, Dict(:alg => SparseDiffTools.AcyclicColoring())),
+  (ADNLPModels.SparseADJacobian, Dict(:alg => SparseDiffTools.GreedyD1Color())),
+  (ADNLPModels.SparseADJacobian, Dict(:alg => SparseDiffTools.AcyclicColoring())),
   (ADNLPModels.ForwardDiffADJacobian, Dict()),
   (ADNLPModels.SparseSymbolicsADJacobian, Dict()),
 )

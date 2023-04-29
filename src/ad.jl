@@ -20,13 +20,13 @@ where the `kwargs` are either the different backends as listed below or argument
   - `hprod_backend = ForwardDiffADHvprod`;
   - `jprod_backend = ForwardDiffADJprod`;
   - `jtprod_backend = ForwardDiffADJtprod`;
-  - `jacobian_backend = SparseForwardADJacobian`;
+  - `jacobian_backend = SparseADJacobian`;
   - `hessian_backend = ForwardDiffADHessian`;
   - `ghjvprod_backend = ForwardDiffADGHjvprod`;
   - `hprod_residual_backend = ForwardDiffADHvprod` for `ADNLSModel` and `EmptyADbackend` otherwise;
   - `jprod_residual_backend = ForwardDiffADJprod` for `ADNLSModel` and `EmptyADbackend` otherwise;
   - `jtprod_residual_backend = ForwardDiffADJtprod` for `ADNLSModel` and `EmptyADbackend` otherwise;
-  - `jacobian_residual_backend = SparseForwardADJacobian` for `ADNLSModel` and `EmptyADbackend` otherwise;
+  - `jacobian_residual_backend = SparseADJacobian` for `ADNLSModel` and `EmptyADbackend` otherwise;
   - `hessian_residual_backend = ForwardDiffADHessian` for `ADNLSModel` and `EmptyADbackend` otherwise.
 
 """
@@ -73,7 +73,7 @@ function ADModelBackend(
   hprod_backend::Type{HvB} = ForwardDiffADHvprod,
   jprod_backend::Type{JvB} = ForwardDiffADJprod,
   jtprod_backend::Type{JtvB} = ForwardDiffADJtprod,
-  jacobian_backend::Type{JB} = SparseForwardADJacobian,
+  jacobian_backend::Type{JB} = SparseADJacobian,
   hessian_backend::Type{HB} = SparseADHessian,
   ghjvprod_backend::Type{GHJ} = ForwardDiffADGHjvprod,
   kwargs...,
@@ -104,13 +104,13 @@ function ADModelNLSBackend(
   hprod_backend::Type{HvB} = ForwardDiffADHvprod,
   jprod_backend::Type{JvB} = ForwardDiffADJprod,
   jtprod_backend::Type{JtvB} = ForwardDiffADJtprod,
-  jacobian_backend::Type{JB} = SparseForwardADJacobian,
+  jacobian_backend::Type{JB} = SparseADJacobian,
   hessian_backend::Type{HB} = SparseADHessian,
   ghjvprod_backend::Type{GHJ} = ForwardDiffADGHjvprod,
   hprod_residual_backend::Type{HvBLS} = ForwardDiffADHvprod,
   jprod_residual_backend::Type{JvBLS} = ForwardDiffADJprod,
   jtprod_residual_backend::Type{JtvBLS} = ForwardDiffADJtprod,
-  jacobian_residual_backend::Type{JBLS} = SparseForwardADJacobian,
+  jacobian_residual_backend::Type{JBLS} = SparseADJacobian,
   hessian_residual_backend::Type{HBLS} = ForwardDiffADHessian,
   kwargs...,
 ) where {GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS}

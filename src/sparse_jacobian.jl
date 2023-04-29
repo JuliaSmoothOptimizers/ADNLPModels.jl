@@ -1,10 +1,8 @@
-## ----- SparseDiffTools -----
-
-struct SparseForwardADJacobian{Tv, Ti, T, T2, T3, T4, T5} <: ADNLPModels.ADBackend
+struct SparseADJacobian{Tv, Ti, T, T2, T3, T4, T5} <: ADNLPModels.ADBackend
   cfJ::ForwardColorJacCache{T, T2, T3, T4, T5, SparseMatrixCSC{Tv, Ti}}
 end
 
-function SparseForwardADJacobian(
+function SparseADJacobian(
   nvar,
   f,
   ncon,
@@ -20,15 +18,15 @@ function SparseForwardADJacobian(
 
   dx = zeros(T, ncon)
   cfJ = ForwardColorJacCache(c!, x0, colorvec = colors, dx = dx, sparsity = jac)
-  SparseForwardADJacobian(cfJ)
+  SparseADJacobian(cfJ)
 end
 
-function get_nln_nnzj(b::SparseForwardADJacobian, nvar, ncon)
+function get_nln_nnzj(b::SparseADJacobian, nvar, ncon)
   nnz(b.cfJ.sparsity)
 end
 
 function jac_structure!(
-  b::SparseForwardADJacobian,
+  b::SparseADJacobian,
   nlp::ADModel,
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
@@ -43,7 +41,7 @@ function jac_structure!(
 end
 
 function jac_coord!(
-  b::SparseForwardADJacobian,
+  b::SparseADJacobian,
   nlp::ADModel,
   x::AbstractVector,
   vals::AbstractVector,
@@ -54,7 +52,7 @@ function jac_coord!(
 end
 
 function jac_structure_residual!(
-  b::SparseForwardADJacobian,
+  b::SparseADJacobian,
   nls::AbstractADNLSModel,
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
@@ -69,7 +67,7 @@ function jac_structure_residual!(
 end
 
 function jac_coord_residual!(
-  b::SparseForwardADJacobian,
+  b::SparseADJacobian,
   nls::AbstractADNLSModel,
   x::AbstractVector,
   vals::AbstractVector,
