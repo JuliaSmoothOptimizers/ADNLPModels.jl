@@ -40,12 +40,7 @@ function jac_structure!(
   return rows, cols
 end
 
-function jac_coord!(
-  b::SparseADJacobian,
-  nlp::ADModel,
-  x::AbstractVector,
-  vals::AbstractVector,
-)
+function jac_coord!(b::SparseADJacobian, nlp::ADModel, x::AbstractVector, vals::AbstractVector)
   forwarddiff_color_jacobian!(b.cfJ.sparsity, nlp.c!, x, b.cfJ)
   vals .= nonzeros(b.cfJ.sparsity)
   return vals
