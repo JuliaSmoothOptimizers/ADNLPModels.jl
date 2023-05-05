@@ -30,8 +30,9 @@ function SparseADHessian(
   d = BitVector(undef, nvar)
   ncolors = maximum(colors)
 
-  rowval = tril(H).rowval
-  colptr = tril(H).colptr
+  trilH = tril(H)
+  rowval = trilH.rowval
+  colptr = trilH.colptr
 
   return SparseADHessian(d, rowval, colptr, colors, ncolors)
 end
