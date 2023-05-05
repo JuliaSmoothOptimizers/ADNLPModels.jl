@@ -791,7 +791,7 @@ function NLPModels.ghjvprod!(
   increment!(nlp, :neval_hprod)
   @views gHv[1:(nlp.meta.nlin)] .= zero(T)
   if nlp.meta.nnln > 0
-  c = get_c(nlp, nlp.adbackend.ghjvprod_backend)
+    c = get_c(nlp, nlp.adbackend.ghjvprod_backend)
     @views gHv[(nlp.meta.nlin + 1):end] .=
       directional_second_derivative(nlp.adbackend.ghjvprod_backend, c, x, v, g)
   end
