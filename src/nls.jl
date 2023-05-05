@@ -1157,8 +1157,10 @@ function NLPModels.ghjvprod!(
   @lencheck nls.meta.ncon gHv
   increment!(nls, :neval_hprod)
   @views gHv[1:(nls.meta.nlin)] .= zero(T)
-  c = get_c(nls, nls.adbackend.ghjvprod_backend)
-  @views gHv[(nls.meta.nlin + 1):end] .=
-    directional_second_derivative(nls.adbackend.ghjvprod_backend, c, x, v, g)
+  if nls.meta.nnln > 0
+    c = get_c(nls, nls.adbackend.ghjvprod_backend)
+    @views gHv[(nls.meta.nlin + 1):end] .=
+      directional_second_derivative(nls.adbackend.ghjvprod_backend, c, x, v, g)
+  end
   return gHv
 end
