@@ -24,13 +24,16 @@ function SparseADHessian(
     cx = similar(ysi)
     fun = fun + dot(c!(cx, xsi), ysi)
   end
-  S = Symbolics.hessian_sparsity(fun, ncon == 0 ? xsi : [xsi; ysi], full = false)
+  S = Symbolics.hessian_sparsity(fun, ncon == 0 ? xsi : [xsi; ysi]) # , full = false
   H = ncon == 0 ? S : S[1:nvar, 1:nvar]
-  rows, cols, _ = findnz(H)
   colors = matrix_colors(H, alg)
   d = BitVector(undef, nvar)
   ncolors = maximum(colors)
-  return SparseADHessian(d, H.rowval, H.colptr, colors, ncolors)
+
+  rowval = tril(H).rowval
+  colptr = tril(H).colptr
+
+  return SparseADHessian(d, rowval, colptr, colors, ncolors)
 end
 
 function get_nln_nnzh(b::SparseADHessian, nvar)
