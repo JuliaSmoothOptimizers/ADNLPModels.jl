@@ -52,4 +52,16 @@ dt = (Float32, Float64)
   @test eltype(vals) == T
   H = sparse(rows, cols, vals, nvar, nvar)
   @test H == [x[2] 0; x[1]+x[2] x[1]] + y[2] * [-20 0; 0 0]
+
+  n = 4
+  nlp = ADNLPModel(
+        x -> sum(100 * (x[i + 1] - x[i]^2)^2 + (x[i] - 1)^2 for i = 1:(n - 1)),
+        collect(1:n) ./ (n + 1),
+        zeros(n),
+        ones(n),
+        hessian_backend = backend,
+        name = "Extended Rosenbrock",
+  )
+  x = ones(n)
+  @test hess(nlp, x) == [802 -400 0 0; -400 1002 -400 0; 0 -400 1002 -400; 0 0 -400 200]
 end
