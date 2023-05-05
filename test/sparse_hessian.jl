@@ -56,18 +56,14 @@ dt = (Float32, Float64)
   n = 4
   x = ones(T, 4)
   nlp = ADNLPModel(
-        x -> sum(100 * (x[i + 1] - x[i]^2)^2 + (x[i] - 1)^2 for i = 1:(n - 1)),
-        x,
-        hessian_backend = backend,
-        name = "Extended Rosenbrock",
+    x -> sum(100 * (x[i + 1] - x[i]^2)^2 + (x[i] - 1)^2 for i = 1:(n - 1)),
+    x,
+    hessian_backend = backend,
+    name = "Extended Rosenbrock",
   )
   @test hess(nlp, x) == T[802 -400 0 0; -400 1002 -400 0; 0 -400 1002 -400; 0 0 -400 200]
-  
+
   x = ones(T, 2)
-  nlp = ADNLPModel(
-        x -> x[1]^2 + x[1] * x[2],
-        x,
-        hessian_backend = backend,
-  )
+  nlp = ADNLPModel(x -> x[1]^2 + x[1] * x[2], x, hessian_backend = backend)
   @test hess(nlp, x) == T[2 1; 1 0]
 end
