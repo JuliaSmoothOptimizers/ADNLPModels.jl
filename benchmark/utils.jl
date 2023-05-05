@@ -42,7 +42,9 @@ benchmarked_optimized_backends = Dict(
     "enzyme" => EnzymeADGradient,
   ),
   "hprod_backend" => Dict(
-    "forward" => OptForwardDiffADHvprod,
+    "forward" => ADNLPModels.ForwardDiffADHvprod,
+    "forwardSDT" => OptForwardDiffADHvprod,
+    "forwardNothing" => Opt2ForwardDiffADHvprod,
   ),
   "jprod_backend" => Dict(
     "forward" => ADNLPModels.ForwardDiffADJprod,
@@ -130,7 +132,7 @@ end
 # keys list all the accepted keywords to define backends
 # values are generic backend to be used by default in this benchmark
 all_backend_structure = Dict(
-  "gradient_backend" => GenericForwardDiffADGradient,
+  "gradient_backend" => ADNLPModels.GenericForwardDiffADGradient,
   "hprod_backend" => ADNLPModels.ForwardDiffADHvprod,
   "jprod_backend" => ADNLPModels.ForwardDiffADJprod,
   "jtprod_backend" => ADNLPModels.ForwardDiffADJtprod,

@@ -31,7 +31,7 @@ using ReverseDiff, ForwardDiff
 # - backend (see `set_back_list(Val(f), test_back)`)
 problem_sets = Dict(
   #"all" => setdiff(all_cons_problems, ["camshape"]), # crash
-  "scalable" => scalable_cons_problems,
+  "scalable" => setdiff(scalable_cons_problems, ["polygon", "polygon1", "clnlbeam"]),
 )
 benchs = [
   "optimized",
