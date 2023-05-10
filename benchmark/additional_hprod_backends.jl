@@ -234,24 +234,6 @@ function ADNLPModels.Hvprod!(b::ForwardDiffADHvprod4, Hv, f, x, v)
   return Hv
 end
 
-f(x) = (x[1] - 100 * x[2]^2)^2 + (x[1] - 1)^2
-x =  rand(2)
-g = similar(x)
-v = ones(2)
-Hv = similar(v)
-Hv_control(x, v) = ForwardDiff.hessian(f, x) * v
-
-cfg = ForwardDiff.GradientConfig(f, x)
-ForwardDiff.gradient!(g, f, x, cfg)
-@allocated ForwardDiff.gradient!(g, f, x, cfg) # 0
-
-z = map(ForwardDiff.Dual{ForwardDiff.Tag{typeof(f), Float64}}, x, v)
-cfg2 = ForwardDiff.GradientConfig(f, z)
-gz = similar(z)
-ForwardDiff.gradient!(gz, f, z, cfg2)
-@allocated ForwardDiff.gradient!(gz, f, z, cfg2)
-ForwardDiff.extract_derivative!(ForwardDiff.Tag{typeof(f), Float64}, Hv, gz)
-
 #=
 using ADNLPModels, OptimizationProblems.ADNLPProblems, NLPModels, Test
 T = Float64

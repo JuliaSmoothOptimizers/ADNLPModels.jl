@@ -51,8 +51,9 @@ benchmarked_optimized_backends = Dict(
     "forward5" => ForwardDiffADHvprod5,
   ),
   "jprod_backend" => Dict(
-    "forward" => ADNLPModels.ForwardDiffADJprod,
+    "forward" => ADNLPModels.ForwardDiffADJprod, # use SparseDiffTools
     "reverse" => ADNLPModels.ReverseDiffADJprod,
+    "forward1" => ForwardDiffADJprod1,
   ),
   "jtprod_backend" => Dict(
     "reverse" => OptimizedReverseDiffADJtprod,

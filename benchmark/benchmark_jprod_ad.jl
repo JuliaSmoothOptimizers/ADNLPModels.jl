@@ -29,7 +29,7 @@ include("utils.jl")
 # - backend (see `set_back_list(Val(f), test_back)`)
 problem_sets = Dict(
   #"all" => setdiff(all_cons_problems, ["camshape"]), # crash
-  "scalable" => setdiff(scalable_cons_problems, ["camshape"]),
+  "scalable" => scalable_cons_problems, # , ["camshape"])
 )
 benchs = [
   "optimized",

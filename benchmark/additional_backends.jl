@@ -1,5 +1,6 @@
 include("additional_hprod_backends.jl")
 
+using ADNLPModels, OptimizationProblems.ADNLPProblems, NLPModels
 using Enzyme
 # Enzyme gradient
 struct EnzymeADGradient <: ADNLPModels.ADBackend end
@@ -18,11 +19,11 @@ function ADNLPModels.gradient!(::EnzymeADGradient, g, f, x)
   return g
 end
 
-#=
-using ADNLPModels, OptimizationProblems.ADNLPProblems, NLPModels
+#= Doesn't work with Enzyme 0.11 ...
 for pb in scalable_problems
   @info pb
-  (pb in ["elec", "brybnd", "clplatea", "clplateb", "clplatec", "curly", "curly10", "curly20", "curly30", "ncb20", "ncb20b", "sbrybnd"]) && continue
+  # (pb in ["elec", "brybnd", "clplatea", "clplateb", "clplatec", "curly", "curly10", "curly20", "curly30", "ncb20", "ncb20b", "sbrybnd"]) && continue
+  (pb in ["NZF1"]) && continue
   nlp = eval(Meta.parse(pb))(gradient_backend = EnzymeADGradient)
   grad(nlp, get_x0(nlp))
 end
@@ -65,6 +66,59 @@ end
 function ADNLPModels.gradient!(::GenericReverseDiffADGradient, g, f, x)
   return ReverseDiff.gradient!(g, f, x)
 end
+
+##########################################################
+using ForwardDiff
+
+struct ForwardDiffADJprod1{T, Tag} <: ADNLPModels.InPlaceADbackend
+  z::Vector{ForwardDiff.Dual{Tag, T, 1}}
+  cz::Vector{ForwardDiff.Dual{Tag, T, 1}}
+end
+
+function ForwardDiffADJprod1(
+  nvar::Integer,
+  f,
+  ncon::Integer = 0,
+  c!::Function = (args...) -> [];
+  x0::AbstractVector{T} = rand(nvar),
+  kwargs...,
+) where {T}
+  tag = ForwardDiff.Tag{typeof(c!), T}
+  
+  z = Vector{ForwardDiff.Dual{tag, T, 1}}(undef, nvar)
+  cz = similar(z, ncon)
+  return ForwardDiffADJprod1(z, cz)
+end
+
+function ADNLPModels.Jprod!(b::ForwardDiffADJprod1{T, Tag}, Jv, c!, x, v) where {T, Tag}
+  map!(ForwardDiff.Dual{Tag}, b.z, x, v) # x + ε * v
+  c!(b.cz, b.z) # c!(cz, x + ε * v)
+  ForwardDiff.extract_derivative!(Tag, Jv, b.cz) # ∇c!(cx, x)ᵀv
+  return Jv
+end
+
+#=
+using ADNLPModels, OptimizationProblems, OptimizationProblems.ADNLPProblems, NLPModels, Test
+T = Float64
+nscal = 32
+@testset "$pb" for pb in scalable_cons_problems
+  n = eval(Meta.parse("OptimizationProblems.get_" * pb * "_nvar(n = $(nscal))"))
+  m = eval(Meta.parse("OptimizationProblems.get_" * pb * "_ncon(n = $(nscal))"))
+  v = [sin(T(i) / 10) for i=1:n]
+  (pb in ["chain"]) && continue
+  nlp = eval(Meta.parse(pb))(n = nscal, jprod_backend = ForwardDiffADJprod1)
+  @info " $(pb): $n vars ($(nlp.meta.nvar)) and $m cons"
+  ncon = nlp.meta.nnln
+  x = get_x0(nlp)
+  cx = similar(x, ncon)
+  Jv_control = ForwardDiff.jacobian(nlp.c!, cx, x) * v
+  Jv = similar(x, ncon)
+  jprod_nln!(nlp, x, v, Jv)
+  @test Jv ≈ Jv_control
+end
+=#
+
+##########################################################
 
 #
 #
@@ -170,100 +224,3 @@ for pb in scalable_cons_problems[1:1]
   jtprod(nlp, get_x0(nlp), get_y0(nlp))
 end
 =#
-
-using Symbolics
-
-struct SparseForwardADHessian <: ADNLPModels.ADBackend
-  d::BitVector
-  rowval::Vector{Int}
-  colptr::Vector{Int}
-  colors::Vector{Int}
-  ncolors::Int
-end
-
-function SparseForwardADHessian(nvar, f, ncon, c!;
-  x0=rand(nvar),
-  alg::SparseDiffTools.SparseDiffToolsColoringAlgorithm = SparseDiffTools.GreedyD1Color(),
-  kwargs...,
-)
-  Symbolics.@variables xs[1:nvar]
-  xsi = Symbolics.scalarize(xs)
-  fun = f(xsi)
-  if ncon > 0
-    Symbolics.@variables ys[1:ncon]
-    ysi = Symbolics.scalarize(ys)
-    cx = similar(ysi)
-    fun = fun + dot(c!(cx,xsi), ysi)
-  end
-  S = Symbolics.hessian_sparsity(fun, ncon == 0 ? xsi : [xsi; ysi], full=false)
-  H = ncon == 0 ? S : S[1:nvar,1:nvar]
-  rows, cols, _ = findnz(H)
-  colors = matrix_colors(H, alg)
-  d = BitVector(undef, nvar)
-  ncolors = maximum(colors)
-  return SparseForwardADHessian(d, H.rowval, H.colptr, colors, ncolors)
-end
-
-function ADNLPModels.get_nln_nnzh(b::SparseForwardADHessian, nvar)
-  return length(b.rowval)
-end
-
-function ADNLPModels.hess_structure!(
-  b::SparseForwardADHessian,
-  nlp::ADNLPModels.ADModel,
-  rows::AbstractVector{<:Integer},
-  cols::AbstractVector{<:Integer},
-)
-  rows .= b.rowval
-  for i = 1:(nlp.meta.nvar)
-    for j = b.colptr[i]:(b.colptr[i + 1] - 1)
-      cols[j] = i
-    end
-  end
-  return rows, cols
-end
-
-function sparse_hess_coord!(
-  ℓ::Function,
-  b::SparseForwardADHessian,
-  x::AbstractVector,
-  vals::AbstractVector
-  )
-  nvar = length(x)
-  for icol = 1 : b.ncolors
-    b.d .= (b.colors .== icol)
-    res = ForwardDiff.derivative(t -> ForwardDiff.gradient(ℓ, x + t * b.d), 0)
-    for j = 1 : nvar
-      if b.colors[j] == icol
-        for k = b.colptr[j] : b.colptr[j+1] - 1
-          i = b.rowval[k]
-          vals[k] = res[i]
-        end
-      end
-    end
-  end
-  return vals
-end
-
-function ADNLPModels.hess_coord!(
-  b::SparseForwardADHessian,
-  nlp::ADNLPModels.ADModel,
-  x::AbstractVector,
-  y::AbstractVector,
-  obj_weight::Real,
-  vals::AbstractVector,
-)
-  ℓ = ADNLPModels.get_lag(nlp, b, obj_weight, y)
-  sparse_hess_coord!(ℓ, b, x, vals)
-end
-
-function hess_coord!(
-  b::SparseForwardADHessian,
-  nlp::ADNLPModels.ADModel,
-  x::AbstractVector,
-  obj_weight::Real,
-  vals::AbstractVector,
-)
-  ℓ(x) = obj_weight * nlp.f(x)
-  sparse_hess_coord!(ℓ, b, x, vals)
-end
