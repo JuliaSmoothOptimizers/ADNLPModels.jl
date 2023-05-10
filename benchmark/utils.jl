@@ -41,10 +41,14 @@ benchmarked_optimized_backends = Dict(
     "reverse" => ADNLPModels.ReverseDiffADGradient,
     "enzyme" => EnzymeADGradient,
   ),
-  "hprod_backend" => Dict(
-    "forward" => ADNLPModels.ForwardDiffADHvprod,
-    "forwardSDT" => OptForwardDiffADHvprod,
-    "forwardNothing" => Opt2ForwardDiffADHvprod,
+  "hprod_backend" => Dict( # 2 and 5 are best, maybe 5 more robust.
+    "forward" => ADNLPModels.ForwardDiffADHvprod, # SPT 1
+    "forwardSDT" => SPTADHvprod, # SPT 2 > STP 1
+    #"forward1" => ForwardDiffADHvprod1,
+    "forward2" => ForwardDiffADHvprod2,
+    # "forward3" => ForwardDiffADHvprod3, # doesn't work
+    #"forward4" => ForwardDiffADHvprod4,
+    "forward5" => ForwardDiffADHvprod5,
   ),
   "jprod_backend" => Dict(
     "forward" => ADNLPModels.ForwardDiffADJprod,
@@ -55,13 +59,13 @@ benchmarked_optimized_backends = Dict(
     "forward" => OptimizedForwardDiffADJtprod,
   ),
   "jacobian_backend" => Dict(
-    "sparse" => ADNLPModels.SparseForwardADJacobian,
+    "sparse" => ADNLPModels.SparseADJacobian,
     # "forward" => ADNLPModels.ForwardDiffADJacobian, # slower
     # "reverse" => ADNLPModels.ReverseDiffADJacobian, # fails somehow
     # "zygote" => ADNLPModels.ZygoteADJacobian,
   ),
   "hessian_backend" => Dict(
-    "sparse" => SparseForwardADHessian,
+    "sparse" => ADNLPModels.SparseADHessian,
     "forward" => ADNLPModels.ForwardDiffADHessian,
     # "sym" => ADNLPModels.SparseADHessian, # out of memory for large problems
   ),
@@ -80,7 +84,7 @@ benchmarked_generic_backends = Dict(
     "zygote" => ADNLPModels.ZygoteADGradient,
   ),
   "hprod_backend" => Dict(
-    "forward" => ADNLPModels.ForwardDiffADHvprod, # ADNLPModels.GenericForwardDiffADHvprod
+    "forward" => ADNLPModels.GenericForwardDiffADHvprod,
     "reverse" => ADNLPModels.ReverseDiffADHvprod,
   ),
   "jprod_backend" => Dict(

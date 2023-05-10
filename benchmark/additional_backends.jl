@@ -1,3 +1,5 @@
+include("additional_hprod_backends.jl")
+
 using Enzyme
 # Enzyme gradient
 struct EnzymeADGradient <: ADNLPModels.ADBackend end
@@ -62,69 +64,6 @@ function GenericReverseDiffADGradient(
 end
 function ADNLPModels.gradient!(::GenericReverseDiffADGradient, g, f, x)
   return ReverseDiff.gradient!(g, f, x)
-end
-
-using SparseDiffTools
-# Hprod using ForwardDiff and SparseDiffTools
-# branch hprod2: https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl/pull/122/files
-struct OptForwardDiffADHvprod{T, F} <: ADNLPModels.ADBackend
-  tmp_in::Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}
-  tmp_out::Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}
-  ϕ!::F
-end
-function OptForwardDiffADHvprod(
-  nvar::Integer,
-  f,
-  ncon::Integer = 0,
-  c::Function = (args...) -> [];
-  x0::AbstractVector{T} = rand(nvar),
-  kwargs...,
-) where {T}
-  tmp_in = Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(undef, nvar)
-  tmp_out = Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(undef, nvar)
-  cfg = ForwardDiff.GradientConfig(f, tmp_in)
-  ϕ!(dy, x; f = f, cfg = cfg) = ForwardDiff.gradient!(dy, f, x, cfg)
-  return OptForwardDiffADHvprod(tmp_in, tmp_out, ϕ!)
-end
-
-function ADNLPModels.Hvprod!(b::OptForwardDiffADHvprod, Hv, f, x, v)
-  ϕ!(dy, x; f = f) = ForwardDiff.gradient!(dy, f, x)
-  SparseDiffTools.auto_hesvecgrad!(Hv, ϕ!, x, v, b.tmp_in, b.tmp_out)
-  return Hv
-end
-
-struct Opt2ForwardDiffADHvprod{T, F} <: ADNLPModels.ADBackend
-  z::Vector{ForwardDiff.Dual{Nothing, T, 1}}
-  gz::Vector{ForwardDiff.Dual{Nothing, T, 1}}
-  # ∇φ::F
-  cfg::F
-end
-function Opt2ForwardDiffADHvprod(
-  nvar::Integer,
-  f,
-  ncon::Integer = 0,
-  c::Function = (args...) -> [];
-  x0::AbstractVector{T} = rand(nvar),
-  kwargs...,
-) where {T}
-  tag = Nothing
-
-  z = Vector{ForwardDiff.Dual{tag, T, 1}}(undef, nvar)
-  gz = Vector{ForwardDiff.Dual{tag, T, 1}}(undef, nvar)
-  # ∇φ(gz, z) = ForwardDiff.gradient!(gz, f, z)
-  cfg = ForwardDiff.GradientConfig(f, z)
-
-  return Opt2ForwardDiffADHvprod(z, gz, cfg)
-end
-
-function ADNLPModels.Hvprod!(b::Opt2ForwardDiffADHvprod, Hv, f, x, v)
-  map!(ForwardDiff.Dual, b.z, x, v) # x + ε * v
-  # b.∇φ(b.gz, b.z) # ∇f(x + ε * v) = ∇f(x) + ε * ∇²f(x)ᵀv
-  # ForwardDiff.gradient!(b.gz, f, b.z, b.cfg) # ∇f(x + ε * v) = ∇f(x) + ε * ∇²f(x)ᵀv
-  # gz = ForwardDiff.gradient(f, b.z, b.cfg)
-  ForwardDiff.vector_mode_gradient!(b.gz, f, b.z, b.cfg)
-  ForwardDiff.extract_derivative!(Nothing, Hv, b.gz)  # ∇²f(x)ᵀv
-  return Hv
 end
 
 #
