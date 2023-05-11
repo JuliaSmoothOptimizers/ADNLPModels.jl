@@ -29,7 +29,7 @@ include("utils.jl")
 # - backend (see `set_back_list(Val(f), test_back)`)
 problem_sets = Dict(
   #"all" => setdiff(all_cons_problems, ["camshape"]), # crash
-  "scalable" => setdiff(scalable_cons_problems, ["camshape", "clnlbeam", "polygon", "robotarm"]),
+  "scalable" => scalable_cons_problems,
 )
 benchs = [
   "optimized",
@@ -39,7 +39,7 @@ data_types = [Float64] # [Float16, Float32, Float64]
 tested_backs = Dict(
   "jtprod_backend" => :jtprod,
 )
-const nscal = nn * 100
+const nscal = nn * 10
 name = "$(today())_adnlpmodels_benchmark_jtprod"
 if "all" in keys(problem_sets)
   name *= "_all"
