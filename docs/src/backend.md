@@ -19,6 +19,15 @@ The functions used internally to define the NLPModel API and the possible backen
 
 The functions `hess_structure!`, `hess_coord!`, `jac_structure!` and `jac_coord!` defined in `ad.jl` are generic to all the backends for now.
 
+```@example ex1
+using ADNLPModels
+f(x) = sum(x)
+x0 = ones(2)
+ADNLPModel(f, x0, show_time = true)
+```
+
+The keyword `show_time` is set to `true` to display the time needed to instantiate each backend.
+
 ## Examples
 
 We now present a serie of practical examples. For simplicity, we focus here on unconstrained optimization problem. All these examples can be generalized to problems with bounds, constraints or nonlinear least-squares.
