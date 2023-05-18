@@ -75,7 +75,6 @@ function ADModelBackend(
   hessian_backend::Type{HB} = SparseADHessian,
   kwargs...,
 ) where {GB, HvB, HB}
-
   c! = (args...) -> []
   ncon = 0
 
@@ -123,7 +122,6 @@ function ADModelBackend(
   ghjvprod_backend::Type{GHJ} = ForwardDiffADGHjvprod,
   kwargs...,
 ) where {GB, HvB, JvB, JtvB, JB, HB, GHJ}
-
   b = @elapsed begin
     gradient_backend = GB(nvar, f, ncon, c!; kwargs...)
   end
@@ -136,19 +134,19 @@ function ADModelBackend(
     jprod_backend = JvB(nvar, f, ncon, c!; kwargs...)
   end
   show_time && println("jprod    backend $JvB: $b seconds;")
-    b = @elapsed begin
+  b = @elapsed begin
     jtprod_backend = JtvB(nvar, f, ncon, c!; kwargs...)
   end
   show_time && println("jtprod   backend $JtvB: $b seconds;")
-    b = @elapsed begin
+  b = @elapsed begin
     jacobian_backend = JB(nvar, f, ncon, c!; kwargs...)
   end
   show_time && println("jacobian backend $JB: $b seconds;")
-    b = @elapsed begin
+  b = @elapsed begin
     hessian_backend = HB(nvar, f, ncon, c!; kwargs...)
   end
   show_time && println("hessian  backend $HB: $b seconds;")
-    b = @elapsed begin
+  b = @elapsed begin
     ghjvprod_backend = GHJ(nvar, f, ncon, c!; kwargs...)
   end
   show_time && println("ghjvprod backend $GHJ: $b seconds. \n")
@@ -187,7 +185,6 @@ function ADModelNLSBackend(
   hessian_residual_backend::Type{HBLS} = ForwardDiffADHessian,
   kwargs...,
 ) where {GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS}
-
   function F(x; nequ = nequ)
     Fx = similar(x, nequ)
     F!(Fx, x)
@@ -288,19 +285,19 @@ function ADModelNLSBackend(
     jprod_backend = JvB(nvar, f, ncon, c!; kwargs...)
   end
   show_time && println("jprod             backend $JvB: $b seconds;")
-    b = @elapsed begin
+  b = @elapsed begin
     jtprod_backend = JtvB(nvar, f, ncon, c!; kwargs...)
   end
   show_time && println("jtprod            backend $JtvB: $b seconds;")
-    b = @elapsed begin
+  b = @elapsed begin
     jacobian_backend = JB(nvar, f, ncon, c!; kwargs...)
   end
   show_time && println("jacobian          backend $JB: $b seconds;")
-    b = @elapsed begin
+  b = @elapsed begin
     hessian_backend = HB(nvar, f, ncon, c!; kwargs...)
   end
   show_time && println("hessian           backend $HB: $b seconds;")
-    b = @elapsed begin
+  b = @elapsed begin
     ghjvprod_backend = GHJ(nvar, f, ncon, c!; kwargs...)
   end
   show_time && println("ghjvprod          backend $GHJ: $b seconds;")
