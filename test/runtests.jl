@@ -19,11 +19,10 @@ for problem in NLPModelsTest.nls_problems
   include("nls/problems/$(lowercase(problem)).jl")
 end
 
-OptimizedAD(nvar, f, ncon = 0) = ADNLPModels.ADModelBackend(nvar, f, ncon)
-ForwardDiffAD(nvar, f, ncon = 0) = ADNLPModels.ADModelBackend(
+OptimizedAD(nvar, f) = ADNLPModels.ADModelBackend(nvar, f)
+ForwardDiffAD(nvar, f) = ADNLPModels.ADModelBackend(
   nvar,
   f,
-  ncon,
   gradient_backend = ADNLPModels.GenericForwardDiffADGradient,
   hprod_backend = ADNLPModels.GenericForwardDiffADHvprod,
   jprod_backend = ADNLPModels.GenericForwardDiffADJprod,
@@ -31,10 +30,9 @@ ForwardDiffAD(nvar, f, ncon = 0) = ADNLPModels.ADModelBackend(
   jacobian_backend = ADNLPModels.ForwardDiffADJacobian,
   hessian_backend = ADNLPModels.ForwardDiffADHessian,
 )
-ReverseDiffAD(nvar, f, ncon = 0) = ADNLPModels.ADModelBackend(
+ReverseDiffAD(nvar, f) = ADNLPModels.ADModelBackend(
   nvar,
   f,
-  ncon,
   gradient_backend = ADNLPModels.ReverseDiffADGradient,
   hprod_backend = ADNLPModels.ReverseDiffADHvprod,
   jprod_backend = ADNLPModels.ReverseDiffADJprod,
@@ -64,9 +62,6 @@ function test_getter_setter(nlp)
   end
   @test typeof(get_adbackend(nlp).gradient_backend) <: ADNLPModels.ReverseDiffADGradient
   @test typeof(get_adbackend(nlp).hprod_backend) <: ADNLPModels.ReverseDiffADHvprod
-  @test typeof(get_adbackend(nlp).jprod_backend) <: ADNLPModels.ReverseDiffADJprod
-  @test typeof(get_adbackend(nlp).jtprod_backend) <: ADNLPModels.ReverseDiffADJtprod
-  @test typeof(get_adbackend(nlp).jacobian_backend) <: ADNLPModels.ReverseDiffADJacobian
   @test typeof(get_adbackend(nlp).hessian_backend) <: ADNLPModels.ReverseDiffADHessian
   set_adbackend!(
     nlp,
@@ -75,9 +70,7 @@ function test_getter_setter(nlp)
   )
   @test typeof(get_adbackend(nlp).gradient_backend) <: ADNLPModels.ForwardDiffADGradient
   @test typeof(get_adbackend(nlp).hprod_backend) <: ADNLPModels.ReverseDiffADHvprod
-  @test typeof(get_adbackend(nlp).jprod_backend) <: ADNLPModels.ReverseDiffADJprod
   @test typeof(get_adbackend(nlp).jtprod_backend) <: ADNLPModels.ForwardDiffADJtprod
-  @test typeof(get_adbackend(nlp).jacobian_backend) <: ADNLPModels.ReverseDiffADJacobian
   @test typeof(get_adbackend(nlp).hessian_backend) <: ADNLPModels.ReverseDiffADHessian
 end
 

@@ -12,8 +12,8 @@ The different backend are all subtype of `ADBackend` and are respectively used f
   - directional second derivative computation, i.e. gᵀ ∇²cᵢ(x) v.
 
 The default constructors are 
-    ADModelBackend(nvar, f, ncon = 0, c::Function = (args...) -> []; show_time::Bool = false, kwargs...)
-    ADModelNLSBackend(nvar, F!, nequ, ncon = 0, c::Function = (args...) -> []; show_time::Bool = false, kwargs...)
+    ADModelBackend(nvar, f, ncon = 0, c = (args...) -> []; show_time::Bool = false, kwargs...)
+    ADModelNLSBackend(nvar, F!, nequ, ncon = 0, c = (args...) -> []; show_time::Bool = false, kwargs...)
 
 If `show_time` is set to `true`, it prints the time used to generate each backend.
 
@@ -68,9 +68,51 @@ end
 
 function ADModelBackend(
   nvar::Integer,
+  f;
+  show_time::Bool = false,
+  gradient_backend::Type{GB} = ForwardDiffADGradient,
+  hprod_backend::Type{HvB} = ForwardDiffADHvprod,
+  hessian_backend::Type{HB} = SparseADHessian,
+  kwargs...,
+) where {GB, HvB, HB}
+
+  c! = (args...) -> []
+  ncon = 0
+
+  b = @elapsed begin
+    gradient_backend = GB(nvar, f, ncon, c!; kwargs...)
+  end
+  show_time && println("gradient backend $GB: $b seconds;")
+  b = @elapsed begin
+    hprod_backend = HvB(nvar, f, ncon, c!; kwargs...)
+  end
+  show_time && println("hprod    backend $HvB: $b seconds;")
+  b = @elapsed begin
+    hessian_backend = HB(nvar, f, ncon, c!; kwargs...)
+  end
+  show_time && println("hessian  backend $HB: $b seconds;")
+
+  return ADModelBackend(
+    gradient_backend,
+    hprod_backend,
+    EmptyADbackend(),
+    EmptyADbackend(),
+    EmptyADbackend(),
+    hessian_backend,
+    EmptyADbackend(),
+    EmptyADbackend(),
+    EmptyADbackend(),
+    EmptyADbackend(),
+    EmptyADbackend(),
+    EmptyADbackend(),
+  )
+end
+
+function ADModelBackend(
+  nvar::Integer,
   f,
-  ncon::Integer = 0,
-  c!::Function = (args...) -> [];
+  ncon::Integer,
+  c!;
   show_time::Bool = false,
   gradient_backend::Type{GB} = ForwardDiffADGradient,
   hprod_backend::Type{HvB} = ForwardDiffADHvprod,
@@ -81,6 +123,7 @@ function ADModelBackend(
   ghjvprod_backend::Type{GHJ} = ForwardDiffADGHjvprod,
   kwargs...,
 ) where {GB, HvB, JvB, JtvB, JB, HB, GHJ}
+
   b = @elapsed begin
     gradient_backend = GB(nvar, f, ncon, c!; kwargs...)
   end
@@ -128,9 +171,89 @@ end
 function ADModelNLSBackend(
   nvar::Integer,
   F!,
+  nequ::Integer;
+  show_time::Bool = false,
+  gradient_backend::Type{GB} = ForwardDiffADGradient,
+  hprod_backend::Type{HvB} = ForwardDiffADHvprod,
+  jprod_backend::Type{JvB} = ForwardDiffADJprod,
+  jtprod_backend::Type{JtvB} = ForwardDiffADJtprod,
+  jacobian_backend::Type{JB} = SparseADJacobian,
+  hessian_backend::Type{HB} = SparseADHessian,
+  ghjvprod_backend::Type{GHJ} = ForwardDiffADGHjvprod,
+  hprod_residual_backend::Type{HvBLS} = ForwardDiffADHvprod,
+  jprod_residual_backend::Type{JvBLS} = ForwardDiffADJprod,
+  jtprod_residual_backend::Type{JtvBLS} = ForwardDiffADJtprod,
+  jacobian_residual_backend::Type{JBLS} = SparseADJacobian,
+  hessian_residual_backend::Type{HBLS} = ForwardDiffADHessian,
+  kwargs...,
+) where {GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS}
+
+  function F(x; nequ = nequ)
+    Fx = similar(x, nequ)
+    F!(Fx, x)
+    return Fx
+  end
+  f = x -> mapreduce(Fi -> Fi^2, +, F(x)) / 2
+
+  c! = (args...) -> []
+  ncon = 0
+
+  b = @elapsed begin
+    gradient_backend = GB(nvar, f, ncon, c!; kwargs...)
+  end
+  show_time && println("gradient          backend $GB: $b seconds;")
+  b = @elapsed begin
+    hprod_backend = HvB(nvar, f, ncon, c!; kwargs...)
+  end
+  show_time && println("hprod             backend $HvB: $b seconds;")
+  b = @elapsed begin
+    hessian_backend = HB(nvar, f, ncon, c!; kwargs...)
+  end
+  show_time && println("hessian           backend $HB: $b seconds;")
+
+  b = @elapsed begin
+    hprod_residual_backend = HvBLS(nvar, f, nequ, F!; kwargs...)
+  end
+  show_time && println("hprod_residual    backend $HvBLS: $b seconds;")
+  b = @elapsed begin
+    jprod_residual_backend = JvBLS(nvar, f, nequ, F!; kwargs...)
+  end
+  show_time && println("jprod_residual    backend $JvBLS: $b seconds;")
+  b = @elapsed begin
+    jtprod_residual_backend = JtvBLS(nvar, f, nequ, F!; kwargs...)
+  end
+  show_time && println("jtprod_residual   backend $JtvBLS: $b seconds;")
+  b = @elapsed begin
+    jacobian_residual_backend = JBLS(nvar, f, nequ, F!; kwargs...)
+  end
+  show_time && println("jacobian_residual backend $JBLS: $b seconds;")
+  b = @elapsed begin
+    hessian_residual_backend = HBLS(nvar, f, nequ, F!; kwargs...)
+  end
+  show_time && println("hessian_residual  backend $HBLS: $b seconds. \n")
+
+  return ADModelBackend(
+    gradient_backend,
+    hprod_backend,
+    EmptyADbackend(),
+    EmptyADbackend(),
+    EmptyADbackend(),
+    hessian_backend,
+    EmptyADbackend(),
+    hprod_residual_backend,
+    jprod_residual_backend,
+    jtprod_residual_backend,
+    jacobian_residual_backend,
+    hessian_residual_backend,
+  )
+end
+
+function ADModelNLSBackend(
+  nvar::Integer,
+  F!,
   nequ::Integer,
-  ncon::Integer = 0,
-  c!::Function = (args...) -> [];
+  ncon::Integer,
+  c!;
   show_time::Bool = false,
   gradient_backend::Type{GB} = ForwardDiffADGradient,
   hprod_backend::Type{HvB} = ForwardDiffADHvprod,
