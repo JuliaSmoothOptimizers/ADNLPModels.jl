@@ -96,18 +96,60 @@ function Jprod!(b::ForwardDiffADJprod, Jv, c!, x, v)
   return Jv
 end
 
-struct ForwardDiffADJtprod <: ADBackend end
-function ForwardDiffADJtprod(
+struct GenericForwardDiffADJtprod <: ADBackend end
+function GeneriForwardDiffADJtprod(
   nvar::Integer,
   f,
   ncon::Integer = 0,
   c::Function = (args...) -> [];
   kwargs...,
 )
-  return ForwardDiffADJtprod()
+  return GenericForwardDiffADJtprod()
 end
-function Jtprod!(::ForwardDiffADJtprod, Jtv, f, x, v)
+function Jtprod!(::GenericForwardDiffADJtprod, Jtv, f, x, v)
   Jtv .= ForwardDiff.gradient(x -> dot(f(x), v), x)
+  return Jtv
+end
+
+struct ForwardDiffADJtprod{Tag, GT, S} <: ADNLPModels.InPlaceADbackend
+  cfg::ForwardDiff.GradientConfig{Tag}
+  ψ::GT
+  temp::S
+  sol::S
+end
+
+function ForwardDiffADJtprod(
+  nvar::Integer,
+  f,
+  ncon::Integer = 0,
+  c!::Function = (args...) -> [];
+  x0::AbstractVector{T} = rand(nvar),
+  kwargs...,
+) where {T}
+
+  temp = similar(x0, nvar + 2 * ncon)
+  sol = similar(x0, nvar + 2 * ncon)
+
+  function ψ(z; nvar = nvar, ncon = ncon)
+    cx, x, u = view(z, 1:ncon), view(z, (ncon + 1):(nvar + ncon)), view(z, (nvar + ncon + 1):(nvar + ncon + ncon))
+    c!(cx, x)
+    dot(cx, u)
+  end
+  tagψ = ForwardDiff.Tag(ψ, T)
+  cfg = ForwardDiff.GradientConfig(ψ, temp, ForwardDiff.Chunk(temp), tagψ)
+
+  return ForwardDiffADJtprod(cfg, ψ, temp, sol)
+end
+
+function ADNLPModels.Jtprod!(b::ForwardDiffADJtprod{Tag, GT, S}, Jtv, c!, x, v) where {Tag, GT, S}
+  ncon = length(v)
+  nvar = length(x)
+
+  b.sol[1:ncon] .= 0
+  b.sol[(ncon + 1):(ncon + nvar)] .= x
+  b.sol[(ncon + nvar + 1):(2 * ncon + nvar)] .= v
+  ForwardDiff.gradient!(b.temp, b.ψ, b.sol, b.cfg)
+  Jtv .= view(b.temp, (ncon + 1):(nvar + ncon))
   return Jtv
 end
 
