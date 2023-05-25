@@ -1,6 +1,3 @@
-struct ReverseDiffADGradient <: ADBackend
-  cfg
-end
 struct ReverseDiffADJacobian <: ADBackend
   nnzj::Int
 end
@@ -10,6 +7,10 @@ end
 struct GenericReverseDiffADJprod <: ADBackend end
 struct ReverseDiffADJtprod <: ADBackend end
 struct ReverseDiffADHvprod <: ADBackend end
+
+struct ReverseDiffADGradient <: ADBackend
+  cfg
+end
 
 function ReverseDiffADGradient(
   nvar::Integer,
@@ -25,8 +26,26 @@ function ReverseDiffADGradient(
   cfg = ReverseDiff.compile(f_tape)
   return ReverseDiffADGradient(cfg)
 end
+
 function gradient!(adbackend::ReverseDiffADGradient, g, f, x)
   return ReverseDiff.gradient!(g, adbackend.cfg, x)
+end
+
+struct GenericReverseDiffADGradient <: ADNLPModels.ADBackend end
+
+function GenericReverseDiffADGradient(
+  nvar::Integer,
+  f,
+  ncon::Integer = 0,
+  c::Function = (args...) -> [];
+  x0::AbstractVector = rand(nvar),
+  kwargs...,
+)
+  return GenericReverseDiffADGradient()
+end
+
+function ADNLPModels.gradient!(::GenericReverseDiffADGradient, g, f, x)
+  return ReverseDiff.gradient!(g, f, x)
 end
 
 function ReverseDiffADJacobian(
