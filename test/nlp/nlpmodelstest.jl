@@ -43,7 +43,7 @@ nlpmodelstest_autodiff(
   gradient_backend = ADNLPModels.ReverseDiffADGradient,
   hprod_backend = ADNLPModels.ReverseDiffADHvprod,
   jprod_backend = ADNLPModels.ReverseDiffADJprod,
-  jtprod_backend = ADNLPModels.GenericReverseDiffADJtprod,
+  jtprod_backend = ADNLPModels.ReverseDiffADJtprod,
   jacobian_backend = ADNLPModels.ReverseDiffADJacobian,
   hessian_backend = ADNLPModels.ReverseDiffADHessian,
 )
