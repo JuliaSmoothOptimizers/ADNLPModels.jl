@@ -71,9 +71,9 @@ function Jprod!(::GenericForwardDiffADJprod, Jv, f, x, v)
   return Jv
 end
 
-struct ForwardDiffADJprod{T} <: InPlaceADbackend
-  tmp_in::Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}
-  tmp_out::Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}
+struct ForwardDiffADJprod{T, Tag} <: ADNLPModels.InPlaceADbackend
+  z::Vector{ForwardDiff.Dual{Tag, T, 1}}
+  cz::Vector{ForwardDiff.Dual{Tag, T, 1}}
 end
 
 function ForwardDiffADJprod(
@@ -84,15 +84,17 @@ function ForwardDiffADJprod(
   x0::AbstractVector{T} = rand(nvar),
   kwargs...,
 ) where {T}
-  tmp_in =
-    Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(undef, nvar)
-  tmp_out =
-    Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(undef, ncon)
-  return ForwardDiffADJprod(tmp_in, tmp_out)
+  tag = ForwardDiff.Tag{typeof(c!), T}
+  
+  z = Vector{ForwardDiff.Dual{tag, T, 1}}(undef, nvar)
+  cz = similar(z, ncon)
+  return ForwardDiffADJprod(z, cz)
 end
 
-function Jprod!(b::ForwardDiffADJprod, Jv, c!, x, v)
-  SparseDiffTools.auto_jacvec!(Jv, c!, x, v, b.tmp_in, b.tmp_out)
+function ADNLPModels.Jprod!(b::ForwardDiffADJprod{T, Tag}, Jv, c!, x, v) where {T, Tag}
+  map!(ForwardDiff.Dual{Tag}, b.z, x, v) # x + ε * v
+  c!(b.cz, b.z) # c!(cz, x + ε * v)
+  ForwardDiff.extract_derivative!(Tag, Jv, b.cz) # ∇c!(cx, x)ᵀv
   return Jv
 end
 
