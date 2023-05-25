@@ -95,7 +95,7 @@ The alternative is to use ``set_adbackend!` and pass the new backends via `kwarg
 set_adbackend!(
   nlp,
   gradient_backend = ADNLPModels.ForwardDiffADGradient,
-  jtprod_backend = ADNLPModels.ForwardDiffADJtprod(),
+  jtprod_backend = ADNLPModels.GenericForwardDiffADJtprod(),
 )
 get_adbackend(nlp)
 ```
