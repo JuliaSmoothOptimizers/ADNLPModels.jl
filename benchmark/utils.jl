@@ -39,7 +39,7 @@ benchmarked_optimized_backends = Dict(
   "gradient_backend" => Dict(
     "forward" => ADNLPModels.ForwardDiffADGradient,
     "reverse" => ADNLPModels.ReverseDiffADGradient,
-    "enzyme" => EnzymeADGradient,
+    "enzyme" => ADNLPModels.EnzymeADGradient,
   ),
   "hprod_backend" => Dict( # 2 and 5 are best, maybe 5 more robust.
     "forward" => ADNLPModels.ForwardDiffADHvprod, # SPT 1
@@ -51,15 +51,13 @@ benchmarked_optimized_backends = Dict(
     "forward5" => ForwardDiffADHvprod5,
   ),
   "jprod_backend" => Dict(
-    "forward" => ADNLPModels.ForwardDiffADJprod, # use SparseDiffTools
+    "forward" => ADNLPModels.ForwardDiffADJprod,
     "reverse" => ADNLPModels.ReverseDiffADJprod,
-    "forward1" => ForwardDiffADJprod1,
+    # "sdtforward" => SDTForwardDiffADJprod, # use SparseDiffTools
   ),
   "jtprod_backend" => Dict(
-    #"reverse" => ADNLPModels.ReverseDiffADJtprod,
-    "optreverse" => OptimizedReverseDiffADJtprod,
-    #"forward" => ADNLPModels.ForwardDiffADJtprod,
-    "optforward" => OptimizedForwardDiffADJtprod,
+    "reverse" => ADNLPModels.ReverseDiffADJtprod,
+    "forward" => ADNLPModels.ForwardDiffADJtprod,
   ),
   "jacobian_backend" => Dict(
     "sparse" => ADNLPModels.SparseADJacobian,
@@ -83,7 +81,7 @@ benchmarked_optimized_backends = Dict(
 benchmarked_generic_backends = Dict(
   "gradient_backend" => Dict(
     "forward" => ADNLPModels.GenericForwardDiffADGradient,
-    "reverse" => GenericReverseDiffADGradient,
+    "reverse" => ADNLPModels.GenericReverseDiffADGradient,
     "zygote" => ADNLPModels.ZygoteADGradient,
   ),
   "hprod_backend" => Dict(
@@ -139,13 +137,13 @@ end
 # keys list all the accepted keywords to define backends
 # values are generic backend to be used by default in this benchmark
 all_backend_structure = Dict(
-  "gradient_backend" => ADNLPModels.GenericForwardDiffADGradient,
-  "hprod_backend" => ADNLPModels.ForwardDiffADHvprod,
-  "jprod_backend" => ADNLPModels.ForwardDiffADJprod,
-  "jtprod_backend" => ADNLPModels.ForwardDiffADJtprod,
-  "jacobian_backend" => ADNLPModels.ForwardDiffADJacobian,
-  "hessian_backend" => ADNLPModels.ForwardDiffADHessian,
-  "ghjvprod_backend" => ADNLPModels.ForwardDiffADGHjvprod,
+  "gradient_backend" => ADNLPModels.EmptyADbackend, # ADNLPModels.GenericForwardDiffADGradient,
+  "hprod_backend" => ADNLPModels.EmptyADbackend, # ADNLPModels.ForwardDiffADHvprod,
+  "jprod_backend" => ADNLPModels.EmptyADbackend, # ADNLPModels.ForwardDiffADJprod,
+  "jtprod_backend" => ADNLPModels.EmptyADbackend, # ADNLPModels.ForwardDiffADJtprod,
+  "jacobian_backend" => ADNLPModels.EmptyADbackend, # ADNLPModels.ForwardDiffADJacobian,
+  "hessian_backend" => ADNLPModels.EmptyADbackend, # ADNLPModels.ForwardDiffADHessian,
+  "ghjvprod_backend" => ADNLPModels.EmptyADbackend, # ADNLPModels.ForwardDiffADGHjvprod,
 )
 
 """

@@ -16,7 +16,7 @@ using BenchmarkTools, DataFrames, JuMP, Plots
 #JSO packages
 using NLPModels, BenchmarkProfiles, NLPModelsJuMP, OptimizationProblems, SolverBenchmark
 #This package
-using ReverseDiff, Zygote, ForwardDiff
+using Enzyme, ReverseDiff, Zygote, ForwardDiff
 
 include("additional_backends.jl")
 include("utils.jl")
@@ -27,7 +27,49 @@ include("utils.jl")
 # - problem set (see `keys(problem_sets)`);
 # - backend name (see `values(tested_backs)`);
 # - backend (see `set_back_list(Val(f), test_back)`)
-problems_not_supported_enzyme = ["elec", "brybnd", "clplatea", "clplateb", "clplatec", "curly", "curly10", "curly20", "curly30", "ncb20", "ncb20b", "sbrybnd"]
+problems_not_supported_enzyme = [
+  "brybnd",
+  "clplatea",
+  "clplateb",
+  "clplatec",
+  "curly",
+  "curly10",
+  "curly20",
+  "curly30",
+  "elec",
+  "fminsrf2",
+  "hs101",
+  "hs117",
+  "hs119",
+  "hs86",
+  "integreq",
+  "ncb20",
+  "ncb20b",
+  "palmer1c",
+  "palmer1d",
+  "palmer2c",
+  "palmer3c",
+  "palmer4c",
+  "palmer5c",
+  "palmer5d",
+  "palmer6c",
+  "palmer7c",
+  "palmer8c",
+  "sbrybnd",
+  "tetra",
+  "tetra_duct12",
+  "tetra_duct15",
+  "tetra_duct20",
+  "tetra_foam5",
+  "tetra_gear",
+  "tetra_hook",
+  "threepk",
+  "triangle",
+  "triangle_deer",
+  "triangle_pacman",
+  "triangle_turtle",
+  "watson",
+]
 problem_sets = Dict(
   #"all" => all_problems,
   "scalable" => setdiff(scalable_problems, problems_not_supported_enzyme),
@@ -107,6 +149,20 @@ for f in benchs
     end
   end
 end
+
+#=
+# If a cache of tuned parameters already exists, use it, otherwise, tune and cache
+# the benchmark parameters. Reusing cached parameters is faster and more reliable
+# than re-tuning `suite` every time the file is included.
+paramspath = joinpath(dirname(@__FILE__), "params.json")
+
+if isfile(paramspath)
+    loadparams!(suite, BenchmarkTools.load(paramspath)[1], :evals);
+else
+    tune!(suite)
+    BenchmarkTools.save(paramspath, params(suite));
+end
+=#
 
 @info "Starting evaluating the benchmark"
 result = run(SUITE)

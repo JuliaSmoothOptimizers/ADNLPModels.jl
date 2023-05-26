@@ -1,33 +1,6 @@
 include("additional_hprod_backends.jl")
 
 using ADNLPModels, OptimizationProblems.ADNLPProblems, NLPModels
-using Enzyme
-# Enzyme gradient
-struct EnzymeADGradient <: ADNLPModels.ADBackend end
-function EnzymeADGradient(
-  nvar::Integer,
-  f,
-  ncon::Integer = 0,
-  c::Function = (args...) -> [];
-  x0::AbstractVector = rand(nvar),
-  kwargs...,
-)
-  return EnzymeADGradient()
-end
-function ADNLPModels.gradient!(::EnzymeADGradient, g, f, x)
-  autodiff(Reverse, f, Duplicated(x, g)) # gradient!(Reverse, g, f, x)
-  return g
-end
-
-#= Doesn't work with Enzyme 0.11 ...
-for pb in scalable_problems
-  @info pb
-  # (pb in ["elec", "brybnd", "clplatea", "clplateb", "clplatec", "curly", "curly10", "curly20", "curly30", "ncb20", "ncb20b", "sbrybnd"]) && continue
-  (pb in ["NZF1"]) && continue
-  nlp = eval(Meta.parse(pb))(gradient_backend = EnzymeADGradient)
-  grad(nlp, get_x0(nlp))
-end
-=#
 
 #=
 using Nabla # No longer maintained
@@ -51,51 +24,7 @@ function ADNLPModels.gradient!(b::NablaADGradient, g, f, x)
 end # doesn't work on any problem...
 =#
 
-# Generic ReverseDiff gradient
-struct GenericReverseDiffADGradient <: ADNLPModels.ADBackend end
-function GenericReverseDiffADGradient(
-  nvar::Integer,
-  f,
-  ncon::Integer = 0,
-  c::Function = (args...) -> [];
-  x0::AbstractVector = rand(nvar),
-  kwargs...,
-)
-  return GenericReverseDiffADGradient()
-end
-function ADNLPModels.gradient!(::GenericReverseDiffADGradient, g, f, x)
-  return ReverseDiff.gradient!(g, f, x)
-end
-
 ##########################################################
-using ForwardDiff
-
-struct ForwardDiffADJprod1{T, Tag} <: ADNLPModels.InPlaceADbackend
-  z::Vector{ForwardDiff.Dual{Tag, T, 1}}
-  cz::Vector{ForwardDiff.Dual{Tag, T, 1}}
-end
-
-function ForwardDiffADJprod1(
-  nvar::Integer,
-  f,
-  ncon::Integer = 0,
-  c!::Function = (args...) -> [];
-  x0::AbstractVector{T} = rand(nvar),
-  kwargs...,
-) where {T}
-  tag = ForwardDiff.Tag{typeof(c!), T}
-  
-  z = Vector{ForwardDiff.Dual{tag, T, 1}}(undef, nvar)
-  cz = similar(z, ncon)
-  return ForwardDiffADJprod1(z, cz)
-end
-
-function ADNLPModels.Jprod!(b::ForwardDiffADJprod1{T, Tag}, Jv, c!, x, v) where {T, Tag}
-  map!(ForwardDiff.Dual{Tag}, b.z, x, v) # x + ε * v
-  c!(b.cz, b.z) # c!(cz, x + ε * v)
-  ForwardDiff.extract_derivative!(Tag, Jv, b.cz) # ∇c!(cx, x)ᵀv
-  return Jv
-end
 
 #=
 using ADNLPModels, OptimizationProblems, OptimizationProblems.ADNLPProblems, NLPModels, Test
@@ -119,47 +48,6 @@ end
 =#
 
 ##########################################################
-
-#
-#
-using ReverseDiff
-struct OptimizedReverseDiffADJtprod{T, S, GT} <: ADNLPModels.InPlaceADbackend
-  #ψ::F2
-  #gcfg::GC  # gradient config
-  gtape::GT  # compiled gradient tape
-  _tmp_out::Vector{ReverseDiff.TrackedReal{T, T, Nothing}}
-  _rval::S  # temporary storage for jtprod
-end
-
-function OptimizedReverseDiffADJtprod(
-  nvar::Integer,
-  f,
-  ncon::Integer = 0,
-  c!::Function = (args...) -> [];
-  x0::AbstractVector{T} = rand(nvar),
-  y0::AbstractVector{T} = rand(ncon),
-  kwargs...,
-) where {T}
-  _tmp_out = Vector{ReverseDiff.TrackedReal{T, T, Nothing}}(undef, ncon)
-  _rval = similar(x0, ncon)  # temporary storage for jtprod
-
-  ψ(x, u; tmp_out = _tmp_out) = begin
-    # here x is a vector of ReverseDiff.TrackedReal
-    c!(tmp_out, x)
-    dot(tmp_out, u)
-  end
-
-  # u = similar(x0, nequ)  # just for GradientConfig
-  gcfg = ReverseDiff.GradientConfig((x0, y0))
-  gtape = ReverseDiff.compile(ReverseDiff.GradientTape(ψ, (x0, y0), gcfg))
-
-  return OptimizedReverseDiffADJtprod(gtape, _tmp_out, _rval)
-end
-
-function ADNLPModels.Jtprod!(b::OptimizedReverseDiffADJtprod, Jtv, c!, x, v)
-  ReverseDiff.gradient!((Jtv, b._rval), b.gtape, (x, v))
-  return Jtv
-end
 
 #=
 using ADNLPModels, OptimizationProblems, OptimizationProblems.ADNLPProblems, NLPModels, Test
