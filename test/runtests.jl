@@ -66,11 +66,11 @@ function test_getter_setter(nlp)
   set_adbackend!(
     nlp,
     gradient_backend = ADNLPModels.ForwardDiffADGradient,
-    jtprod_backend = ADNLPModels.ForwardDiffADJtprod(),
+    jtprod_backend = ADNLPModels.GenericForwardDiffADJtprod(),
   )
   @test typeof(get_adbackend(nlp).gradient_backend) <: ADNLPModels.ForwardDiffADGradient
   @test typeof(get_adbackend(nlp).hprod_backend) <: ADNLPModels.ReverseDiffADHvprod
-  @test typeof(get_adbackend(nlp).jtprod_backend) <: ADNLPModels.ForwardDiffADJtprod
+  @test typeof(get_adbackend(nlp).jtprod_backend) <: ADNLPModels.GenericForwardDiffADJtprod
   @test typeof(get_adbackend(nlp).hessian_backend) <: ADNLPModels.ReverseDiffADHessian
 end
 
