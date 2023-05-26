@@ -13,11 +13,57 @@ using ADNLPModels, OptimizationProblems, OptimizationProblems.ADNLPProblems, NLP
 ADNLPModels.EmptyADbackend(args...; kwargs...) = ADNLPModels.EmptyADbackend()
 
 names = OptimizationProblems.meta[!, :name]
-list_excluded_enzyme = ["brybnd", "clplatea", "clplateb", "clplatec", "curly", "curly10", "curly20", "curly30", "elec", "fminsrf2", "hs101", "hs117", "hs119", "hs86", "integreq", "ncb20", "ncb20b", "palmer1c", "palmer1d", "palmer2c", "palmer3c", "palmer4c", "palmer5c", "palmer5d", "palmer6c", "palmer7c", "palmer8c", "sbrybnd", "tetra", "tetra_duct12", "tetra_duct15", "tetra_duct20", "tetra_foam5", "tetra_gear", "tetra_hook", "threepk", "triangle", "triangle_deer", "triangle_pacman", "triangle_turtle", "watson"]
+list_excluded_enzyme = [
+  "brybnd",
+  "clplatea",
+  "clplateb",
+  "clplatec",
+  "curly",
+  "curly10",
+  "curly20",
+  "curly30",
+  "elec",
+  "fminsrf2",
+  "hs101",
+  "hs117",
+  "hs119",
+  "hs86",
+  "integreq",
+  "ncb20",
+  "ncb20b",
+  "palmer1c",
+  "palmer1d",
+  "palmer2c",
+  "palmer3c",
+  "palmer4c",
+  "palmer5c",
+  "palmer5d",
+  "palmer6c",
+  "palmer7c",
+  "palmer8c",
+  "sbrybnd",
+  "tetra",
+  "tetra_duct12",
+  "tetra_duct15",
+  "tetra_duct20",
+  "tetra_foam5",
+  "tetra_gear",
+  "tetra_hook",
+  "threepk",
+  "triangle",
+  "triangle_deer",
+  "triangle_pacman",
+  "triangle_turtle",
+  "watson",
+]
 for pb in names
   @info pb
   (pb in list_excluded_enzyme) && continue
-  nlp = eval(Meta.parse(pb))(gradient_backend = ADNLPModels.EnzymeADGradient, jacobian_backend = ADNLPModels.EmptyADbackend, hessian_backend = ADNLPModels.EmptyADbackend)
+  nlp = eval(Meta.parse(pb))(
+    gradient_backend = ADNLPModels.EnzymeADGradient,
+    jacobian_backend = ADNLPModels.EmptyADbackend,
+    hessian_backend = ADNLPModels.EmptyADbackend,
+  )
   grad(nlp, get_x0(nlp))
 end
 

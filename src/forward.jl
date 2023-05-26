@@ -85,7 +85,7 @@ function ForwardDiffADJprod(
   kwargs...,
 ) where {T}
   tag = ForwardDiff.Tag{typeof(c!), T}
-  
+
   z = Vector{ForwardDiff.Dual{tag, T, 1}}(undef, nvar)
   cz = similar(z, ncon)
   return ForwardDiffADJprod(z, cz)
@@ -128,12 +128,13 @@ function ForwardDiffADJtprod(
   x0::AbstractVector{T} = rand(nvar),
   kwargs...,
 ) where {T}
-
   temp = similar(x0, nvar + 2 * ncon)
   sol = similar(x0, nvar + 2 * ncon)
 
   function ψ(z; nvar = nvar, ncon = ncon)
-    cx, x, u = view(z, 1:ncon), view(z, (ncon + 1):(nvar + ncon)), view(z, (nvar + ncon + 1):(nvar + ncon + ncon))
+    cx, x, u = view(z, 1:ncon),
+    view(z, (ncon + 1):(nvar + ncon)),
+    view(z, (nvar + ncon + 1):(nvar + ncon + ncon))
     c!(cx, x)
     dot(cx, u)
   end
