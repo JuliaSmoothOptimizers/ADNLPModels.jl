@@ -2,7 +2,9 @@ abstract type ADBackend end
 
 abstract type ImmutableADbackend <: ADBackend end
 abstract type InPlaceADbackend <: ADBackend end
+
 struct EmptyADbackend <: ADBackend end
+EmptyADbackend(args...; kwargs...) = EmptyADbackend()
 
 """
     get_nln_nnzj(::ADBackend, nvar, ncon)
