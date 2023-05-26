@@ -5,7 +5,7 @@ struct ReverseDiffADHessian <: ADBackend
   nnzh::Int
 end
 struct GenericReverseDiffADJprod <: ADBackend end
-struct ReverseDiffADJtprod <: ADBackend end
+struct GenericReverseDiffADJtprod <: ADBackend end
 struct ReverseDiffADHvprod <: ADBackend end
 
 struct ReverseDiffADGradient <: ADBackend
@@ -126,17 +126,50 @@ function Jprod!(b::ReverseDiffADJprod, Jv, c!, x, v)
   return Jv
 end
 
-function ReverseDiffADJtprod(
+function GenericReverseDiffADJtprod(
   nvar::Integer,
   f,
   ncon::Integer = 0,
   c::Function = (args...) -> [];
   kwargs...,
 )
-  return ReverseDiffADJtprod()
+  return GenericReverseDiffADJtprod()
 end
-function Jtprod!(::ReverseDiffADJtprod, Jtv, f, x, v)
+function Jtprod!(::GenericReverseDiffADJtprod, Jtv, f, x, v)
   Jtv .= ReverseDiff.gradient(x -> dot(f(x), v), x)
+  return Jtv
+end
+
+struct ReverseDiffADJtprod{T, S, GT} <: ADNLPModels.InPlaceADbackend
+  gtape::GT
+  _tmp_out::Vector{ReverseDiff.TrackedReal{T, T, Nothing}}
+  _rval::S  # temporary storage for jtprod
+end
+
+function ReverseDiffADJtprod(
+  nvar::Integer,
+  f,
+  ncon::Integer = 0,
+  c!::Function = (args...) -> [];
+  x0::AbstractVector{T} = rand(nvar),
+  kwargs...,
+) where {T}
+  _tmp_out = Vector{ReverseDiff.TrackedReal{T, T, Nothing}}(undef, ncon)
+  _rval = similar(x0, ncon)
+
+  ψ(x, u; tmp_out = _tmp_out) = begin
+    c!(tmp_out, x) # here x is a vector of ReverseDiff.TrackedReal
+    dot(tmp_out, u)
+  end
+  u = fill!(similar(x0, ncon), zero(T)) # just for GradientConfig
+  gcfg = ReverseDiff.GradientConfig((x0, u))
+  gtape = ReverseDiff.compile(ReverseDiff.GradientTape(ψ, (x0, u), gcfg))
+
+  return ReverseDiffADJtprod(gtape, _tmp_out, _rval)
+end
+
+function ADNLPModels.Jtprod!(b::ReverseDiffADJtprod, Jtv, c!, x, v)
+  ReverseDiff.gradient!((Jtv, b._rval), b.gtape, (x, v))
   return Jtv
 end
 
