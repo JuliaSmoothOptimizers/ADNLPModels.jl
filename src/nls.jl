@@ -137,7 +137,7 @@ nls = ADNLSModel!(F!, x0, nequ, c!, zeros(ncon), zeros(ncon))
 function ADNLSModel(F, x0::S, nequ::Integer; kwargs...) where {S}
   function F!(output, x)
     Fx = F(x)
-    for i = 1:length(Fx)
+    for i = 1:nequ
       output[i] = Fx[i]
     end
     return output
@@ -154,7 +154,7 @@ function ADNLSModel!(
   name::String = "Generic",
   minimize::Bool = true,
   kwargs...,
-) where {S, AD}
+) where {S}
   T = eltype(S)
   nvar = length(x0)
 
@@ -171,7 +171,7 @@ end
 function ADNLSModel(F, x0::S, nequ::Integer, lvar::S, uvar::S; kwargs...) where {S}
   function F!(output, x)
     Fx = F(x)
-    for i = 1:length(Fx)
+    for i = 1:nequ
       output[i] = Fx[i]
     end
     return output
@@ -216,7 +216,7 @@ end
 function ADNLSModel(F, x0::S, nequ::Integer, c, lcon::S, ucon::S; kwargs...) where {S}
   function F!(output, x)
     Fx = F(x)
-    for i = 1:length(Fx)
+    for i = 1:nequ
       output[i] = Fx[i]
     end
     return output
@@ -288,7 +288,7 @@ function ADNLSModel(
 ) where {S, Si}
   function F!(output, x)
     Fx = F(x)
-    for i = 1:length(Fx)
+    for i = 1:nequ
       output[i] = Fx[i]
     end
     return output
@@ -307,7 +307,7 @@ function ADNLSModel(
 ) where {S, Tv, Ti}
   function F!(output, x)
     Fx = F(x)
-    for i = 1:length(Fx)
+    for i = 1:nequ
       output[i] = Fx[i]
     end
     return output
@@ -329,7 +329,7 @@ function ADNLSModel(
 ) where {S, Si}
   function F!(output, x)
     Fx = F(x)
-    for i = 1:length(Fx)
+    for i = 1:nequ
       output[i] = Fx[i]
     end
     return output
@@ -357,7 +357,6 @@ function ADNLSModel!(
   ucon::S;
   kwargs...,
 ) where {S, Si}
-  T = eltype(S)
   return ADNLSModel!(
     F!,
     x0,
@@ -464,7 +463,6 @@ function ADNLSModel!(
   kwargs...,
 ) where {S, Tv, Ti}
   clinrows, clincols, clinvals = findnz(A)
-  T = eltype(S)
   return ADNLSModel!(
     F!,
     x0,
@@ -494,7 +492,7 @@ function ADNLSModel(
 ) where {S, Si}
   function F!(output, x)
     Fx = F(x)
-    for i = 1:length(Fx)
+    for i = 1:nequ
       output[i] = Fx[i]
     end
     return output
@@ -544,7 +542,7 @@ function ADNLSModel(
 ) where {S, Tv, Ti}
   function F!(output, x)
     Fx = F(x)
-    for i = 1:length(Fx)
+    for i = 1:nequ
       output[i] = Fx[i]
     end
     return output
@@ -577,10 +575,10 @@ function ADNLSModel(
   lcon::S,
   ucon::S;
   kwargs...,
-) where {S, AD}
+) where {S}
   function F!(output, x)
     Fx = F(x)
-    for i = 1:length(Fx)
+    for i = 1:nequ
       output[i] = Fx[i]
     end
     return output
@@ -611,7 +609,7 @@ function ADNLSModel!(
   name::String = "Generic",
   minimize::Bool = true,
   kwargs...,
-) where {S, AD}
+) where {S}
   T = eltype(S)
   nvar = length(x0)
   ncon = length(lcon)
@@ -660,7 +658,7 @@ function ADNLSModel(
 ) where {S, Si}
   function F!(output, x)
     Fx = F(x)
-    for i = 1:length(Fx)
+    for i = 1:nequ
       output[i] = Fx[i]
     end
     return output
