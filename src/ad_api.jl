@@ -53,7 +53,7 @@ jacobian(b::ADBackend, ::Any, ::Any) = throw_error(b)
 hessian(b::ADBackend, ::Any, ::Any) = throw_error(b)
 Jprod!(b::ADBackend, ::Any, ::Any, ::Any, ::Any) = throw_error(b)
 Jtprod!(b::ADBackend, ::Any, ::Any, ::Any, ::Any) = throw_error(b)
-Hvprod!(b::ADBackend, ::Any, ::Any, ::Any, ::Any) = throw_error(b)
+Hvprod!(b::ADBackend, ::Any, ::Any, ::Any, ::Any, ::Any) = throw_error(b)
 directional_second_derivative(::ADBackend, ::Any, ::Any, ::Any, ::Any) = throw_error(b)
 
 function hess_structure!(
@@ -147,7 +147,7 @@ function hprod!(
   Hv::AbstractVector,
 )
   c = get_c(nlp, b)
-  Hvprod!(b, Hv, x -> c(x)[j - nlp.meta.nlin], x, v)
+  Hvprod!(b, Val(:ci), Hv, x -> c(x)[j - nlp.meta.nlin], x, v)
   return Hv
 end
 

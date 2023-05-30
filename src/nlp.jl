@@ -722,7 +722,7 @@ function NLPModels.hprod!(
   @lencheck n x v Hv
   increment!(nlp, :neval_hprod)
   ℓ = get_lag(nlp, nlp.adbackend.hprod_backend, obj_weight)
-  Hvprod!(nlp.adbackend.hprod_backend, Hv, ℓ, x, v)
+  Hvprod!(nlp.adbackend.hprod_backend, Val(:obj), Hv, ℓ, x, v)
   return Hv
 end
 
@@ -739,7 +739,7 @@ function NLPModels.hprod!(
   @lencheck nlp.meta.ncon y
   increment!(nlp, :neval_hprod)
   ℓ = get_lag(nlp, nlp.adbackend.hprod_backend, obj_weight, y)
-  Hvprod!(nlp.adbackend.hprod_backend, Hv, ℓ, x, v)
+  Hvprod!(nlp.adbackend.hprod_backend, Val(:lag), Hv, ℓ, x, v)
   return Hv
 end
 

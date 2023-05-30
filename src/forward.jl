@@ -166,7 +166,7 @@ function GenericForwardDiffADHvprod(
 )
   return GenericForwardDiffADHvprod()
 end
-function Hvprod!(::GenericForwardDiffADHvprod, Hv, f, x, v)
+function Hvprod!(::GenericForwardDiffADHvprod, ::Val{Smbl}, Hv, f, x, v) where {Smbl}
   Hv .= ForwardDiff.derivative(t -> ForwardDiff.gradient(f, x + t * v), 0)
   return Hv
 end
@@ -190,7 +190,7 @@ function ForwardDiffADHvprod(
   return ForwardDiffADHvprod(tmp_in, tmp_out)
 end
 
-function Hvprod!(b::ForwardDiffADHvprod, Hv, f, x, v)
+function Hvprod!(b::ForwardDiffADHvprod, ::Val{Smbl}, Hv, f, x, v) where {Smbl}
   ϕ!(dy, x; f = f) = ForwardDiff.gradient!(dy, f, x)
   SparseDiffTools.auto_hesvecgrad!(Hv, (dy, x) -> ϕ!(dy, x), x, v, b.tmp_in, b.tmp_out)
   return Hv
