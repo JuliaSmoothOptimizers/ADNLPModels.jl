@@ -182,7 +182,7 @@ function ReverseDiffADHvprod(
 )
   return ReverseDiffADHvprod()
 end
-function Hvprod!(::ReverseDiffADHvprod, Hv, f, x, v)
+function Hvprod!(::ReverseDiffADHvprod, ::Val{Smbl}, Hv, f, x, v) where {Smbl}
   Hv .= ForwardDiff.derivative(t -> ReverseDiff.gradient(f, x + t * v), 0)
   return Hv
 end
