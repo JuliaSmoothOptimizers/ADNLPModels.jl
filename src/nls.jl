@@ -905,8 +905,7 @@ function NLPModels.hprod_residual!(
 )
   @lencheck nls.meta.nvar x v Hiv
   increment!(nls, :neval_hprod_residual)
-  F = get_F(nls, nls.adbackend.hprod_residual_backend)
-  Hvprod!(nls.adbackend.hprod_residual_backend, Val(:ci), Hiv, x -> F(x)[i], x, v)
+  hprod_residual!(nls.adbackend.hprod_residual_backend, nls, x, v, i, Hiv)
   return Hiv
 end
 
@@ -1088,7 +1087,7 @@ function NLPModels.hprod!(
   @lencheck nls.meta.nvar x v Hv
   increment!(nls, :neval_hprod)
   ℓ = get_lag(nls, nls.adbackend.hprod_backend, obj_weight)
-  Hvprod!(nls.adbackend.hprod_backend, Val(:obj), Hv, ℓ, x, v)
+  Hvprod!(nls.adbackend.hprod_backend, Hv, x, v, ℓ, Val(:obj), obj_weight)
   return Hv
 end
 
@@ -1104,7 +1103,8 @@ function NLPModels.hprod!(
   @lencheck nls.meta.ncon y
   increment!(nls, :neval_hprod)
   ℓ = get_lag(nls, nls.adbackend.hprod_backend, obj_weight, y)
-  Hvprod!(nls.adbackend.hprod_backend, Val(:lag), Hv, ℓ, x, v)
+  yview = (length(y) == nls.meta.nnln) ? y : view(y, (nls.meta.nlin + 1):(nls.meta.ncon))
+  Hvprod!(nls.adbackend.hprod_backend, Hv, x, v, ℓ, Val(:lag), yview, obj_weight)
   return Hv
 end
 
