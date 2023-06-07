@@ -6,7 +6,7 @@ project_hash = "1d158fdf397bf228d34e117bd44f1f64834b2729"
 
 [[deps.ADNLPModels]]
 deps = ["ForwardDiff", "LinearAlgebra", "NLPModels", "Requires", "ReverseDiff", "SparseArrays", "SparseDiffTools", "Symbolics"]
-git-tree-sha1 = "dcdf52f5ddbea5968327afe099d0856faaafe8a6"
+git-tree-sha1 = "141a9d39b3c5e6825345dfd47c0f5c0d0da6478f"
 repo-rev = "addForwardDiffHprod"
 repo-url = "https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl"
 uuid = "54578032-b7ea-4c30-94aa-7cbd1cce6c9a"

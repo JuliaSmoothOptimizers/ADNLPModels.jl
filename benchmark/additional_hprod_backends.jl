@@ -318,6 +318,8 @@ function ForwardDiffADHvprod6(
   ntotal = nvar + 2 * ncon + 1
 
   sol = similar(x0, ntotal)
+  sol .= 0
+
   lz = Vector{ForwardDiff.Dual{ForwardDiff.Tag{typeof(lag), T}, T, 1}}(undef, ntotal)
   glz = similar(lz)
   cfg = ForwardDiff.GradientConfig(lag, lz)

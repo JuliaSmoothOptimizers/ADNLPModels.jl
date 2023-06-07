@@ -48,8 +48,8 @@ benchmarked_optimized_backends = Dict(
     #"forward2" => ForwardDiffADHvprod2,
     # "forward3" => ForwardDiffADHvprod3, # doesn't work
     #"forward4" => ForwardDiffADHvprod4,
-    "forward5" => ForwardDiffADHvprod5,
-    "f6" => ForwardDiffADHvprod6,
+    #"forward5" => ForwardDiffADHvprod5,
+    #"f6" => ForwardDiffADHvprod6,
   ),
   "jprod_backend" => Dict(
     "forward" => ADNLPModels.ForwardDiffADJprod,
