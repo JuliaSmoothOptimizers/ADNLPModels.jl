@@ -171,13 +171,16 @@ function Hvprod!(::GenericForwardDiffADHvprod, Hv, x, v, f, args...)
   return Hv
 end
 
-struct ForwardDiffADHvprod{Tag, GT, S, T} <: ADBackend
+struct ForwardDiffADHvprod{Tag, GT, S, T, F, Tagf} <: ADBackend
   lz::Vector{ForwardDiff.Dual{Tag, T, 1}}
   glz::Vector{ForwardDiff.Dual{Tag, T, 1}}
   sol::S
   longv::S
   Hvp::S
   ∇φ!::GT
+  z::Vector{ForwardDiff.Dual{Tagf, T, 1}}
+  gz::Vector{ForwardDiff.Dual{Tagf, T, 1}}
+  ∇f!::F
 end
 
 function ForwardDiffADHvprod(
@@ -214,7 +217,14 @@ function ForwardDiffADHvprod(
   longv = zeros(T, ntotal)
   Hvp = zeros(T, ntotal)
 
-  return ForwardDiffADHvprod(lz, glz, sol, longv, Hvp, ∇φ!)
+  # unconstrained Hessian
+  tagf = ForwardDiff.Tag{typeof(f), T}
+  z = Vector{ForwardDiff.Dual{tagf, T, 1}}(undef, nvar)
+  gz = similar(z)
+  cfgf = ForwardDiff.GradientConfig(f, z)
+  ∇f!(gz, z; f = f, cfgf = cfgf) = ForwardDiff.gradient!(gz, f, z, cfgf)
+
+  return ForwardDiffADHvprod(lz, glz, sol, longv, Hvp, ∇φ!, z, gz, ∇f!)
 end
 
 function Hvprod!(b::ForwardDiffADHvprod{Tag, GT, S, T}, Hv, x::AbstractVector{T}, v, ℓ, ::Val{:lag}, y, obj_weight::Real = one(T)) where {Tag, GT, S, T}
@@ -235,23 +245,11 @@ function Hvprod!(b::ForwardDiffADHvprod{Tag, GT, S, T}, Hv, x::AbstractVector{T}
   return Hv
 end
 
-function Hvprod!(b::ForwardDiffADHvprod{Tag, GT, S, T}, Hv, x::AbstractVector{T}, v, f, ::Val{:obj}, obj_weight::Real = one(T)) where {Tag, GT, S, T}
-  nvar = length(x)
-  ncon = Int((length(b.sol) - nvar - 1) / 2)
-
-  b.sol[1:ncon] .= zero(T)
-  b.sol[(ncon + 1):(ncon + nvar)] .= x
-  b.sol[(ncon + nvar + 1):(2 * ncon + nvar)] .= zero(T)
-  b.sol[end] = obj_weight
-
-  b.longv .= zero(T)
-  b.longv[(ncon + 1):(ncon + nvar)] .= v
-
-  map!(ForwardDiff.Dual{Tag}, b.lz, b.sol, b.longv)
-
-  b.∇φ!(b.glz, b.lz)
-  ForwardDiff.extract_derivative!(Tag, b.Hvp, b.glz)
-  Hv .= b.Hvp[(ncon + 1):(ncon + nvar)]
+function Hvprod!(b::ForwardDiffADHvprod{Tag, GT, S, T, F, Tagf}, Hv, x::AbstractVector{T}, v, f, ::Val{:obj}, obj_weight::Real = one(T)) where {Tag, GT, S, T, F, Tagf}
+  map!(ForwardDiff.Dual{Tagf}, b.z, x, v) # x + ε * v
+  b.∇f!(b.gz, b.z) # ∇f(x + ε * v) = ∇f(x) + ε * ∇²f(x)ᵀv
+  ForwardDiff.extract_derivative!(Tagf, Hv, b.gz)  # ∇²f(x)ᵀv
+  Hv .*= obj_weight
   return Hv
 end
 
