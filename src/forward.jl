@@ -241,7 +241,7 @@ function Hvprod!(b::ForwardDiffADHvprod{Tag, GT, S, T}, Hv, x::AbstractVector{T}
 
   b.∇φ!(b.glz, b.lz)
   ForwardDiff.extract_derivative!(Tag, b.Hvp, b.glz)
-  Hv .= b.Hvp[(ncon + 1):(ncon + nvar)]
+  Hv .= view(b.Hvp, (ncon + 1):(ncon + nvar))
   return Hv
 end
 
@@ -282,7 +282,7 @@ function hprod!(
 
   b.∇φ!(b.glz, b.lz)
   ForwardDiff.extract_derivative!(Tag, b.Hvp, b.glz)
-  Hv .= b.Hvp[(ncon + 1):(ncon + nvar)]
+  Hv .= view(b.Hvp, (ncon + 1):(ncon + nvar))
   return Hv
 end
 
@@ -313,7 +313,7 @@ function hprod_residual!(
   b.∇φ!(b.glz, b.lz)
 
   ForwardDiff.extract_derivative!(Tag, b.Hvp, b.glz)
-  Hv .= b.Hvp[(nequ + 1):(nequ + nvar)]
+  Hv .= view(b.Hvp, (nequ + 1):(nequ + nvar))
   return Hv
 end
 
