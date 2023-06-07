@@ -7,7 +7,7 @@ TODO:
 =#
 using Pkg
 Pkg.activate(".")
-Pkg.add(url = "https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl", rev = "main")
+Pkg.add(url = "https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl", rev = "addForwardDiffHprod")
 using ADNLPModels
 
 using Dates, DelimitedFiles, JLD2, LinearAlgebra, Printf, SparseArrays
