@@ -177,7 +177,6 @@ struct ForwardDiffADHvprod{Tag, GT, S, T} <: ADBackend
   sol::S
   longv::S
   Hvp::S
-  cfg
   ∇φ!::GT
 end
 
@@ -208,16 +207,15 @@ function ForwardDiffADHvprod(
   lz = Vector{ForwardDiff.Dual{ForwardDiff.Tag{typeof(lag), T}, T, 1}}(undef, ntotal)
   glz = similar(lz)
   cfg = ForwardDiff.GradientConfig(lag, lz)
-  function ∇φ!(gz, z; lag = lag)
-    ForwardDiff.gradient!(gz, lag, z) # , cfg
+  function ∇φ!(gz, z; lag = lag, cfg = cfg)
+    ForwardDiff.gradient!(gz, lag, z, cfg)
     return gz
   end
   longv = zeros(T, ntotal)
   Hvp = zeros(T, ntotal)
 
-  return ForwardDiffADHvprod(lz, glz, sol, longv, Hvp, cfg, ∇φ!)
+  return ForwardDiffADHvprod(lz, glz, sol, longv, Hvp, ∇φ!)
 end
-
 
 function Hvprod!(b::ForwardDiffADHvprod{Tag, GT, S, T}, Hv, x::AbstractVector{T}, v, ℓ, ::Val{:lag}, y, obj_weight::Real = one(T)) where {Tag, GT, S, T}
   nvar = length(x)
