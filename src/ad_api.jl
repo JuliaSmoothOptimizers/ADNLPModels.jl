@@ -147,7 +147,7 @@ function hprod!(
   Hv::AbstractVector,
 )
   c = get_c(nlp, b)
-  Hvprod!(b, x, v, Hv, x -> c(x)[j - nlp.meta.nlin], Val(:ci))
+  Hvprod!(b, Hv, x, v, x -> c(x)[j - nlp.meta.nlin], Val(:ci))
   return Hv
 end
 
