@@ -7,13 +7,5 @@ function bndrosenbrock_autodiff(::Type{T} = Float64; kwargs...) where {T}
   lvar = T[-1; -2]
   uvar = T[0.8; 2]
 
-  return ADNLSModel(
-    F,
-    x0,
-    2,
-    lvar,
-    uvar,
-    name = "bndrosenbrock_autodiff";
-    kwargs...,
-  )
+  return ADNLSModel(F, x0, 2, lvar, uvar, name = "bndrosenbrock_autodiff"; kwargs...)
 end

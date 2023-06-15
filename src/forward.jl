@@ -227,7 +227,16 @@ function ForwardDiffADHvprod(
   return ForwardDiffADHvprod(lz, glz, sol, longv, Hvp, ∇φ!, z, gz, ∇f!)
 end
 
-function Hvprod!(b::ForwardDiffADHvprod{Tag, GT, S, T}, Hv, x::AbstractVector{T}, v, ℓ, ::Val{:lag}, y, obj_weight::Real = one(T)) where {Tag, GT, S, T}
+function Hvprod!(
+  b::ForwardDiffADHvprod{Tag, GT, S, T},
+  Hv,
+  x::AbstractVector{T},
+  v,
+  ℓ,
+  ::Val{:lag},
+  y,
+  obj_weight::Real = one(T),
+) where {Tag, GT, S, T}
   nvar = length(x)
   ncon = Int((length(b.sol) - nvar - 1) / 2)
   b.sol[1:ncon] .= zero(T)
@@ -245,7 +254,15 @@ function Hvprod!(b::ForwardDiffADHvprod{Tag, GT, S, T}, Hv, x::AbstractVector{T}
   return Hv
 end
 
-function Hvprod!(b::ForwardDiffADHvprod{Tag, GT, S, T, F, Tagf}, Hv, x::AbstractVector{T}, v, f, ::Val{:obj}, obj_weight::Real = one(T)) where {Tag, GT, S, T, F, Tagf}
+function Hvprod!(
+  b::ForwardDiffADHvprod{Tag, GT, S, T, F, Tagf},
+  Hv,
+  x::AbstractVector{T},
+  v,
+  f,
+  ::Val{:obj},
+  obj_weight::Real = one(T),
+) where {Tag, GT, S, T, F, Tagf}
   map!(ForwardDiff.Dual{Tagf}, b.z, x, v) # x + ε * v
   b.∇f!(b.gz, b.z) # ∇f(x + ε * v) = ∇f(x) + ε * ∇²f(x)ᵀv
   ForwardDiff.extract_derivative!(Tagf, Hv, b.gz)  # ∇²f(x)ᵀv
@@ -267,7 +284,7 @@ function hprod!(
   b.sol[1:ncon] .= 0
   b.sol[(ncon + 1):(ncon + nvar)] .= x
   k = 0
-  for i=1:nlp.meta.ncon
+  for i = 1:(nlp.meta.ncon)
     if i in nlp.meta.nln
       k += 1
       b.sol[ncon + nvar + k] = i == j ? one(T) : zero(T)
@@ -299,7 +316,7 @@ function hprod_residual!(
 
   b.sol[1:nequ] .= 0
   b.sol[(nequ + 1):(nequ + nvar)] .= x
-  for i=1:nequ
+  for i = 1:nequ
     b.sol[nequ + nvar + i] = i == j ? one(T) : zero(T)
   end
 
