@@ -1,5 +1,11 @@
-struct SparseADJacobian{Tv, Ti, T, T2, T3, T4, T5} <: ADNLPModels.ADBackend
-  cfJ::ForwardColorJacCache{T, T2, T3, T4, T5, SparseMatrixCSC{Tv, Ti}}
+struct SparseADJacobian{T, Tag} <: ADBackend
+  d::BitVector
+  rowval::Vector{Int}
+  colptr::Vector{Int}
+  colors::Vector{Int}
+  ncolors::Int
+  z::Vector{ForwardDiff.Dual{Tag, T, 1}}
+  cz::Vector{ForwardDiff.Dual{Tag, T, 1}}
 end
 
 function SparseADJacobian(
@@ -14,15 +20,22 @@ function SparseADJacobian(
   output = similar(x0, ncon)
   J = Symbolics.jacobian_sparsity(c!, output, x0)
   colors = matrix_colors(J, alg)
-  jac = SparseMatrixCSC{T, Int}(J.m, J.n, J.colptr, J.rowval, T.(J.nzval))
+  d = BitVector(undef, nvar)
+  ncolors = maximum(colors)
 
-  dx = zeros(T, ncon)
-  cfJ = ForwardColorJacCache(c!, x0, colorvec = colors, dx = dx, sparsity = jac)
-  SparseADJacobian(cfJ)
+  rowval = J.rowval
+  colptr = J.colptr
+
+  tag = ForwardDiff.Tag{typeof(c!), T}
+
+  z = Vector{ForwardDiff.Dual{tag, T, 1}}(undef, nvar)
+  cz = similar(z, ncon)
+
+  SparseADJacobian(d, rowval, colptr, colors, ncolors, z, cz)
 end
 
 function get_nln_nnzj(b::SparseADJacobian, nvar, ncon)
-  nnz(b.cfJ.sparsity)
+  length(b.rowval)
 end
 
 function jac_structure!(
@@ -31,18 +44,43 @@ function jac_structure!(
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
 )
-  rows .= rowvals(b.cfJ.sparsity)
+  rows .= b.rowval
   for i = 1:(nlp.meta.nvar)
-    for j = b.cfJ.sparsity.colptr[i]:(b.cfJ.sparsity.colptr[i + 1] - 1)
+    for j = b.colptr[i]:(b.colptr[i + 1] - 1)
       cols[j] = i
     end
   end
   return rows, cols
 end
 
+function sparse_jac_coord!(
+  ℓ!::Function,
+  b::SparseADJacobian{T, Tag},
+  x::AbstractVector,
+  vals::AbstractVector,
+) where {T, Tag}
+  nvar = length(x)
+  ncon = length(b.cz)
+  res = similar(x, ncon)
+  for icol = 1:(b.ncolors)
+    b.d .= (b.colors .== icol)
+    map!(ForwardDiff.Dual{Tag}, b.z, x, b.d) # x + ε * v
+    ℓ!(b.cz, b.z) # c!(cz, x + ε * v)
+    ForwardDiff.extract_derivative!(Tag, res, b.cz) # ∇c!(cx, x)ᵀv
+    for j = 1:nvar
+      if b.colors[j] == icol
+        for k = b.colptr[j]:(b.colptr[j + 1] - 1)
+          i = b.rowval[k]
+          vals[k] = res[i]
+        end
+      end
+    end
+  end
+  return vals
+end
+
 function jac_coord!(b::SparseADJacobian, nlp::ADModel, x::AbstractVector, vals::AbstractVector)
-  forwarddiff_color_jacobian!(b.cfJ.sparsity, nlp.c!, x, b.cfJ)
-  vals .= nonzeros(b.cfJ.sparsity)
+  sparse_jac_coord!(nlp.c!, b, x, vals)
   return vals
 end
 
@@ -52,9 +90,9 @@ function jac_structure_residual!(
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
 )
-  rows .= rowvals(b.cfJ.sparsity)
+  rows .= b.rowval
   for i = 1:(nls.meta.nvar)
-    for j = b.cfJ.sparsity.colptr[i]:(b.cfJ.sparsity.colptr[i + 1] - 1)
+    for j = b.colptr[i]:(b.colptr[i + 1] - 1)
       cols[j] = i
     end
   end
@@ -67,8 +105,7 @@ function jac_coord_residual!(
   x::AbstractVector,
   vals::AbstractVector,
 )
-  forwarddiff_color_jacobian!(b.cfJ.sparsity, nls.F!, x, b.cfJ)
-  vals .= nonzeros(b.cfJ.sparsity)
+  sparse_jac_coord!(nls.F!, b, x, vals)
   return vals
 end
 
