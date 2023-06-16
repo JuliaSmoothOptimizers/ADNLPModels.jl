@@ -1,9 +1,10 @@
-struct SparseADHessian <: ADNLPModels.ADBackend
+struct SparseADHessian{S} <: ADNLPModels.ADBackend
   d::BitVector
   rowval::Vector{Int}
   colptr::Vector{Int}
   colors::Vector{Int}
   ncolors::Int
+  res::S
 end
 
 function SparseADHessian(
@@ -34,7 +35,9 @@ function SparseADHessian(
   rowval = trilH.rowval
   colptr = trilH.colptr
 
-  return SparseADHessian(d, rowval, colptr, colors, ncolors)
+  res = similar(x0)
+
+  return SparseADHessian(d, rowval, colptr, colors, ncolors, res)
 end
 
 function get_nln_nnzh(b::SparseADHessian, nvar)
@@ -65,12 +68,12 @@ function sparse_hess_coord!(
   nvar = length(x)
   for icol = 1:(b.ncolors)
     b.d .= (b.colors .== icol)
-    res = ForwardDiff.derivative(t -> ForwardDiff.gradient(ℓ, x + t * b.d), 0)
+    b.res .= ForwardDiff.derivative(t -> ForwardDiff.gradient(ℓ, x + t * b.d), 0)
     for j = 1:nvar
       if b.colors[j] == icol
         for k = b.colptr[j]:(b.colptr[j + 1] - 1)
           i = b.rowval[k]
-          vals[k] = res[i]
+          vals[k] = b.res[i]
         end
       end
     end

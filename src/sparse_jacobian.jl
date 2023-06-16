@@ -1,4 +1,4 @@
-struct SparseADJacobian{T, Tag} <: ADBackend
+struct SparseADJacobian{T, Tag, S} <: ADBackend
   d::BitVector
   rowval::Vector{Int}
   colptr::Vector{Int}
@@ -6,6 +6,7 @@ struct SparseADJacobian{T, Tag} <: ADBackend
   ncolors::Int
   z::Vector{ForwardDiff.Dual{Tag, T, 1}}
   cz::Vector{ForwardDiff.Dual{Tag, T, 1}}
+  res::S
 end
 
 function SparseADJacobian(
@@ -30,8 +31,9 @@ function SparseADJacobian(
 
   z = Vector{ForwardDiff.Dual{tag, T, 1}}(undef, nvar)
   cz = similar(z, ncon)
+  res = similar(x0, ncon)
 
-  SparseADJacobian(d, rowval, colptr, colors, ncolors, z, cz)
+  SparseADJacobian(d, rowval, colptr, colors, ncolors, z, cz, res)
 end
 
 function get_nln_nnzj(b::SparseADJacobian, nvar, ncon)
@@ -60,18 +62,16 @@ function sparse_jac_coord!(
   vals::AbstractVector,
 ) where {T, Tag}
   nvar = length(x)
-  ncon = length(b.cz)
-  res = similar(x, ncon)
   for icol = 1:(b.ncolors)
     b.d .= (b.colors .== icol)
     map!(ForwardDiff.Dual{Tag}, b.z, x, b.d) # x + ε * v
     ℓ!(b.cz, b.z) # c!(cz, x + ε * v)
-    ForwardDiff.extract_derivative!(Tag, res, b.cz) # ∇c!(cx, x)ᵀv
+    ForwardDiff.extract_derivative!(Tag, b.res, b.cz) # ∇c!(cx, x)ᵀv
     for j = 1:nvar
       if b.colors[j] == icol
         for k = b.colptr[j]:(b.colptr[j + 1] - 1)
           i = b.rowval[k]
-          vals[k] = res[i]
+          vals[k] = b.res[i]
         end
       end
     end
