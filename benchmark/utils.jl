@@ -62,6 +62,7 @@ benchmarked_optimized_backends = Dict(
   ),
   "jacobian_backend" => Dict(
     "sparse" => ADNLPModels.SparseADJacobian,
+    "SDTsparse" => SDTSparseADJacobian,
     # "forward" => ADNLPModels.ForwardDiffADJacobian, # slower
     # "reverse" => ADNLPModels.ReverseDiffADJacobian, # fails somehow
     # "zygote" => ADNLPModels.ZygoteADJacobian,
