@@ -68,7 +68,7 @@ function sparse_hess_coord!(
   nvar = length(x)
   for icol = 1:(b.ncolors)
     b.d .= (b.colors .== icol)
-    b.res .= ForwardDiff.derivative(t -> ForwardDiff.gradient(ℓ, x + t * b.d), 0)
+    ForwardDiff.derivative!(b.res, t -> ForwardDiff.gradient(ℓ, x + t * b.d), 0)
     for j = 1:nvar
       if b.colors[j] == icol
         for k = b.colptr[j]:(b.colptr[j + 1] - 1)
