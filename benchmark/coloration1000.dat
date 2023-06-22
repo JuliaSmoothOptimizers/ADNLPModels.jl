@@ -1,0 +1,56 @@
+SDT
+6×6 DataFrame
+ Row │ id     name               ncon   nvar   elapsed_time  ncolors
+     │ Int64  String             Int64  Int64  Float64       Int64
+─────┼───────────────────────────────────────────────────────────────
+   1 │     1  camshape            1000   2003   0.00800014         3
+   2 │     2  clnlbeam             999    332   0.000999928        4
+   3 │     3  controlinvestment   1000    499   0.000999928        4
+   4 │     4  elec                 999    333   0.000999928        3
+   5 │     6  polygon3            1000   1000   0.0                4
+   6 │     7  robotarm            1018   1011   0.0                6
+(incidence_degree_ordering("INCIDENCE_DEGREE"), d1_coloring("DISTANCE_ONE"), false)
+6×6 DataFrame
+ Row │ id     name               ncon   nvar   elapsed_time  ncolors
+     │ Int64  String             Int64  Int64  Float64       Int64
+─────┼───────────────────────────────────────────────────────────────
+   1 │     1  camshape            1000   2003   0.00100017         3
+   2 │     2  clnlbeam             999    332   0.00100017         4
+   3 │     3  controlinvestment   1000    499   0.000999928        4
+   4 │     4  elec                 999    333   0.00100017         3
+   5 │     6  polygon3            1000   1000   0.000999928        4
+   6 │     7  robotarm            1018   1011   0.00200009         4
+(incidence_degree_ordering("INCIDENCE_DEGREE"), d1_coloring("DISTANCE_ONE"), true)
+6×6 DataFrame
+ Row │ id     name               ncon   nvar   elapsed_time  ncolors
+     │ Int64  String             Int64  Int64  Float64       Int64
+─────┼───────────────────────────────────────────────────────────────
+   1 │     1  camshape            1000   2003   0.0139999          5
+   2 │     2  clnlbeam             999    332   0.0                2
+   3 │     3  controlinvestment   1000    499   0.0                2
+   4 │     4  elec                 999    333   0.0                1
+   5 │     6  polygon3            1000   1000   0.000999928        3
+   6 │     7  robotarm            1018   1011   7.846            672
+(incidence_degree_ordering("INCIDENCE_DEGREE"), d1_coloring("DISTANCE_ONE"), false)
+6×6 DataFrame
+ Row │ id     name               ncon   nvar   elapsed_time  ncolors
+     │ Int64  String             Int64  Int64  Float64       Int64
+─────┼───────────────────────────────────────────────────────────────
+   1 │     1  camshape            1000   2003   0.00100017         3
+   2 │     2  clnlbeam             999    332   0.00100017         4
+   3 │     3  controlinvestment   1000    499   0.000999928        4
+   4 │     4  elec                 999    333   0.00100017         3
+   5 │     6  polygon3            1000   1000   0.000999928        4
+   6 │     7  robotarm            1018   1011   0.00200009         4
+(incidence_degree_ordering("INCIDENCE_DEGREE"), d1_coloring("DISTANCE_ONE"), true)
+6×6 DataFrame
+ Row │ id     name               ncon   nvar   elapsed_time  ncolors
+     │ Int64  String             Int64  Int64  Float64       Int64
+─────┼───────────────────────────────────────────────────────────────
+   1 │     1  camshape            1000   2003   0.0139999          5
+   2 │     2  clnlbeam             999    332   0.0                2
+   3 │     3  controlinvestment   1000    499   0.0                2
+   4 │     4  elec                 999    333   0.0                1
+   5 │     6  polygon3            1000   1000   0.000999928        3
+   6 │     7  robotarm            1018   1011   7.846            672
+Conclusion: if ncon<nvar (incidence_degree_ordering("INCIDENCE_DEGREE"), d1_coloring("DISTANCE_ONE"), false) and if ncon>nvar (incidence_degree_ordering("INCIDENCE_DEGREE"), d1_coloring("DISTANCE_ONE"), false)

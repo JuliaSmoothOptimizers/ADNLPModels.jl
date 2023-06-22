@@ -2,6 +2,7 @@ using Pkg
 Pkg.activate("coloration")
 Pkg.add(url="https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl", rev="main")
 using ADNLPModels, OptimizationProblems, NLPModels
+using SparseArrays, LinearAlgebra, DataFrames
 using Symbolics # only option to compute sparsity pattern
 # coloration packages
 using SparseDiffTools, ColPack
@@ -21,9 +22,19 @@ all_cons_problems = meta[(meta.nvar .> 5) .&& (meta.ncon .> 5), :name] # all pro
 scalable_cons_problems = meta[(meta.variable_nvar .== true) .&& (meta.ncon .> 5), :name] # problems that are scalable
 all_cons_problems = setdiff(all_cons_problems, scalable_cons_problems) # avoid duplicate problems
 
-result = Dict()
-for pb in scalable_cons_problems
-    nscal = 100
+scalable_cons_problems = setdiff(scalable_cons_problems, ["structural", "hovercraft1d"]) # structural & hovercraft1d have no nonlinear constraints
+stats = Dict{String, DataFrame}()
+
+# Init DF
+names = [:id, :name, :ncon, :nvar, :elapsed_time, :ncolors]
+types = [Int, String, Int, Int, Float64, Int]
+stats["SDT"] = DataFrame(names .=> [T[] for T in types])
+for ordering in ColPack.ORDERINGS, coloring in ColPack.COLORINGS, partition_by_rows in (true, false)
+    stats["($ordering, $coloring, $(partition_by_rows))"] = DataFrame(names .=> [T[] for T in types])
+end
+
+nscal = 1000
+for (id, pb) in enumerate(setdiff(scalable_cons_problems, ["polygon"]))
     n = eval(Meta.parse("OptimizationProblems.get_" * pb * "_nvar(n = $(nscal))"))
     ncon = eval(Meta.parse("OptimizationProblems.get_" * pb * "_nnln(n = $(nscal))"))
     T = Float64
@@ -62,27 +73,97 @@ for pb in scalable_cons_problems
             ncolors = maximum(colors)
             return ncolors
         end
+        start = time()
         ncolorsSDT = SDTcoloring(J)
-        list["SDT"] = ncolorsSDT
+        eltime = time() - start
+        push!(stats["SDT"], [id, pb, nlp.meta.nvar, nlp.meta.nnln, eltime, ncolorsSDT])
 
         # ColPack
         function ColPackcoloring(J, coloring, ordering, partition_by_rows)
-            adjA = ColPack.matrix2adjmatrix(J) # ; partition_by_rows=false
+            adjA = ColPack.matrix2adjmatrix(J; partition_by_rows=partition_by_rows)
             CPC = ColPackColoring(adjA, coloring, ordering)
             colors = get_colors(CPC)
             ncolors = length(unique(colors))
             return ncolors
         end
         for ordering in ColPack.ORDERINGS, coloring in ColPack.COLORINGS, partition_by_rows in (true, false)
+            @info "Check ($ordering, $coloring, $(partition_by_rows))"
+            start = time()
             ncolors = ColPackcoloring(J, coloring, ordering, partition_by_rows)
-            list["($ordering, $coloring, $(partition_by_rows))"] = ncolors
+            eltime = time() - start
+            push!(stats["($ordering, $coloring, $(partition_by_rows))"], [id, pb, nlp.meta.nvar, nlp.meta.nnln, eltime, ncolors])
             # @info "ColPack with (ordering=$ordering, coloring=$coloring, rows=$(partition_by_rows)) gave $ncolors colors"
         end
-        @show findmin(list)
-        result[pb] = list
     else
         @info "0 elements in the matrix"
     end
+end
+
+# Case 1: ncon <= nvar
+result1 = copy(stats)
+df = stats["SDT"]
+SDTtime = sum(stats["SDT"][df.ncon .<= df.nvar, :].elapsed_time)
+SDTscore = sum(stats["SDT"][df.ncon .<= df.nvar, :].ncolors)
+bestscore1 = Inf
+bestname1 = "unknown"
+for solver in setdiff(keys(stats), ["SDT"])
+    scoretime = sum(stats[solver][df.ncon .<= df.nvar, :].elapsed_time)
+    scorecol = sum(stats[solver][df.ncon .<= df.nvar, :].ncolors)
+    if (scorecol > SDTscore)
+        pop!(result1, solver)
+    else
+        if scorecol < bestscore1
+            global bestscore1 = scorecol
+            global bestname1 = solver
+        end
+        @info "$solver time=$(scoretime) and score=$(scorecol)"
+    end
+end
+result1
+
+# Case 2: ncon >= nvar
+result2 = copy(stats)
+df = stats["SDT"]
+SDTtime = sum(stats["SDT"][df.ncon .>= df.nvar, :].elapsed_time)
+SDTscore = sum(stats["SDT"][df.ncon .>= df.nvar, :].ncolors)
+bestscore2 = Inf
+bestname2 = "unknwon"
+for solver in setdiff(keys(stats), ["SDT"])
+    scoretime = sum(stats[solver][df.ncon .>= df.nvar, :].elapsed_time)
+    scorecol = sum(stats[solver][df.ncon .>= df.nvar, :].ncolors)
+    @info "$solver time=$(scoretime) and score=$(scorecol) robotarm=$(stats[solver][(df.ncon .>= df.nvar) .& (df.name .== "robotarm"), :ncolors])"
+    if (scorecol > SDTscore)
+        pop!(result2, solver)
+    end
+    if solver != "SDT"
+        if scorecol < bestscore2
+            global bestscore2 = scorecol
+            global bestname2 = solver
+        end
+    end
+end
+result2
+
+function switch_order(bestname)
+    if true in bestname
+        return replace(bestname, "true" => "false")
+    else
+        return replace(bestname, "false" => "true")
+    end
+end
+
+open("coloration$nscal.dat","w") do io
+    println(io, "SDT")
+    println(io, stats["SDT"])
+    println(io, "$bestname1")
+    println(io, stats[bestname1])
+    println(io, "$(switch_order(bestname1))")
+    println(io, stats[switch_order(bestname1)])
+    println(io, "$bestname2")
+    println(io, stats[bestname2])
+    println(io, "$(switch_order(bestname2))")
+    println(io, stats[switch_order(bestname2)])
+    println(io, "Conclusion: if ncon<nvar $bestname1 and if ncon>nvar $bestname2")
 end
 
 # test Hessian coloration
