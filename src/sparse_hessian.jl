@@ -13,7 +13,7 @@ function SparseADHessian(
   ncon,
   c!;
   x0 = rand(nvar),
-  alg::SparseDiffTools.SparseDiffToolsColoringAlgorithm = SparseDiffTools.GreedyD1Color(),
+  alg = ColPackColoration(),
   kwargs...,
 )
   @variables xs[1:nvar]
@@ -27,9 +27,11 @@ function SparseADHessian(
   end
   S = Symbolics.hessian_sparsity(fun, ncon == 0 ? xsi : [xsi; ysi]) # , full = false
   H = ncon == 0 ? S : S[1:nvar, 1:nvar]
-  colors = matrix_colors(H, alg)
-  d = BitVector(undef, nvar)
+
+  colors = sparse_matrix_colors(H, alg)
   ncolors = maximum(colors)
+
+  d = BitVector(undef, nvar)
 
   trilH = tril(H)
   rowval = trilH.rowval

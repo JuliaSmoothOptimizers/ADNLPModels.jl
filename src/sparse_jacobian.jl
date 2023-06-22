@@ -15,14 +15,16 @@ function SparseADJacobian(
   ncon,
   c!;
   x0::AbstractVector{T} = rand(nvar),
-  alg::SparseDiffTools.SparseDiffToolsColoringAlgorithm = SparseDiffTools.GreedyD1Color(),
+  alg = ColPackColoration(),
   kwargs...,
 ) where {T}
   output = similar(x0, ncon)
   J = Symbolics.jacobian_sparsity(c!, output, x0)
-  colors = matrix_colors(J, alg)
-  d = BitVector(undef, nvar)
+
+  colors = sparse_matrix_colors(J, alg)
   ncolors = maximum(colors)
+
+  d = BitVector(undef, nvar)
 
   rowval = J.rowval
   colptr = J.colptr

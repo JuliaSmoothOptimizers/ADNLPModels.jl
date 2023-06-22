@@ -338,3 +338,35 @@ function ADModelNLSBackend(
     hessian_residual_backend,
   )
 end
+
+abstract type ColorationAlgorithm end
+
+struct ColPackColoration{F} <: ColorationAlgorithm
+  partition_choice::F
+  coloring
+  ordering
+end
+
+function ColPackColoration(;
+  partition_choice = (m, n; μ = 0.6) -> n < μ * m ? true : false,
+  coloring = d1_coloring("DISTANCE_ONE"),
+  ordering = incidence_degree_ordering("INCIDENCE_DEGREE"),
+  )
+  return ColPackColoration{typeof(partition_choice)}(partition_choice, coloring, ordering)
+end
+
+function sparse_matrix_colors(A, alg::ColPackColoration)
+  m, n = size(A)
+  partition_by_rows = alg.partition_choice(m, n)
+  if A != spzeros(size(A))
+    adjA = ColPack.matrix2adjmatrix(A; partition_by_rows=partition_by_rows)
+    CPC = ColPackColoring(adjA, alg.coloring, alg.ordering)
+    colors = get_colors(CPC)
+  else
+    colors = zeros(Int, n)
+  end
+  return colors
+end
+
+# SparseDiffTools.SparseDiffToolsColoringAlgorithm
+# sparse_matrix_colors(A, alg) = matrix_colors(A, alg)

@@ -3,7 +3,7 @@ module ADNLPModels
 # stdlib
 using LinearAlgebra, SparseArrays
 # external
-using ForwardDiff, ReverseDiff, SparseDiffTools, Symbolics
+using ColPack, ForwardDiff, ReverseDiff, Symbolics
 # JSO
 using NLPModels
 using Requires
