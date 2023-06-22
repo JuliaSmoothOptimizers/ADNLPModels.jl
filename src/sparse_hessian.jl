@@ -1,13 +1,19 @@
-struct SparseADHessian{S} <: ADNLPModels.ADBackend
+struct SparseADHessian{Tag, GT, S, T} <: ADNLPModels.ADBackend
   d::BitVector
   rowval::Vector{Int}
   colptr::Vector{Int}
   colors::Vector{Int}
   ncolors::Int
   res::S
+  lz::Vector{ForwardDiff.Dual{Tag, T, 1}}
+  glz::Vector{ForwardDiff.Dual{Tag, T, 1}}
+  sol::S
+  longv::S
+  Hvp::S
+  ∇φ!::GT
 end
 
-function SparseADHessian(nvar, f, ncon, c!; x0 = rand(nvar), alg = ColPackColoration(), kwargs...)
+function SparseADHessian(nvar, f, ncon, c!; x0::AbstractVector{T} = rand(nvar), alg = ColPackColoration(), kwargs...) where {T}
   @variables xs[1:nvar]
   xsi = Symbolics.scalarize(xs)
   fun = f(xsi)
@@ -29,9 +35,34 @@ function SparseADHessian(nvar, f, ncon, c!; x0 = rand(nvar), alg = ColPackColora
   rowval = trilH.rowval
   colptr = trilH.colptr
 
+  # prepare directional derivatives
   res = similar(x0)
 
-  return SparseADHessian(d, rowval, colptr, colors, ncolors, res)
+  function lag(z; nvar = nvar, ncon = ncon, f = f, c! = c!)
+    cx, x, y, ob = view(z, 1:ncon),
+    view(z, (ncon + 1):(nvar + ncon)),
+    view(z, (nvar + ncon + 1):(nvar + ncon + ncon)),
+    z[end]
+    if ncon > 0
+      c!(cx, x)
+      return ob * f(x) + dot(cx, y)
+    else
+      return ob * f(x)
+    end
+  end
+  ntotal = nvar + 2 * ncon + 1
+  sol = similar(x0, ntotal)
+  lz = Vector{ForwardDiff.Dual{ForwardDiff.Tag{typeof(lag), T}, T, 1}}(undef, ntotal)
+  glz = similar(lz)
+  cfg = ForwardDiff.GradientConfig(lag, lz)
+  function ∇φ!(gz, z; lag = lag, cfg = cfg)
+    ForwardDiff.gradient!(gz, lag, z, cfg)
+    return gz
+  end
+  longv = zeros(T, ntotal)
+  Hvp = zeros(T, ntotal)
+
+  return SparseADHessian(d, rowval, colptr, colors, ncolors, res, lz, glz, sol, longv, Hvp, ∇φ!)
 end
 
 function get_nln_nnzh(b::SparseADHessian, nvar)
@@ -55,14 +86,29 @@ end
 
 function sparse_hess_coord!(
   ℓ::Function,
-  b::SparseADHessian,
+  b::SparseADHessian{Tag, GT, S, T},
   x::AbstractVector,
+  obj_weight,
+  y::AbstractVector,
   vals::AbstractVector,
-)
+) where {Tag, GT, S, T}
   nvar = length(x)
+  ncon = length(y)
+
+  b.sol[1:ncon] .= zero(T) # cx
+  b.sol[(ncon + 1):(ncon + nvar)] .= x
+  b.sol[(ncon + nvar + 1):(2 * ncon + nvar)] .= y
+  b.sol[end] = obj_weight
+
+  b.longv .= 0
+
   for icol = 1:(b.ncolors)
     b.d .= (b.colors .== icol)
-    ForwardDiff.derivative!(b.res, t -> ForwardDiff.gradient(ℓ, x + t * b.d), 0)
+    b.longv[(ncon + 1):(ncon + nvar)] .= b.d
+    map!(ForwardDiff.Dual{Tag}, b.lz, b.sol, b.longv)
+    b.∇φ!(b.glz, b.lz)
+    ForwardDiff.extract_derivative!(Tag, b.Hvp, b.glz)
+    b.res .= view(b.Hvp, (ncon + 1):(ncon + nvar))
     for j = 1:nvar
       if b.colors[j] == icol
         for k = b.colptr[j]:(b.colptr[j + 1] - 1)
@@ -72,6 +118,7 @@ function sparse_hess_coord!(
       end
     end
   end
+
   return vals
 end
 
@@ -84,7 +131,7 @@ function hess_coord!(
   vals::AbstractVector,
 )
   ℓ = get_lag(nlp, b, obj_weight, y)
-  sparse_hess_coord!(ℓ, b, x, vals)
+  sparse_hess_coord!(ℓ, b, x, obj_weight, y, vals)
 end
 
 function hess_coord!(
@@ -94,8 +141,9 @@ function hess_coord!(
   obj_weight::Real,
   vals::AbstractVector,
 )
-  ℓ = get_lag(nlp, b, obj_weight)
-  sparse_hess_coord!(ℓ, b, x, vals)
+  y = zeros(eltype(x), nlp.meta.nnln)
+  ℓ = get_lag(nlp, b, obj_weight, y)
+  sparse_hess_coord!(ℓ, b, x, obj_weight, y, vals)
 end
 
 function hess_coord!(
@@ -111,9 +159,10 @@ function hess_coord!(
   end
   obj_weight = zero(T)
   ℓ = get_lag(nlp, b, obj_weight, y)
-  sparse_hess_coord!(ℓ, b, x, vals)
+  sparse_hess_coord!(ℓ, b, x, obj_weight, y, vals)
   return vals
 end
+
 ## ----- Symbolics -----
 
 struct SparseSymbolicsADHessian{T, H} <: ADBackend
