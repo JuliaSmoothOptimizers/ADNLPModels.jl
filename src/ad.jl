@@ -341,18 +341,18 @@ end
 
 abstract type ColorationAlgorithm end
 
-struct ColPackColoration{F} <: ColorationAlgorithm
+struct ColPackColoration{F, C, O} <: ColorationAlgorithm
   partition_choice::F
-  coloring
-  ordering
+  coloring::C
+  ordering::O
 end
 
 function ColPackColoration(;
-  partition_choice = (m, n; μ = 0.6) -> n < μ * m ? true : false,
-  coloring = d1_coloring("DISTANCE_ONE"),
-  ordering = incidence_degree_ordering("INCIDENCE_DEGREE"),
+  partition_choice = (m, n) -> false, # TODO: (m, n; μ = 0.6) -> n < μ * m ? true : false,
+  coloring::ColPack.AbstractColoring = d1_coloring("DISTANCE_ONE"),
+  ordering::ColPack.AbstractOrdering = incidence_degree_ordering("INCIDENCE_DEGREE"),
   )
-  return ColPackColoration{typeof(partition_choice)}(partition_choice, coloring, ordering)
+  return ColPackColoration{typeof(partition_choice), typeof(coloring), typeof(ordering)}(partition_choice, coloring, ordering)
 end
 
 function sparse_matrix_colors(A, alg::ColPackColoration)
