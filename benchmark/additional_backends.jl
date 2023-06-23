@@ -2,6 +2,241 @@ include("additional_hprod_backends.jl")
 
 using Symbolics, SparseDiffTools
 
+struct SparseADHessianSDTColoration{S} <: ADNLPModels.ADBackend
+  d::BitVector
+  rowval::Vector{Int}
+  colptr::Vector{Int}
+  colors::Vector{Int}
+  ncolors::Int
+  res::S
+end
+
+function SparseADHessianSDTColoration(
+  nvar,
+  f,
+  ncon,
+  c!;
+  x0 = rand(nvar),
+  alg::SparseDiffTools.SparseDiffToolsColoringAlgorithm = SparseDiffTools.GreedyD1Color(),
+  kwargs...,
+)
+  Symbolics.@variables xs[1:nvar]
+  xsi = Symbolics.scalarize(xs)
+  fun = f(xsi)
+  if ncon > 0
+    Symbolics.@variables ys[1:ncon]
+    ysi = Symbolics.scalarize(ys)
+    cx = similar(ysi)
+    fun = fun + dot(c!(cx, xsi), ysi)
+  end
+  S = Symbolics.hessian_sparsity(fun, ncon == 0 ? xsi : [xsi; ysi]) # , full = false
+  H = ncon == 0 ? S : S[1:nvar, 1:nvar]
+  colors = matrix_colors(H, alg)
+  d = BitVector(undef, nvar)
+  ncolors = maximum(colors)
+
+  trilH = tril(H)
+  rowval = trilH.rowval
+  colptr = trilH.colptr
+
+  res = similar(x0)
+
+  return SparseADHessianSDTColoration(d, rowval, colptr, colors, ncolors, res)
+end
+
+function ADNLPModels.get_nln_nnzh(b::SparseADHessianSDTColoration, nvar)
+  return length(b.rowval)
+end
+
+function ADNLPModels.hess_structure!(
+  b::SparseADHessianSDTColoration,
+  nlp::ADNLPModels.ADModel,
+  rows::AbstractVector{<:Integer},
+  cols::AbstractVector{<:Integer},
+)
+  rows .= b.rowval
+  for i = 1:(nlp.meta.nvar)
+    for j = b.colptr[i]:(b.colptr[i + 1] - 1)
+      cols[j] = i
+    end
+  end
+  return rows, cols
+end
+
+function ADNLPModels.sparse_hess_coord!(
+  ℓ::Function,
+  b::SparseADHessianSDTColoration,
+  x::AbstractVector,
+  vals::AbstractVector,
+)
+  nvar = length(x)
+  for icol = 1:(b.ncolors)
+    b.d .= (b.colors .== icol)
+    ForwardDiff.derivative!(b.res, t -> ForwardDiff.gradient(ℓ, x + t * b.d), 0)
+    for j = 1:nvar
+      if b.colors[j] == icol
+        for k = b.colptr[j]:(b.colptr[j + 1] - 1)
+          i = b.rowval[k]
+          vals[k] = b.res[i]
+        end
+      end
+    end
+  end
+  return vals
+end
+
+function ADNLPModels.hess_coord!(
+  b::SparseADHessianSDTColoration,
+  nlp::ADNLPModels.ADModel,
+  x::AbstractVector,
+  y::AbstractVector,
+  obj_weight::Real,
+  vals::AbstractVector,
+)
+  ℓ = ADNLPModels.get_lag(nlp, b, obj_weight, y)
+  sparse_hess_coord!(ℓ, b, x, vals)
+end
+
+function ADNLPModels.hess_coord!(
+  b::SparseADHessianSDTColoration,
+  nlp::ADNLPModels.ADModel,
+  x::AbstractVector,
+  obj_weight::Real,
+  vals::AbstractVector,
+)
+  ℓ = ADNLPModels.get_lag(nlp, b, obj_weight)
+  sparse_hess_coord!(ℓ, b, x, vals)
+end
+
+function ADNLPModels.hess_coord!(
+  b::SparseADHessianSDTColoration,
+  nlp::ADNLPModels.ADModel,
+  x::AbstractVector,
+  j::Integer,
+  vals::AbstractVector{T},
+) where {T}
+  y = zeros(T, nlp.meta.nnln)
+  for (w, k) in enumerate(nlp.meta.nln)
+    y[w] = k == j ? 1 : 0
+  end
+  obj_weight = zero(T)
+  ℓ = ADNLPModels.get_lag(nlp, b, obj_weight, y)
+  sparse_hess_coord!(ℓ, b, x, vals)
+  return vals
+end
+
+struct SparseADJacobianSDTColoration{T, Tag, S} <: ADNLPModels.ADBackend
+  d::BitVector
+  rowval::Vector{Int}
+  colptr::Vector{Int}
+  colors::Vector{Int}
+  ncolors::Int
+  z::Vector{ForwardDiff.Dual{Tag, T, 1}}
+  cz::Vector{ForwardDiff.Dual{Tag, T, 1}}
+  res::S
+end
+
+function SparseADJacobianSDTColoration(
+  nvar,
+  f,
+  ncon,
+  c!;
+  x0::AbstractVector{T} = rand(nvar),
+  alg::SparseDiffTools.SparseDiffToolsColoringAlgorithm = SparseDiffTools.GreedyD1Color(),
+  kwargs...,
+) where {T}
+  output = similar(x0, ncon)
+  J = Symbolics.jacobian_sparsity(c!, output, x0)
+  colors = matrix_colors(J, alg)
+  d = BitVector(undef, nvar)
+  ncolors = maximum(colors)
+
+  rowval = J.rowval
+  colptr = J.colptr
+
+  tag = ForwardDiff.Tag{typeof(c!), T}
+
+  z = Vector{ForwardDiff.Dual{tag, T, 1}}(undef, nvar)
+  cz = similar(z, ncon)
+  res = similar(x0, ncon)
+
+  SparseADJacobianSDTColoration(d, rowval, colptr, colors, ncolors, z, cz, res)
+end
+
+function ADNLPModels.get_nln_nnzj(b::SparseADJacobianSDTColoration, nvar, ncon)
+  length(b.rowval)
+end
+
+function ADNLPModels.jac_structure!(
+  b::SparseADJacobianSDTColoration,
+  nlp::ADNLPModels.ADModel,
+  rows::AbstractVector{<:Integer},
+  cols::AbstractVector{<:Integer},
+)
+  rows .= b.rowval
+  for i = 1:(nlp.meta.nvar)
+    for j = b.colptr[i]:(b.colptr[i + 1] - 1)
+      cols[j] = i
+    end
+  end
+  return rows, cols
+end
+
+function ADNLPModels.sparse_jac_coord!(
+  ℓ!::Function,
+  b::SparseADJacobianSDTColoration{T, Tag},
+  x::AbstractVector,
+  vals::AbstractVector,
+) where {T, Tag}
+  nvar = length(x)
+  for icol = 1:(b.ncolors)
+    b.d .= (b.colors .== icol)
+    map!(ForwardDiff.Dual{Tag}, b.z, x, b.d) # x + ε * v
+    ℓ!(b.cz, b.z) # c!(cz, x + ε * v)
+    ForwardDiff.extract_derivative!(Tag, b.res, b.cz) # ∇c!(cx, x)ᵀv
+    for j = 1:nvar
+      if b.colors[j] == icol
+        for k = b.colptr[j]:(b.colptr[j + 1] - 1)
+          i = b.rowval[k]
+          vals[k] = b.res[i]
+        end
+      end
+    end
+  end
+  return vals
+end
+
+function ADNLPModels.jac_coord!(b::SparseADJacobianSDTColoration, nlp::ADNLPModels.ADModel, x::AbstractVector, vals::AbstractVector)
+  ADNLPModels.sparse_jac_coord!(nlp.c!, b, x, vals)
+  return vals
+end
+
+function ADNLPModels.jac_structure_residual!(
+  b::SparseADJacobianSDTColoration,
+  nls::ADNLPModels.AbstractADNLSModel,
+  rows::AbstractVector{<:Integer},
+  cols::AbstractVector{<:Integer},
+)
+  rows .= b.rowval
+  for i = 1:(nls.meta.nvar)
+    for j = b.colptr[i]:(b.colptr[i + 1] - 1)
+      cols[j] = i
+    end
+  end
+  return rows, cols
+end
+
+function ADNLPModels.jac_coord_residual!(
+  b::SparseADJacobianSDTColoration,
+  nls::ADNLPModels.AbstractADNLSModel,
+  x::AbstractVector,
+  vals::AbstractVector,
+)
+  ADNLPModels.sparse_jac_coord!(nls.F!, b, x, vals)
+  return vals
+end
+
+
 struct SDTSparseADJacobian{Tv, Ti, T, T2, T3, T4, T5} <: ADNLPModels.ADBackend
   cfJ::ForwardColorJacCache{T, T2, T3, T4, T5, SparseMatrixCSC{Tv, Ti}}
 end

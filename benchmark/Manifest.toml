@@ -5,9 +5,9 @@ manifest_format = "2.0"
 project_hash = "1d158fdf397bf228d34e117bd44f1f64834b2729"
 
 [[deps.ADNLPModels]]
-deps = ["ForwardDiff", "LinearAlgebra", "NLPModels", "Requires", "ReverseDiff", "SparseArrays", "SparseDiffTools", "Symbolics"]
-git-tree-sha1 = "7b06fb2677cd48e7683c93998443610474a05cd2"
-repo-rev = "improve-sparse"
+deps = ["ColPack", "ForwardDiff", "LinearAlgebra", "NLPModels", "Requires", "ReverseDiff", "SparseArrays", "Symbolics"]
+git-tree-sha1 = "9ca49681174ec957310a868b71d47b766c77f32c"
+repo-rev = "rmv-SDT"
 repo-url = "https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl"
 uuid = "54578032-b7ea-4c30-94aa-7cbd1cce6c9a"
 version = "0.6.2"
@@ -147,6 +147,18 @@ deps = ["TranscodingStreams", "Zlib_jll"]
 git-tree-sha1 = "9c209fb7536406834aa938fb149964b985de6c83"
 uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
 version = "0.7.1"
+
+[[deps.ColPack]]
+deps = ["ColPack_jll", "LinearAlgebra", "Random", "SparseArrays"]
+git-tree-sha1 = "83a23545e7969d8b21fb85271b9cd04c8e09d08b"
+uuid = "ffa27691-3a59-46ab-a8d4-551f45b8d401"
+version = "0.3.0"
+
+[[deps.ColPack_jll]]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "2a518018a2b888ba529e944d34d4bd84b54d652d"
+uuid = "f218ff0c-cb54-5151-80c4-c0f62c730ce6"
+version = "0.3.0+0"
 
 [[deps.ColorSchemes]]
 deps = ["ColorTypes", "ColorVectorSpace", "Colors", "FixedPointNumbers", "PrecompileTools", "Random"]

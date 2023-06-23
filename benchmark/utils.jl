@@ -61,6 +61,7 @@ benchmarked_optimized_backends = Dict(
     "forward" => ADNLPModels.ForwardDiffADJtprod,
   ),
   "jacobian_backend" => Dict(
+    "sparse-SDTcol" => SparseADJacobianSDTColoration,
     "sparse" => ADNLPModels.SparseADJacobian,
     "SDTsparse" => SDTSparseADJacobian,
     # "forward" => ADNLPModels.ForwardDiffADJacobian, # slower
@@ -68,6 +69,7 @@ benchmarked_optimized_backends = Dict(
     # "zygote" => ADNLPModels.ZygoteADJacobian,
   ),
   "hessian_backend" => Dict(
+    "sparse-SDTcol" => SparseADHessianSDTColoration,
     "sparse" => ADNLPModels.SparseADHessian,
     "forward" => ADNLPModels.ForwardDiffADHessian,
     # "sym" => ADNLPModels.SparseADHessian, # out of memory for large problems
