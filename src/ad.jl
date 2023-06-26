@@ -358,7 +358,7 @@ end
 function sparse_matrix_colors(A, alg::ColPackColoration)
   m, n = size(A)
   partition_by_rows = alg.partition_choice(m, n)
-  if A != spzeros(m, n)
+  if !isempty(A.nzval)
     adjA = ColPack.matrix2adjmatrix(A; partition_by_rows=partition_by_rows)
     CPC = ColPackColoring(adjA, alg.coloring, alg.ordering)
     colors = get_colors(CPC)
