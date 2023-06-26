@@ -7,15 +7,7 @@ struct SparseADHessian{S} <: ADNLPModels.ADBackend
   res::S
 end
 
-function SparseADHessian(
-  nvar,
-  f,
-  ncon,
-  c!;
-  x0 = rand(nvar),
-  alg = ColPackColoration(),
-  kwargs...,
-)
+function SparseADHessian(nvar, f, ncon, c!; x0 = rand(nvar), alg = ColPackColoration(), kwargs...)
   @variables xs[1:nvar]
   xsi = Symbolics.scalarize(xs)
   fun = f(xsi)
