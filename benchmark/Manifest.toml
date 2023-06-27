@@ -6,8 +6,8 @@ project_hash = "1d158fdf397bf228d34e117bd44f1f64834b2729"
 
 [[deps.ADNLPModels]]
 deps = ["ColPack", "ForwardDiff", "LinearAlgebra", "NLPModels", "Requires", "ReverseDiff", "SparseArrays", "Symbolics"]
-git-tree-sha1 = "9ca49681174ec957310a868b71d47b766c77f32c"
-repo-rev = "rmv-SDT"
+git-tree-sha1 = "980a5a1a017714fe568fb5ab0804d8ac39303969"
+repo-rev = "imp-hessian"
 repo-url = "https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl"
 uuid = "54578032-b7ea-4c30-94aa-7cbd1cce6c9a"
 version = "0.6.2"

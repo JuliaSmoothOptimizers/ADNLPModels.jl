@@ -69,7 +69,7 @@ benchmarked_optimized_backends = Dict(
     # "zygote" => ADNLPModels.ZygoteADJacobian,
   ),
   "hessian_backend" => Dict(
-    "sparse-SDTcol" => SparseADHessianSDTColoration,
+    #"sparse-SDTcol" => SparseADHessianSDTColoration,
     "sparse" => ADNLPModels.SparseADHessian,
     "forward" => ADNLPModels.ForwardDiffADHessian,
     # "sym" => ADNLPModels.SparseADHessian, # out of memory for large problems
