@@ -14,7 +14,15 @@ struct SparseADHessian{Tag, GT, S, T} <: ADNLPModels.ADBackend
   y::S
 end
 
-function SparseADHessian(nvar, f, ncon, c!; x0::AbstractVector{T} = rand(nvar), alg = ColPackColoration(), kwargs...) where {T}
+function SparseADHessian(
+  nvar,
+  f,
+  ncon,
+  c!;
+  x0::AbstractVector{T} = rand(nvar),
+  alg = ColPackColoration(),
+  kwargs...,
+) where {T}
   @variables xs[1:nvar]
   xsi = Symbolics.scalarize(xs)
   fun = f(xsi)
