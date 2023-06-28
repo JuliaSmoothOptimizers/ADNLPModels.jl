@@ -11,6 +11,7 @@ struct SparseADHessian{Tag, GT, S, T} <: ADNLPModels.ADBackend
   longv::S
   Hvp::S
   ∇φ!::GT
+  y::S
 end
 
 function SparseADHessian(nvar, f, ncon, c!; x0::AbstractVector{T} = rand(nvar), alg = ColPackColoration(), kwargs...) where {T}
@@ -62,7 +63,9 @@ function SparseADHessian(nvar, f, ncon, c!; x0::AbstractVector{T} = rand(nvar), 
   longv = zeros(T, ntotal)
   Hvp = zeros(T, ntotal)
 
-  return SparseADHessian(d, rowval, colptr, colors, ncolors, res, lz, glz, sol, longv, Hvp, ∇φ!)
+  y = zeros(T, ncon)
+
+  return SparseADHessian(d, rowval, colptr, colors, ncolors, res, lz, glz, sol, longv, Hvp, ∇φ!, y)
 end
 
 function get_nln_nnzh(b::SparseADHessian, nvar)
@@ -141,9 +144,9 @@ function hess_coord!(
   obj_weight::Real,
   vals::AbstractVector,
 )
-  y = zeros(eltype(x), nlp.meta.nnln)
-  ℓ = get_lag(nlp, b, obj_weight, y)
-  sparse_hess_coord!(ℓ, b, x, obj_weight, y, vals)
+  b.y .= 0
+  ℓ = get_lag(nlp, b, obj_weight, b.y)
+  sparse_hess_coord!(ℓ, b, x, obj_weight, b.y, vals)
 end
 
 function hess_coord!(
@@ -153,13 +156,12 @@ function hess_coord!(
   j::Integer,
   vals::AbstractVector{T},
 ) where {T}
-  y = zeros(T, nlp.meta.nnln)
   for (w, k) in enumerate(nlp.meta.nln)
-    y[w] = k == j ? 1 : 0
+    b.y[w] = k == j ? 1 : 0
   end
   obj_weight = zero(T)
-  ℓ = get_lag(nlp, b, obj_weight, y)
-  sparse_hess_coord!(ℓ, b, x, obj_weight, y, vals)
+  ℓ = get_lag(nlp, b, obj_weight, b.y)
+  sparse_hess_coord!(ℓ, b, x, obj_weight, b.y, vals)
   return vals
 end
 
