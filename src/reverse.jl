@@ -6,7 +6,6 @@ struct ReverseDiffADHessian <: ADBackend
 end
 struct GenericReverseDiffADJprod <: ADBackend end
 struct GenericReverseDiffADJtprod <: ADBackend end
-struct ReverseDiffADHvprod <: ADBackend end
 
 struct ReverseDiffADGradient <: ADBackend
   cfg
@@ -173,16 +172,85 @@ function ADNLPModels.Jtprod!(b::ReverseDiffADJtprod, Jtv, c!, x, v, ::Val)
   return Jtv
 end
 
-function ReverseDiffADHvprod(
+struct GenericReverseDiffADHvprod <: ADBackend end
+
+function GenericReverseDiffADHvprod(
   nvar::Integer,
   f,
   ncon::Integer = 0,
   c::Function = (args...) -> [];
   kwargs...,
 )
-  return ReverseDiffADHvprod()
+  return GenericReverseDiffADHvprod()
 end
-function Hvprod!(::ReverseDiffADHvprod, Hv, x, v, f, args...)
+function Hvprod!(::GenericReverseDiffADHvprod, Hv, x, v, f, args...)
   Hv .= ForwardDiff.derivative(t -> ReverseDiff.gradient(f, x + t * v), 0)
+  return Hv
+end
+
+struct ReverseDiffADHvprod{T, Tagf, F} <: ADBackend
+  z::Vector{ForwardDiff.Dual{Tagf, T, 1}}
+  gz::Vector{ForwardDiff.Dual{Tagf, T, 1}}
+  ∇f!::F
+end
+
+function ReverseDiffADHvprod(
+  nvar::Integer,
+  f,
+  ncon::Integer = 0,
+  c!::Function = (args...) -> [];
+  x0::AbstractVector{T} = rand(nvar),
+  kwargs...,
+) where {T}
+  # unconstrained Hessian
+  tagf = ForwardDiff.Tag{typeof(f), T}
+  z = Vector{ForwardDiff.Dual{tagf, T, 1}}(undef, nvar)
+  gz = similar(z)
+  f_tape = ReverseDiff.GradientTape(f, z)
+  cfgf = ReverseDiff.compile(f_tape)
+  ∇f!(gz, z; cfg = cfgf) = ReverseDiff.gradient!(gz, cfg, z)
+
+  return ReverseDiffADHvprod(z, gz, ∇f!)
+end
+
+function Hvprod!(
+  b::ReverseDiffADHvprod{T},
+  Hv,
+  x::AbstractVector{T},
+  v,
+  ℓ,
+  ::Val{:lag},
+  y,
+  obj_weight::Real = one(T),
+) where {T}
+  Hv .= ForwardDiff.derivative(t -> ReverseDiff.gradient(ℓ, x + t * v), 0)
+  return Hv
+end
+
+function Hvprod!(
+  b::ReverseDiffADHvprod{T},
+  Hv,
+  x::AbstractVector{T},
+  v,
+  ci,
+  ::Val{:ci},
+) where {T}
+  Hv .= ForwardDiff.derivative(t -> ReverseDiff.gradient(ci, x + t * v), 0)
+  return Hv
+end
+
+function Hvprod!(
+  b::ReverseDiffADHvprod{T, Tagf},
+  Hv,
+  x::AbstractVector{T},
+  v,
+  f,
+  ::Val{:obj},
+  obj_weight::Real = one(T),
+) where {T, Tagf}
+  map!(ForwardDiff.Dual{Tagf}, b.z, x, v) # x + ε * v
+  b.∇f!(b.gz, b.z) # ∇f(x + ε * v) = ∇f(x) + ε * ∇²f(x)ᵀv
+  ForwardDiff.extract_derivative!(Tagf, Hv, b.gz)  # ∇²f(x)ᵀv
+  Hv .*= obj_weight
   return Hv
 end
