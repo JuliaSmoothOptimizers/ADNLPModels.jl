@@ -371,6 +371,3 @@ function sparse_matrix_colors(A, alg::ColPackColoration)
   end
   return colors
 end
-
-# SparseDiffTools.SparseDiffToolsColoringAlgorithm
-# sparse_matrix_colors(A, alg) = matrix_colors(A, alg)

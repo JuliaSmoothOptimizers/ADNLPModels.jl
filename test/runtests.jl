@@ -42,6 +42,7 @@ ReverseDiffAD(nvar, f) = ADNLPModels.ADModelBackend(
 )
 ZygoteAD() = ADNLPModels.ADModelBackend(
   gradient_backend = ADNLPModels.ZygoteADGradient,
+  hprod_backend = ADNLPModels.SDTForwardDiffADHvprod,
   jprod_backend = ADNLPModels.ZygoteADJprod,
   jtprod_backend = ADNLPModels.ZygoteADJtprod,
   jacobian_backend = ADNLPModels.ZygoteADJacobian,
