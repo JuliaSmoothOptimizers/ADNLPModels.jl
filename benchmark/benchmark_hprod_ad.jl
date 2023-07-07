@@ -7,7 +7,7 @@ TODO:
 =#
 using Pkg
 Pkg.activate(".")
-Pkg.add(url = "https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl", rev = "addForwardDiffHprod")
+Pkg.add(url = "https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl", rev = "reverseforwardhpro")
 using ADNLPModels
 
 using Dates, DelimitedFiles, JLD2, LinearAlgebra, Printf, SparseArrays
@@ -31,7 +31,7 @@ using ReverseDiff, ForwardDiff
 # - backend (see `set_back_list(Val(f), test_back)`)
 problem_sets = Dict(
   #"all" => setdiff(all_cons_problems, ["camshape"]), # crash
-  "scalable" => setdiff(scalable_cons_problems), # , ["polygon", "polygon1", "clnlbeam"]
+  "scalable" => setdiff(scalable_cons_problems, ["structural", "clnlbeam", "polygon", "polygon1"]), # clnlbeam bug with n = 1000 , ["polygon", "polygon1", "clnlbeam"]
 )
 benchs = [
   "optimized",

@@ -41,15 +41,10 @@ benchmarked_optimized_backends = Dict(
     "reverse" => ADNLPModels.ReverseDiffADGradient,
     "enzyme" => ADNLPModels.EnzymeADGradient,
   ),
-  "hprod_backend" => Dict( # 2 and 5 are best, maybe 5 more robust.
+  "hprod_backend" => Dict(
     "forward" => ADNLPModels.ForwardDiffADHvprod,
     "forwardSDT" => SPTADHvprod,
-    #"forward1" => ForwardDiffADHvprod1,
-    #"forward2" => ForwardDiffADHvprod2,
-    # "forward3" => ForwardDiffADHvprod3, # doesn't work
-    #"forward4" => ForwardDiffADHvprod4,
-    #"forward5" => ForwardDiffADHvprod5,
-    #"f6" => ForwardDiffADHvprod6,
+    "reverse" => ADNLPModels.ReverseDiffADHvprod,
   ),
   "jprod_backend" => Dict(
     "forward" => ADNLPModels.ForwardDiffADJprod,
@@ -90,7 +85,7 @@ benchmarked_generic_backends = Dict(
   ),
   "hprod_backend" => Dict(
     "forward" => ADNLPModels.GenericForwardDiffADHvprod,
-    "reverse" => ADNLPModels.ReverseDiffADHvprod,
+    "reverse" => ADNLPModels.GenericReverseDiffADHvprod,
   ),
   "jprod_backend" => Dict(
     "forward" => ADNLPModels.GenericForwardDiffADJprod,
