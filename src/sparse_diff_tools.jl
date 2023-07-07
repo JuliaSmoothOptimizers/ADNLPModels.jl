@@ -1,6 +1,5 @@
 @init begin
   @require SparseDiffTools = "47a9eef4-7e08-11e9-0b38-333d64bd3804" begin
-
     function sparse_matrix_colors(A, alg::SparseDiffTools.SparseDiffToolsColoringAlgorithm)
       return SparseDiffTools.matrix_colors(A, alg)
     end
@@ -47,7 +46,12 @@
       return rows, cols
     end
 
-    function jac_coord!(b::SDTSparseADJacobian, nlp::ADModel, x::AbstractVector, vals::AbstractVector)
+    function jac_coord!(
+      b::SDTSparseADJacobian,
+      nlp::ADModel,
+      x::AbstractVector,
+      vals::AbstractVector,
+    )
       SparseDiffTools.forwarddiff_color_jacobian!(b.cfJ.sparsity, nlp.c!, x, b.cfJ)
       vals .= nonzeros(b.cfJ.sparsity)
       return vals
@@ -92,10 +96,14 @@
       x0::AbstractVector{T} = rand(nvar),
       kwargs...,
     ) where {T}
-      tmp_in =
-        Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(undef, nvar)
-      tmp_out =
-        Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(undef, ncon)
+      tmp_in = Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(
+        undef,
+        nvar,
+      )
+      tmp_out = Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(
+        undef,
+        ncon,
+      )
       return SDTForwardDiffADJprod(tmp_in, tmp_out)
     end
 
@@ -103,7 +111,6 @@
       SparseDiffTools.auto_jacvec!(Jv, c!, x, v, b.tmp_in, b.tmp_out)
       return Jv
     end
-
 
     struct SDTForwardDiffADHvprod{T} <: ADBackend
       tmp_in::Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}
@@ -117,10 +124,14 @@
       x0::AbstractVector{T} = rand(nvar),
       kwargs...,
     ) where {T}
-      tmp_in =
-        Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(undef, nvar)
-      tmp_out =
-        Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(undef, nvar)
+      tmp_in = Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(
+        undef,
+        nvar,
+      )
+      tmp_out = Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(
+        undef,
+        nvar,
+      )
       return SDTForwardDiffADHvprod(tmp_in, tmp_out)
     end
 
