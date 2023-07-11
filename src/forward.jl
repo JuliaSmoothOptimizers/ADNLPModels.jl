@@ -99,7 +99,7 @@ function ADNLPModels.Jprod!(b::ForwardDiffADJprod{T, Tag}, Jv, c!, x, v) where {
 end
 
 struct GenericForwardDiffADJtprod <: ADBackend end
-function GeneriForwardDiffADJtprod(
+function GenericForwardDiffADJtprod(
   nvar::Integer,
   f,
   ncon::Integer = 0,
