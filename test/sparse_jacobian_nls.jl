@@ -46,4 +46,8 @@ dt = (Float32, Float64)
     -20*x[1] 10
     0 1
   ]
+
+  nls = ADNLPModels.ADNLSModel!(F!, x0, 3, matrix_free = true; kw...)
+  @test nls.adbackend.jacobian_backend isa ADNLPModels.EmptyADbackend
+  @test nls.adbackend.jacobian_residual_backend isa ADNLPModels.EmptyADbackend
 end

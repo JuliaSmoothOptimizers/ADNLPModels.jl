@@ -54,4 +54,15 @@ dt = (Float32, Float64)
     -20*x[1] 10
     0 1
   ]
+
+  nlp = ADNLPModel!(
+    x -> sum(x),
+    x0,
+    c!,
+    zeros(T, ncon),
+    zeros(T, ncon),
+    matrix_free = true;
+    kw...,
+  )
+  @test nlp.adbackend.jacobian_backend isa ADNLPModels.EmptyADbackend
 end

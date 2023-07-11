@@ -54,6 +54,17 @@ dt = (Float32, Float64)
   H = sparse(rows, cols, vals, nvar, nvar)
   @test H == [x[2] 0; x[1]+x[2] x[1]] + y[2] * [-20 0; 0 0]
 
+  nlp = ADNLPModel!(
+    x -> x[1] * x[2]^2 + x[1]^2 * x[2],
+    x0,
+    c!,
+    zeros(T, ncon),
+    zeros(T, ncon),
+    matrix_free = true;
+    kw...,
+  )
+  @test nlp.adbackend.hessian_backend isa ADNLPModels.EmptyADbackend
+
   n = 4
   x = ones(T, 4)
   nlp = ADNLPModel(
@@ -67,4 +78,12 @@ dt = (Float32, Float64)
   x = ones(T, 2)
   nlp = ADNLPModel(x -> x[1]^2 + x[1] * x[2], x, hessian_backend = backend)
   @test hess(nlp, x) == T[2 1; 1 0]
+
+  nlp = ADNLPModel(
+    x -> sum(100 * (x[i + 1] - x[i]^2)^2 + (x[i] - 1)^2 for i = 1:(n - 1)),
+    x,
+    name = "Extended Rosenbrock",
+    matrix_free = true,
+  )
+  @test nlp.adbackend.hessian_backend isa ADNLPModels.EmptyADbackend
 end
