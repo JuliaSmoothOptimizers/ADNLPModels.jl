@@ -361,30 +361,6 @@ function autodiff_nls_test(name; kwargs...)
   end
 end
 
-autodiff_nls_test("OptimizedAD")
-autodiff_nls_test(
-  "ForwardDiff",
-  gradient_backend = ADNLPModels.GenericForwardDiffADGradient,
-  hprod_backend = ADNLPModels.GenericForwardDiffADHvprod,
-  jprod_backend = ADNLPModels.GenericForwardDiffADJprod,
-  jtprod_backend = ADNLPModels.ForwardDiffADJtprod,
-  jacobian_backend = ADNLPModels.ForwardDiffADJacobian,
-  hessian_backend = ADNLPModels.ForwardDiffADHessian,
-)
-autodiff_nls_test(
-  "ReverseDiff",
-  gradient_backend = ADNLPModels.ReverseDiffADGradient,
-  hprod_backend = ADNLPModels.ReverseDiffADHvprod,
-  jprod_backend = ADNLPModels.ReverseDiffADJprod,
-  jtprod_backend = ADNLPModels.ReverseDiffADJtprod,
-  jacobian_backend = ADNLPModels.ReverseDiffADJacobian,
-  hessian_backend = ADNLPModels.ReverseDiffADHessian,
-)
-autodiff_nls_test(
-  "Zygote",
-  gradient_backend = ADNLPModels.ZygoteADGradient,
-  jprod_backend = ADNLPModels.ZygoteADJprod,
-  jtprod_backend = ADNLPModels.ZygoteADJtprod,
-  jacobian_backend = ADNLPModels.ZygoteADJacobian,
-  hessian_backend = ADNLPModels.ZygoteADHessian,
-)
+@testset "Basic NLS tests using $backend " for backend in keys(ADNLPModels.predefined_backend)
+  autodiff_nls_test("$backend", backend = backend)
+end

@@ -1,9 +1,7 @@
-
-function nlpmodelstest_autodiff(name; kwargs...)
-  for problem in NLPModelsTest.nlp_problems
-    @testset "Checking NLPModelsTest tests on problem $problem with $name" begin
+@testset "Checking NLPModelsTest tests with $backend" for backend in keys(ADNLPModels.predefined_backend)
+  @testset "Checking NLPModelsTest tests on problem $problem" for problem in NLPModelsTest.nlp_problems
       nlp_from_T = eval(Meta.parse(lowercase(problem) * "_autodiff"))
-      nlp_ad = nlp_from_T(; kwargs...)
+      nlp_ad = nlp_from_T(; backend = backend)
       nlp_man = eval(Meta.parse(problem))()
 
       show(IOBuffer(), nlp_ad)
@@ -24,34 +22,5 @@ function nlpmodelstest_autodiff(name; kwargs...)
       @testset "Check coordinate memory" begin
         coord_memory_nlp(nlp_ad, exclude = [], linear_api = true)
       end
-    end
   end
 end
-
-nlpmodelstest_autodiff("OptimizedAD")
-nlpmodelstest_autodiff(
-  "ForwardDiff",
-  gradient_backend = ADNLPModels.GenericForwardDiffADGradient,
-  hprod_backend = ADNLPModels.GenericForwardDiffADHvprod,
-  jprod_backend = ADNLPModels.GenericForwardDiffADJprod,
-  jtprod_backend = ADNLPModels.ForwardDiffADJtprod,
-  jacobian_backend = ADNLPModels.ForwardDiffADJacobian,
-  hessian_backend = ADNLPModels.ForwardDiffADHessian,
-)
-nlpmodelstest_autodiff(
-  "ReverseDiff",
-  gradient_backend = ADNLPModels.ReverseDiffADGradient,
-  hprod_backend = ADNLPModels.ReverseDiffADHvprod,
-  jprod_backend = ADNLPModels.ReverseDiffADJprod,
-  jtprod_backend = ADNLPModels.ReverseDiffADJtprod,
-  jacobian_backend = ADNLPModels.ReverseDiffADJacobian,
-  hessian_backend = ADNLPModels.ReverseDiffADHessian,
-)
-nlpmodelstest_autodiff(
-  "Zygote",
-  gradient_backend = ADNLPModels.ZygoteADGradient,
-  jprod_backend = ADNLPModels.ZygoteADJprod,
-  jtprod_backend = ADNLPModels.ZygoteADJtprod,
-  jacobian_backend = ADNLPModels.ZygoteADJacobian,
-  hessian_backend = ADNLPModels.ZygoteADHessian,
-)
