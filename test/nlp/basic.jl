@@ -8,47 +8,6 @@ function (regr::LinearRegression)(beta)
   return dot(r, r) / 2
 end
 
-ReverseDiffAD() = ADNLPModels.ADModelBackend(
-  ADNLPModels.ReverseDiffADGradient(nothing),
-  ADNLPModels.ReverseDiffADHvprod(),
-  ADNLPModels.ReverseDiffADJprod(),
-  ADNLPModels.ReverseDiffADJtprod(),
-  ADNLPModels.ReverseDiffADJacobian(0),
-  ADNLPModels.ReverseDiffADHessian(0),
-  ADNLPModels.ForwardDiffADGHjvprod(),
-  ADNLPModels.EmptyADbackend(),
-  ADNLPModels.EmptyADbackend(),
-  ADNLPModels.EmptyADbackend(),
-  ADNLPModels.EmptyADbackend(),
-  ADNLPModels.EmptyADbackend(),
-)
-ZygoteAD() = ADNLPModels.ADModelBackend(
-  ADNLPModels.ZygoteADGradient(),
-  ADNLPModels.GenericForwardDiffADHvprod(),
-  ADNLPModels.ZygoteADJprod(),
-  ADNLPModels.ZygoteADJtprod(),
-  ADNLPModels.ZygoteADJacobian(0),
-  ADNLPModels.ZygoteADHessian(0),
-  ADNLPModels.ForwardDiffADGHjvprod(),
-  ADNLPModels.EmptyADbackend(),
-  ADNLPModels.EmptyADbackend(),
-  ADNLPModels.EmptyADbackend(),
-  ADNLPModels.EmptyADbackend(),
-  ADNLPModels.EmptyADbackend(),
-)
-
-function test_autodiff_backend_error()
-  @testset "Error without loading package - $backend" for backend in [:ZygoteAD]
-    adbackend = eval(backend)()
-    @test_throws ArgumentError gradient(adbackend.gradient_backend, sum, [1.0])
-    @test_throws ArgumentError gradient!(adbackend.gradient_backend, [1.0], sum, [1.0])
-    @test_throws ArgumentError jacobian(adbackend.jacobian_backend, identity, [1.0])
-    @test_throws ArgumentError hessian(adbackend.hessian_backend, sum, [1.0])
-    @test_throws ArgumentError Jprod!(adbackend.jprod_backend, [1.0], [1.0], identity, [1.0])
-    @test_throws ArgumentError Jtprod!(adbackend.jtprod_backend, [1.0], [1.0], identity, [1.0])
-  end
-end
-
 function test_autodiff_model(name; kwargs...)
   x0 = zeros(2)
   f(x) = dot(x, x)
@@ -385,36 +344,6 @@ function test_autodiff_model(name; kwargs...)
   end
 end
 
-# Test the argument error without loading the packages
-test_autodiff_backend_error()
-
-# Automatically loads the code for Zygote with Requires
-import Zygote
-
-test_autodiff_model("OptimizedAD")
-test_autodiff_model(
-  "ForwardDiff",
-  gradient_backend = ADNLPModels.GenericForwardDiffADGradient,
-  hprod_backend = ADNLPModels.GenericForwardDiffADHvprod,
-  jprod_backend = ADNLPModels.GenericForwardDiffADJprod,
-  jtprod_backend = ADNLPModels.ForwardDiffADJtprod,
-  jacobian_backend = ADNLPModels.ForwardDiffADJacobian,
-  hessian_backend = ADNLPModels.ForwardDiffADHessian,
-)
-test_autodiff_model(
-  "ReverseDiff",
-  gradient_backend = ADNLPModels.ReverseDiffADGradient,
-  hprod_backend = ADNLPModels.ReverseDiffADHvprod,
-  jprod_backend = ADNLPModels.ReverseDiffADJprod,
-  jtprod_backend = ADNLPModels.ReverseDiffADJtprod,
-  jacobian_backend = ADNLPModels.ReverseDiffADJacobian,
-  hessian_backend = ADNLPModels.ReverseDiffADHessian,
-)
-test_autodiff_model(
-  "Zygote",
-  gradient_backend = ADNLPModels.ZygoteADGradient,
-  jprod_backend = ADNLPModels.ZygoteADJprod,
-  jtprod_backend = ADNLPModels.ZygoteADJtprod,
-  jacobian_backend = ADNLPModels.ZygoteADJacobian,
-  hessian_backend = ADNLPModels.ZygoteADHessian,
-)
+@testset "Basic tests using $backend " for backend in keys(ADNLPModels.predefined_backend)
+  test_autodiff_model("$backend", backend = backend)
+end
