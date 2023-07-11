@@ -135,7 +135,7 @@
       return SDTForwardDiffADHvprod(tmp_in, tmp_out)
     end
 
-    function Hvprod!(b::SDTForwardDiffADHvprod, ::Val{Smbl}, Hv, f, x, v) where {Smbl}
+    function Hvprod!(b::SDTForwardDiffADHvprod, Hv, x, v, f, args...)
       ϕ!(dy, x; f = f) = ForwardDiff.gradient!(dy, f, x)
       SparseDiffTools.auto_hesvecgrad!(Hv, (dy, x) -> ϕ!(dy, x), x, v, b.tmp_in, b.tmp_out)
       return Hv
