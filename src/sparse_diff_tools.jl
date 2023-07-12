@@ -18,7 +18,7 @@
       kwargs...,
     ) where {T}
       output = similar(x0, ncon)
-      J = Symbolics.jacobian_sparsity(c!, output, x0)
+      J = compute_jacobian_sparsity(c!, output, x0)
       colors = sparse_matrix_colors(J, alg)
       jac = SparseMatrixCSC{T, Int}(J.m, J.n, J.colptr, J.rowval, T.(J.nzval))
 

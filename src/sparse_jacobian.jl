@@ -19,7 +19,7 @@ function SparseADJacobian(
   kwargs...,
 ) where {T}
   output = similar(x0, ncon)
-  J = Symbolics.jacobian_sparsity(c!, output, x0)
+  J = compute_jacobian_sparsity(c!, output, x0)
 
   colors = sparse_matrix_colors(J, alg)
   ncolors = maximum(colors)
@@ -113,75 +113,5 @@ function NLPModels.jac_coord_residual!(
   vals::AbstractVector,
 )
   sparse_jac_coord!(nls.F!, b, x, vals)
-  return vals
-end
-
-## ----- Symbolics -----
-
-struct SparseSymbolicsADJacobian{T} <: ADBackend
-  nnzj::Int
-  rows::Vector{Int}
-  cols::Vector{Int}
-  cfJ::T
-end
-
-function SparseSymbolicsADJacobian(nvar, f, ncon, c!; kwargs...)
-  @variables xs[1:nvar] out[1:ncon]
-  wi = Symbolics.scalarize(xs)
-  wo = Symbolics.scalarize(out)
-  fun = c!(wo, wi)
-  J = Symbolics.jacobian_sparsity(c!, wo, wi)
-  rows, cols, _ = findnz(J)
-  vals = Symbolics.sparsejacobian_vals(fun, wi, rows, cols)
-  nnzj = length(vals)
-  # cfJ is a Tuple{Expr, Expr}, cfJ[2] is the in-place function
-  # that we need to update a vector `vals` with the nonzeros of Jc(x).
-  cfJ = Symbolics.build_function(vals, wi, expression = Val{false})
-  SparseSymbolicsADJacobian(nnzj, rows, cols, cfJ[2])
-end
-
-function get_nln_nnzj(b::SparseSymbolicsADJacobian, nvar, ncon)
-  b.nnzj
-end
-
-function NLPModels.jac_structure!(
-  b::SparseSymbolicsADJacobian,
-  nlp::ADModel,
-  rows::AbstractVector{<:Integer},
-  cols::AbstractVector{<:Integer},
-)
-  rows .= b.rows
-  cols .= b.cols
-  return rows, cols
-end
-
-function NLPModels.jac_coord!(
-  b::SparseSymbolicsADJacobian,
-  nlp::ADModel,
-  x::AbstractVector,
-  vals::AbstractVector,
-)
-  @eval $(b.cfJ)($vals, $x)
-  return vals
-end
-
-function NLPModels.jac_structure_residual!(
-  b::SparseSymbolicsADJacobian,
-  nls::AbstractADNLSModel,
-  rows::AbstractVector{<:Integer},
-  cols::AbstractVector{<:Integer},
-)
-  rows .= b.rows
-  cols .= b.cols
-  return rows, cols
-end
-
-function NLPModels.jac_coord_residual!(
-  b::SparseSymbolicsADJacobian,
-  nls::AbstractADNLSModel,
-  x::AbstractVector,
-  vals::AbstractVector,
-)
-  @eval $(b.cfJ)($vals, $x)
   return vals
 end
