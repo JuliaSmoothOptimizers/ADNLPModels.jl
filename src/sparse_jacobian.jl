@@ -42,7 +42,7 @@ function get_nln_nnzj(b::SparseADJacobian, nvar, ncon)
   length(b.rowval)
 end
 
-function jac_structure!(
+function NLPModels.jac_structure!(
   b::SparseADJacobian,
   nlp::ADModel,
   rows::AbstractVector{<:Integer},
@@ -81,12 +81,12 @@ function sparse_jac_coord!(
   return vals
 end
 
-function jac_coord!(b::SparseADJacobian, nlp::ADModel, x::AbstractVector, vals::AbstractVector)
+function NLPModels.jac_coord!(b::SparseADJacobian, nlp::ADModel, x::AbstractVector, vals::AbstractVector)
   sparse_jac_coord!(nlp.c!, b, x, vals)
   return vals
 end
 
-function jac_structure_residual!(
+function NLPModels.jac_structure_residual!(
   b::SparseADJacobian,
   nls::AbstractADNLSModel,
   rows::AbstractVector{<:Integer},
@@ -101,7 +101,7 @@ function jac_structure_residual!(
   return rows, cols
 end
 
-function jac_coord_residual!(
+function NLPModels.jac_coord_residual!(
   b::SparseADJacobian,
   nls::AbstractADNLSModel,
   x::AbstractVector,
@@ -139,7 +139,7 @@ function get_nln_nnzj(b::SparseSymbolicsADJacobian, nvar, ncon)
   b.nnzj
 end
 
-function jac_structure!(
+function NLPModels.jac_structure!(
   b::SparseSymbolicsADJacobian,
   nlp::ADModel,
   rows::AbstractVector{<:Integer},
@@ -150,7 +150,7 @@ function jac_structure!(
   return rows, cols
 end
 
-function jac_coord!(
+function NLPModels.jac_coord!(
   b::SparseSymbolicsADJacobian,
   nlp::ADModel,
   x::AbstractVector,
@@ -160,7 +160,7 @@ function jac_coord!(
   return vals
 end
 
-function jac_structure_residual!(
+function NLPModels.jac_structure_residual!(
   b::SparseSymbolicsADJacobian,
   nls::AbstractADNLSModel,
   rows::AbstractVector{<:Integer},
@@ -171,7 +171,7 @@ function jac_structure_residual!(
   return rows, cols
 end
 
-function jac_coord_residual!(
+function NLPModels.jac_coord_residual!(
   b::SparseSymbolicsADJacobian,
   nls::AbstractADNLSModel,
   x::AbstractVector,

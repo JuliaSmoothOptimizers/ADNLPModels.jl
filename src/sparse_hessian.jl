@@ -80,7 +80,7 @@ function get_nln_nnzh(b::SparseADHessian, nvar)
   return length(b.rowval)
 end
 
-function hess_structure!(
+function NLPModels.hess_structure!(
   b::SparseADHessian,
   nlp::ADModel,
   rows::AbstractVector{<:Integer},
@@ -133,7 +133,7 @@ function sparse_hess_coord!(
   return vals
 end
 
-function hess_coord!(
+function NLPModels.hess_coord!(
   b::SparseADHessian,
   nlp::ADModel,
   x::AbstractVector,
@@ -145,7 +145,7 @@ function hess_coord!(
   sparse_hess_coord!(ℓ, b, x, obj_weight, y, vals)
 end
 
-function hess_coord!(
+function NLPModels.hess_coord!(
   b::SparseADHessian,
   nlp::ADModel,
   x::AbstractVector,
@@ -157,7 +157,7 @@ function hess_coord!(
   sparse_hess_coord!(ℓ, b, x, obj_weight, b.y, vals)
 end
 
-function hess_coord!(
+function NLPModels.hess_coord!(
   b::SparseADHessian,
   nlp::ADModel,
   x::AbstractVector,
@@ -216,7 +216,7 @@ function get_nln_nnzh(b::SparseSymbolicsADHessian, nvar)
   b.nnzh
 end
 
-function hess_structure!(
+function NLPModels.hess_structure!(
   b::SparseSymbolicsADHessian,
   nlp::ADModel,
   rows::AbstractVector{<:Integer},
@@ -227,7 +227,7 @@ function hess_structure!(
   return rows, cols
 end
 
-function hess_coord!(
+function NLPModels.hess_coord!(
   b::SparseSymbolicsADHessian,
   nlp::ADModel,
   x::AbstractVector,
@@ -239,7 +239,7 @@ function hess_coord!(
   return vals
 end
 
-function hess_coord!(
+function NLPModels.hess_coord!(
   b::SparseSymbolicsADHessian,
   nlp::ADModel,
   x::AbstractVector,
@@ -251,7 +251,7 @@ function hess_coord!(
   return vals
 end
 
-function hess_coord!(
+function NLPModels.hess_coord!(
   b::SparseSymbolicsADHessian,
   nlp::ADModel,
   x::AbstractVector,

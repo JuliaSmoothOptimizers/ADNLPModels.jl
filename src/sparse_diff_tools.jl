@@ -31,7 +31,7 @@
       nnz(b.cfJ.sparsity)
     end
 
-    function jac_structure!(
+    function NLPModels.jac_structure!(
       b::SDTSparseADJacobian,
       nlp::ADModel,
       rows::AbstractVector{<:Integer},
@@ -46,7 +46,7 @@
       return rows, cols
     end
 
-    function jac_coord!(
+    function NLPModels.jac_coord!(
       b::SDTSparseADJacobian,
       nlp::ADModel,
       x::AbstractVector,
@@ -57,7 +57,7 @@
       return vals
     end
 
-    function jac_structure_residual!(
+    function NLPModels.jac_structure_residual!(
       b::SDTSparseADJacobian,
       nls::AbstractADNLSModel,
       rows::AbstractVector{<:Integer},
@@ -72,7 +72,7 @@
       return rows, cols
     end
 
-    function jac_coord_residual!(
+    function NLPModels.jac_coord_residual!(
       b::SDTSparseADJacobian,
       nls::AbstractADNLSModel,
       x::AbstractVector,

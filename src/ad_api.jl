@@ -9,6 +9,7 @@ EmptyADbackend(args...; kwargs...) = EmptyADbackend()
 """
     get_nln_nnzj(::ADBackend, nvar, ncon)
     get_nln_nnzj(b::ADModelBackend, nvar, ncon)
+    get_nln_nnzj(nlp::AbstractNLPModel, nvar, ncon)
 
 For a given `ADBackend` of a problem with `nvar` variables and `ncon` constraints, return the number of nonzeros in the Jacobian of nonlinear constraints.
 If `b` is the `ADModelBackend` then `b.jacobian_backend` is used.
@@ -21,8 +22,13 @@ function get_nln_nnzj(::ADBackend, nvar, ncon)
   nvar * ncon
 end
 
+function get_nln_nnzj(nlp::AbstractNLPModel, nvar, ncon)
+  nlp.meta.nln_nnzj
+end
+
 """
     get_residual_nnzj(b::ADModelBackend, nvar, nequ)
+    get_residual_nnzj(nls::AbstractNLPModel, nvar, ncon)
 
 Return `get_nln_nnzj(b.jacobian_residual_backend, nvar, nequ)`.
 """
@@ -30,9 +36,14 @@ function get_residual_nnzj(b::ADModelBackend, nvar, nequ)
   get_nln_nnzj(b.jacobian_residual_backend, nvar, nequ)
 end
 
+function get_residual_nnzj(nls::AbstractNLPModel, nvar, ncon)
+  nls.nls_meta.nnzj
+end
+
 """
     get_nln_nnzh(::ADBackend, nvar)
     get_nln_nnzh(b::ADModelBackend, nvar)
+    get_nln_nnzh(nlp::AbstractNLPModel, nvar)
 
 For a given `ADBackend` of a problem with `nvar` variables, return the number of nonzeros in the lower triangle of the Hessian.
 If `b` is the `ADModelBackend` then `b.hessian_backend` is used.
@@ -43,6 +54,10 @@ end
 
 function get_nln_nnzh(::ADBackend, nvar)
   div(nvar * (nvar + 1), 2)
+end
+
+function get_nln_nnzh(nlp::AbstractNLPModel, nvar)
+  nlp.meta.nnzh
 end
 
 throw_error(b) =
@@ -56,7 +71,20 @@ Jtprod!(b::ADBackend, ::Any, ::Any, ::Any, ::Any) = throw_error(b)
 Hvprod!(b::ADBackend, ::Any, ::Any, ::Any, ::Any, ::Any, args...) = throw_error(b)
 directional_second_derivative(::ADBackend, ::Any, ::Any, ::Any, ::Any) = throw_error(b)
 
-function hess_structure!(
+# API for AbstractNLPModel as backend
+gradient(nlp::AbstractNLPModel, f, x) = grad(nlp, x)
+gradient!(nlp::AbstractNLPModel, g, f, x) = grad!(nlp, x, g)
+Jprod!(nlp::AbstractNLPModel, Jv, c, x, v) = jprod_nln!(nlp, x, v, Jv)
+Jtprod!(nlp::AbstractNLPModel, Jtv, c, x, v) = jtprod_nln!(nlp, x, v, Jtv)
+function Hvprod!(nlp::AbstractNLPModel, Hv, x, v, ℓ, ::Val{:obj}, obj_weight)
+  return hprod!(nlp, x, v, Hv, obj_weight = obj_weight)
+end
+function Hvprod!(nlp::AbstractNLPModel, Hv, x, v, ℓ, ::Val{:lag}, y, obj_weight)
+  return hprod!(nlp, x, y, v, Hv, obj_weight = obj_weight)
+end
+directional_second_derivative(nlp::AbstractNLPModel, c, x, v, g) = ghjvprod(nlp, x, g, v)
+
+function NLPModels.hess_structure!(
   b::ADBackend,
   nlp::ADModel,
   rows::AbstractVector{<:Integer},
@@ -74,7 +102,16 @@ function hess_structure!(
   return rows, cols
 end
 
-function hess_coord!(
+function NLPModels.hess_structure!(
+  nlp::AbstractNLPModel,
+  ::AbstractNLPModel,
+  rows::AbstractVector{<:Integer},
+  cols::AbstractVector{<:Integer},
+)
+  return NLPModels.hess_structure!(nlp, rows, cols)
+end
+
+function NLPModels.hess_coord!(
   b::ADBackend,
   nlp::ADModel,
   x::AbstractVector,
@@ -87,7 +124,18 @@ function hess_coord!(
   return vals
 end
 
-function hess_coord!(
+function NLPModels.hess_coord!(
+  nlp::AbstractNLPModel,
+  ::ADModel,
+  x::AbstractVector,
+  y::AbstractVector,
+  obj_weight::Real,
+  vals::AbstractVector,
+)
+  return NLPModels.hess_coord!(nlp, x, y, vals, obj_weight = obj_weight)
+end
+
+function NLPModels.hess_coord!(
   b::ADBackend,
   nlp::ADModel,
   x::AbstractVector,
@@ -98,7 +146,17 @@ function hess_coord!(
   return hess_coord!(b, nlp, x, ℓ, vals)
 end
 
-function hess_coord!(
+function NLPModels.hess_coord!(
+  nlp::AbstractNLPModel,
+  ::ADModel,
+  x::AbstractVector,
+  obj_weight::Real,
+  vals::AbstractVector,
+)
+  return NLPModels.hess_coord!(nlp, x, vals, obj_weight = obj_weight)
+end
+
+function NLPModels.hess_coord!(
   b::ADBackend,
   nlp::ADModel,
   x::AbstractVector,
@@ -119,7 +177,17 @@ function hess_coord!(
   return vals
 end
 
-function hess_coord!(
+function NLPModels.hess_coord!(
+  nlp::AbstractNLPModel,
+  ::ADModel,
+  x::AbstractVector,
+  j::Integer,
+  vals::AbstractVector,
+)
+  return NLPModels.jth_hess_coord!(nlp, x, j, vals)
+end
+
+function NLPModels.hess_coord!(
   b::ADBackend,
   nlp::ADModel,
   x::AbstractVector,
@@ -138,7 +206,7 @@ function hess_coord!(
   return vals
 end
 
-function hprod!(
+function NLPModels.hprod!(
   b::ADBackend,
   nlp::ADModel,
   x::AbstractVector,
@@ -151,7 +219,18 @@ function hprod!(
   return Hv
 end
 
-function hprod_residual!(
+function NLPModels.hprod!(
+  nlp::AbstractNLPModel,
+  ::ADModel,
+  x::AbstractVector,
+  v::AbstractVector,
+  j::Integer,
+  Hv::AbstractVector,
+)
+  return jth_hprod!(nlp, x, v, j, Hv)
+end
+
+function NLPModels.hprod_residual!(
   b::ADBackend,
   nls::AbstractADNLSModel,
   x::AbstractVector,
@@ -164,7 +243,18 @@ function hprod_residual!(
   return Hv
 end
 
-function jac_structure!(
+function NLPModels.hprod_residual!(
+  nlp::AbstractNLPModel,
+  ::AbstractADNLSModel,
+  x::AbstractVector,
+  v::AbstractVector,
+  i::Integer,
+  Hv::AbstractVector,
+)
+  return hprod_residual!(nlp, x, i, v, Hiv)
+end
+
+function NLPModels.jac_structure!(
   b::ADBackend,
   nlp::ADModel,
   rows::AbstractVector{<:Integer},
@@ -174,7 +264,16 @@ function jac_structure!(
   return jac_dense!(m, n, rows, cols)
 end
 
-function jac_structure_residual!(
+function NLPModels.jac_structure!(
+  nlp::AbstractNLPModel,
+  ::ADModel,
+  rows::AbstractVector{<:Integer},
+  cols::AbstractVector{<:Integer},
+)
+  return jac_nln_structure!(nlp, rows, cols)
+end
+
+function NLPModels.jac_structure_residual!(
   b::ADBackend,
   nls::AbstractADNLSModel,
   rows::AbstractVector{<:Integer},
@@ -182,6 +281,15 @@ function jac_structure_residual!(
 )
   m, n = nls.nls_meta.nequ, nls.meta.nvar
   return jac_dense!(m, n, rows, cols)
+end
+
+function NLPModels.jac_structure_residual!(
+  nlp::AbstractNLPModel,
+  ::AbstractADNLSModel,
+  rows::AbstractVector{<:Integer},
+  cols::AbstractVector{<:Integer},
+)
+  return jac_structure_residual!(nlp, rows, cols)
 end
 
 function jac_dense!(
@@ -201,14 +309,23 @@ function jac_dense!(
   return rows, cols
 end
 
-function jac_coord!(b::ADBackend, nlp::ADModel, x::AbstractVector, vals::AbstractVector)
+function NLPModels.jac_coord!(b::ADBackend, nlp::ADModel, x::AbstractVector, vals::AbstractVector)
   c = get_c(nlp, b)
   Jx = jacobian(b, c, x)
   vals .= view(Jx, :)
   return vals
 end
 
-function jac_coord_residual!(
+function NLPModels.jac_coord!(
+  nlp::AbstractNLPModel,
+  ::ADModel,
+  x::AbstractVector,
+  vals::AbstractVector,
+)
+  return jac_nln_coord!(nlp, x, vals)
+end
+
+function NLPModels.jac_coord_residual!(
   b::ADBackend,
   nls::AbstractADNLSModel,
   x::AbstractVector,
@@ -218,4 +335,13 @@ function jac_coord_residual!(
   Jx = jacobian(b, F, x)
   vals .= view(Jx, :)
   return vals
+end
+
+function NLPModels.jac_coord_residual!(
+  nlp::AbstractNLPModel,
+  ::AbstractADNLSModel,
+  x::AbstractVector,
+  vals::AbstractVector,
+)
+  return jac_coord_residual!(nlp, x, vals)
 end
