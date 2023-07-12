@@ -81,7 +81,12 @@ function sparse_jac_coord!(
   return vals
 end
 
-function NLPModels.jac_coord!(b::SparseADJacobian, nlp::ADModel, x::AbstractVector, vals::AbstractVector)
+function NLPModels.jac_coord!(
+  b::SparseADJacobian,
+  nlp::ADModel,
+  x::AbstractVector,
+  vals::AbstractVector,
+)
   sparse_jac_coord!(nlp.c!, b, x, vals)
   return vals
 end

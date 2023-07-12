@@ -14,16 +14,16 @@
     hv[2] = (h12 * v[1] + h22 * v[2]) * obj_weight
     return hv
   end
-  hv!(vals, x, y, v; obj_weight=1) = hv!(vals, x, v; obj_weight=obj_weight)
+  hv!(vals, x, y, v; obj_weight = 1) = hv!(vals, x, v; obj_weight = obj_weight)
 
-  h!(vals, x; obj_weight=1) = begin
+  h!(vals, x; obj_weight = 1) = begin
     vals[1] = 2 - 16 * x[2] + 48 * x[1]^2
     vals[2] = -16 * x[1]
     vals[3] = 8.0
     vals .*= obj_weight
     return vals
   end
-  h!(vals, x, y; obj_weight=1) = h!(vals, x; obj_weight=obj_weight)
+  h!(vals, x, y; obj_weight = 1) = h!(vals, x; obj_weight = obj_weight)
 
   c!(cx, x) = begin
     cx[1] = x[1] + x[2]
@@ -78,11 +78,13 @@
 
   @test grad(nlp, x) == [2 * (x[1] - 1) - 16 * x[1] * (x[2] - x[1]^2); 8 * (x[2] - x[1]^2)]
   @test hprod(nlp, x, v) == [
-    (2 - 16 * x[2] + 48 * x[1]^2) * v[1] + (-16 * x[1]) * v[2];
-    (-16 * x[1]) * v[1] + 8 * v[2]]
+    (2 - 16 * x[2] + 48 * x[1]^2) * v[1] + (-16 * x[1]) * v[2]
+    (-16 * x[1]) * v[1] + 8 * v[2]
+  ]
   @test hess(nlp, x) == [
-    2 - 16 * x[2] + 48 * x[1]^2  0.0
-    0.0     8.0]
+    2 - 16 * x[2]+48 * x[1]^2 0.0
+    0.0 8.0
+  ]
   @test hprod(nlp, x, y, v) == hprod(nlp, x, y, v)
   @test hess(nlp, x, y) == hess(nlp, x, y)
   @test jprod(nlp, x, v) == [2]
