@@ -13,54 +13,6 @@ for pb in scalable_problems
 end
 =#
 
-using SparseDiffTools
-# Hprod using ForwardDiff and SparseDiffTools
-# branch hprod2: https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl/pull/122/files
-struct SPTADHvprod{T} <: ADNLPModels.ADBackend
-  tmp_in::Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}
-  tmp_out::Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}
-  #ϕ!::F
-end
-function SPTADHvprod(
-  nvar::Integer,
-  f,
-  ncon::Integer = 0,
-  c::Function = (args...) -> [];
-  x0::AbstractVector{T} = rand(nvar),
-  kwargs...,
-) where {T}
-  tmp_in = Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(undef, nvar)
-  tmp_out = Vector{SparseDiffTools.Dual{ForwardDiff.Tag{SparseDiffTools.DeivVecTag, T}, T, 1}}(undef, nvar)
-  #cfg = ForwardDiff.GradientConfig(f, tmp_in)
-  #ϕ!(dy, x; f = f, cfg = cfg) = ForwardDiff.gradient!(dy, f, x, cfg)
-  return SPTADHvprod(tmp_in, tmp_out) # , ϕ!
-end
-
-function ADNLPModels.Hvprod!(b::SPTADHvprod, Hv, x, v, f, args...)
-  ϕ!(dy, x; f = f) = ForwardDiff.gradient!(dy, f, x)
-  SparseDiffTools.auto_hesvecgrad!(Hv, ϕ!, x, v, b.tmp_in, b.tmp_out)
-  return Hv
-end
-
-#=
-using ADNLPModels, OptimizationProblems.ADNLPProblems, NLPModels, Test
-T = Float64
-nscal = 32
-@testset "$pb" for pb in scalable_problems
-  n = eval(Meta.parse("OptimizationProblems.get_" * pb * "_nvar(n = $(nscal))"))
-  m = eval(Meta.parse("OptimizationProblems.get_" * pb * "_ncon(n = $(nscal))"))
-  v = [sin(T(i) / 10) for i=1:n]
-  (pb in [""]) && continue
-  nlp = eval(Meta.parse(pb))(n = nscal, hprod_backend = SPTADHvprod)
-  @info " $(pb): $n vars ($(nlp.meta.nvar)) and $m cons"
-  x = get_x0(nlp)
-  Hv_control = ForwardDiff.hessian(nlp.f, x) * v
-  Hv = similar(x)
-  hprod!(nlp, x, v, Hv)
-  @test Hv ≈ Hv_control
-end
-=#
-
 #######################################################
 # ForwardDiff
 

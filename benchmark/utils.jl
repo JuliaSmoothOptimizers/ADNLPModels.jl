@@ -43,13 +43,13 @@ benchmarked_optimized_backends = Dict(
   ),
   "hprod_backend" => Dict(
     "forward" => ADNLPModels.ForwardDiffADHvprod,
-    "forwardSDT" => SPTADHvprod,
+    "forwardSDT" => ADNLPModels.SDTForwardDiffADHvprod,
     "reverse" => ADNLPModels.ReverseDiffADHvprod,
   ),
   "jprod_backend" => Dict(
     "forward" => ADNLPModels.ForwardDiffADJprod,
     "reverse" => ADNLPModels.ReverseDiffADJprod,
-    # "sdtforward" => SDTForwardDiffADJprod, # use SparseDiffTools
+    "sdtforward" => ADNLPModels.SDTForwardDiffADJprod,
   ),
   "jtprod_backend" => Dict(
     "reverse" => ADNLPModels.ReverseDiffADJtprod,
@@ -58,7 +58,7 @@ benchmarked_optimized_backends = Dict(
   "jacobian_backend" => Dict(
     "sparse-SDTcol" => SparseADJacobianSDTColoration,
     "sparse" => ADNLPModels.SparseADJacobian,
-    "SDTsparse" => SDTSparseADJacobian,
+    "SDTsparse" => ADNLPModels.SDTSparseADJacobian,
     # "forward" => ADNLPModels.ForwardDiffADJacobian, # slower
     # "reverse" => ADNLPModels.ReverseDiffADJacobian, # fails somehow
     # "zygote" => ADNLPModels.ZygoteADJacobian,
@@ -85,7 +85,7 @@ benchmarked_generic_backends = Dict(
   ),
   "hprod_backend" => Dict(
     "forward" => ADNLPModels.GenericForwardDiffADHvprod,
-    "reverse" => ADNLPModels.GenericReverseDiffADHvprod,
+    "reverse" => ADNLPModels.ReverseDiffADHvprod,
   ),
   "jprod_backend" => Dict(
     "forward" => ADNLPModels.GenericForwardDiffADJprod,

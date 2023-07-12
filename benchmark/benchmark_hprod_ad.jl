@@ -41,7 +41,7 @@ data_types = [Float64] # [Float16, Float32, Float64]
 tested_backs = Dict(
   "hprod_backend" => :hprod,
 )
-const nscal = nn * 10
+const nscal = nn * 1
 name = "$(today())_adnlpmodels_benchmark_hprod"
 if "all" in keys(problem_sets)
   name *= "_all"

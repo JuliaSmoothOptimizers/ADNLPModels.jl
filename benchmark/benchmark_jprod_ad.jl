@@ -39,7 +39,7 @@ data_types = [Float64] # [Float16, Float32, Float64]
 tested_backs = Dict(
   "jprod_backend" => :jprod,
 )
-const nscal = nn * 10
+const nscal = nn * 1
 name = "$(today())_adnlpmodels_benchmark_jprod"
 if "all" in keys(problem_sets)
   name *= "_all"

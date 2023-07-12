@@ -7,7 +7,7 @@ TODO:
 =#
 using Pkg
 Pkg.activate(".")
-Pkg.add(url = "https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl", rev = "rmv-SDT")
+Pkg.add(url = "https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl", rev = "main")
 using ADNLPModels
 
 using Dates, DelimitedFiles, JLD2, LinearAlgebra, Printf, SparseArrays
@@ -39,7 +39,7 @@ data_types = [Float64] # [Float16, Float32, Float64]
 tested_backs = Dict(
   "jacobian_backend" => :jac_coord!,
 )
-const nscal = nn * 10
+const nscal = nn * 1
 name = "$(today())_adnlpmodels_benchmark_jac"
 if "all" in keys(problem_sets)
   name *= "_all"

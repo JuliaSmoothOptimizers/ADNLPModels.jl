@@ -6,8 +6,8 @@ project_hash = "1d158fdf397bf228d34e117bd44f1f64834b2729"
 
 [[deps.ADNLPModels]]
 deps = ["ColPack", "ForwardDiff", "LinearAlgebra", "NLPModels", "Requires", "ReverseDiff", "SparseArrays", "Symbolics"]
-git-tree-sha1 = "141e7a2407993e782491e33a5d2e72b27c280cd7"
-repo-rev = "reverseforwardhpro"
+git-tree-sha1 = "aa349346de64e4a009568e22e26b0daabd1762cb"
+repo-rev = "main"
 repo-url = "https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl"
 uuid = "54578032-b7ea-4c30-94aa-7cbd1cce6c9a"
 version = "0.6.2"
