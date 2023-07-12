@@ -43,7 +43,7 @@ benchmarked_optimized_backends = Dict(
   ),
   "hprod_backend" => Dict(
     "forward" => ADNLPModels.ForwardDiffADHvprod,
-    "forwardSDT" => ADNLPModels.SDTForwardDiffADHvprod,
+    "sdtforward" => ADNLPModels.SDTForwardDiffADHvprod,
     "reverse" => ADNLPModels.ReverseDiffADHvprod,
   ),
   "jprod_backend" => Dict(
