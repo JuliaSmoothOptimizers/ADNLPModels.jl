@@ -143,7 +143,6 @@ function ADModelBackend(
   ghjvprod_backend = get_default_backend(:ghjvprod_backend, backend),
   kwargs...,
 )
-
   GB = gradient_backend
   b = @elapsed begin
     gradient_backend = if gradient_backend isa AbstractNLPModel

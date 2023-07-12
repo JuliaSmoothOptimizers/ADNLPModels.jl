@@ -1,53 +1,49 @@
 default_backend = Dict(
-    :gradient_backend => ForwardDiffADGradient,
-    :hprod_backend => ForwardDiffADHvprod,
-    :jprod_backend => ForwardDiffADJprod,
-    :jtprod_backend => ForwardDiffADJtprod,
-    :jacobian_backend => SparseADJacobian,
-    :hessian_backend => SparseADHessian,
-    :ghjvprod_backend => ForwardDiffADGHjvprod,
-    :hprod_residual_backend => ForwardDiffADHvprod,
-    :jprod_residual_backend => ForwardDiffADJprod,
-    :jtprod_residual_backend => ForwardDiffADJtprod,
-    :jacobian_residual_backend => SparseADJacobian,
-    :hessian_residual_backend => ForwardDiffADHessian,
+  :gradient_backend => ForwardDiffADGradient,
+  :hprod_backend => ForwardDiffADHvprod,
+  :jprod_backend => ForwardDiffADJprod,
+  :jtprod_backend => ForwardDiffADJtprod,
+  :jacobian_backend => SparseADJacobian,
+  :hessian_backend => SparseADHessian,
+  :ghjvprod_backend => ForwardDiffADGHjvprod,
+  :hprod_residual_backend => ForwardDiffADHvprod,
+  :jprod_residual_backend => ForwardDiffADJprod,
+  :jtprod_residual_backend => ForwardDiffADJtprod,
+  :jacobian_residual_backend => SparseADJacobian,
+  :hessian_residual_backend => ForwardDiffADHessian,
 )
 
 optimized = Dict(
-    :gradient_backend => ReverseDiffADGradient, # EnzymeADGradient
-    :hprod_backend => ForwardDiffADHvprod,
-    :jprod_backend => ForwardDiffADJprod,
-    :jtprod_backend => ReverseDiffADJtprod,
-    :jacobian_backend => SparseADJacobian,
-    :hessian_backend => SparseADHessian,
-    :ghjvprod_backend => ForwardDiffADGHjvprod,
-    :hprod_residual_backend => ForwardDiffADHvprod,
-    :jprod_residual_backend => ForwardDiffADJprod,
-    :jtprod_residual_backend => ReverseDiffADJtprod,
-    :jacobian_residual_backend => SparseADJacobian,
-    :hessian_residual_backend => ForwardDiffADHessian,
+  :gradient_backend => ReverseDiffADGradient, # EnzymeADGradient
+  :hprod_backend => ForwardDiffADHvprod,
+  :jprod_backend => ForwardDiffADJprod,
+  :jtprod_backend => ReverseDiffADJtprod,
+  :jacobian_backend => SparseADJacobian,
+  :hessian_backend => SparseADHessian,
+  :ghjvprod_backend => ForwardDiffADGHjvprod,
+  :hprod_residual_backend => ForwardDiffADHvprod,
+  :jprod_residual_backend => ForwardDiffADJprod,
+  :jtprod_residual_backend => ReverseDiffADJtprod,
+  :jacobian_residual_backend => SparseADJacobian,
+  :hessian_residual_backend => ForwardDiffADHessian,
 )
 
 generic = Dict(
-    :gradient_backend => GenericForwardDiffADGradient,
-    :hprod_backend => GenericForwardDiffADHvprod,
-    :jprod_backend => GenericForwardDiffADJprod,
-    :jtprod_backend => GenericForwardDiffADJtprod,
-    :jacobian_backend => ForwardDiffADJacobian,
-    :hessian_backend => ForwardDiffADHessian,
-    :ghjvprod_backend => ForwardDiffADGHjvprod,
-    :hprod_residual_backend => GenericForwardDiffADHvprod,
-    :jprod_residual_backend => GenericForwardDiffADJprod,
-    :jtprod_residual_backend => GenericForwardDiffADJtprod,
-    :jacobian_residual_backend => ForwardDiffADJacobian,
-    :hessian_residual_backend => ForwardDiffADHessian,
+  :gradient_backend => GenericForwardDiffADGradient,
+  :hprod_backend => GenericForwardDiffADHvprod,
+  :jprod_backend => GenericForwardDiffADJprod,
+  :jtprod_backend => GenericForwardDiffADJtprod,
+  :jacobian_backend => ForwardDiffADJacobian,
+  :hessian_backend => ForwardDiffADHessian,
+  :ghjvprod_backend => ForwardDiffADGHjvprod,
+  :hprod_residual_backend => GenericForwardDiffADHvprod,
+  :jprod_residual_backend => GenericForwardDiffADJprod,
+  :jtprod_residual_backend => GenericForwardDiffADJtprod,
+  :jacobian_residual_backend => ForwardDiffADJacobian,
+  :hessian_residual_backend => ForwardDiffADHessian,
 )
 
-predefined_backend = Dict(
-    :default => default_backend,
-    :optimized => optimized,
-    :generic => generic
-)
+predefined_backend = Dict(:default => default_backend, :optimized => optimized, :generic => generic)
 
 """
     get_default_backend(meth::Symbol, backend::Symbol; kwargs...)
@@ -77,6 +73,6 @@ end
 function get_default_backend(::Val{:jacobian_residual_backend}, backend, matrix_free::Bool = false)
   return matrix_free ? EmptyADbackend : predefined_backend[backend][:jacobian_residual_backend]
 end
-function get_default_backend(:: Val{:hessian_residual_backend}, backend, matrix_free::Bool = false)
+function get_default_backend(::Val{:hessian_residual_backend}, backend, matrix_free::Bool = false)
   return matrix_free ? EmptyADbackend : predefined_backend[backend][:hessian_residual_backend]
 end

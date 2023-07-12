@@ -31,7 +31,7 @@ push!(
   :zygote_backend => Dict(
     :gradient_backend => ADNLPModels.ZygoteADGradient,
     :hprod_backend => ADNLPModels.SDTForwardDiffADHvprod,
-    :jprod_backend =>ADNLPModels.ZygoteADJprod,
+    :jprod_backend => ADNLPModels.ZygoteADJprod,
     :jtprod_backend => ADNLPModels.ZygoteADJtprod,
     :jacobian_backend => ADNLPModels.ZygoteADJacobian,
     :hessian_backend => ADNLPModels.ZygoteADHessian,
@@ -41,7 +41,7 @@ push!(
     :jtprod_residual_backend => ADNLPModels.ZygoteADJtprod,
     :jacobian_residual_backend => ADNLPModels.ZygoteADJacobian,
     :hessian_residual_backend => ADNLPModels.ZygoteADHessian,
-  )
+  ),
 )
 
 ReverseDiffAD(nvar, f) = ADNLPModels.ADModelBackend(
