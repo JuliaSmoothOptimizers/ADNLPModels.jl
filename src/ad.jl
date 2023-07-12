@@ -72,24 +72,41 @@ function ADModelBackend(
   backend::Symbol = :default,
   matrix_free::Bool = false,
   show_time::Bool = false,
-  gradient_backend::Type{GB} = get_default_backend(:gradient_backend, backend),
-  hprod_backend::Type{HvB} = get_default_backend(:hprod_backend, backend),
-  hessian_backend::Type{HB} = get_default_backend(:hessian_backend, backend, matrix_free),
+  gradient_backend = get_default_backend(:gradient_backend, backend),
+  hprod_backend = get_default_backend(:hprod_backend, backend),
+  hessian_backend = get_default_backend(:hessian_backend, backend, matrix_free),
   kwargs...,
-) where {GB, HvB, HB}
+)
   c! = (args...) -> []
   ncon = 0
 
+  GB = gradient_backend
   b = @elapsed begin
-    gradient_backend = GB(nvar, f, ncon, c!; kwargs...)
+    gradient_backend = if gradient_backend isa AbstractNLPModel
+      gradient_backend
+    else
+      GB(nvar, f, ncon, c!; kwargs...)
+    end
   end
   show_time && println("gradient backend $GB: $b seconds;")
+
+  HvB = hprod_backend
   b = @elapsed begin
-    hprod_backend = HvB(nvar, f, ncon, c!; kwargs...)
+    hprod_backend = if hprod_backend isa AbstractNLPModel
+      hprod_backend
+    else
+      HvB(nvar, f, ncon, c!; kwargs...)
+    end
   end
   show_time && println("hprod    backend $HvB: $b seconds;")
+
+  HB = hessian_backend
   b = @elapsed begin
-    hessian_backend = HB(nvar, f, ncon, c!; kwargs...)
+    hessian_backend = if hessian_backend isa AbstractNLPModel
+      hessian_backend
+    else
+      HB(nvar, f, ncon, c!; kwargs...)
+    end
   end
   show_time && println("hessian  backend $HB: $b seconds;")
 
@@ -117,43 +134,86 @@ function ADModelBackend(
   backend::Symbol = :default,
   matrix_free::Bool = false,
   show_time::Bool = false,
-  gradient_backend::Type{GB} = get_default_backend(:gradient_backend, backend),
-  hprod_backend::Type{HvB} = get_default_backend(:hprod_backend, backend),
-  jprod_backend::Type{JvB} = get_default_backend(:jprod_backend, backend),
-  jtprod_backend::Type{JtvB} = get_default_backend(:jtprod_backend, backend),
-  jacobian_backend::Type{JB} = get_default_backend(:jacobian_backend, backend, matrix_free),
-  hessian_backend::Type{HB} = get_default_backend(:hessian_backend, backend, matrix_free),
-  ghjvprod_backend::Type{GHJ} = get_default_backend(:ghjvprod_backend, backend),
+  gradient_backend = get_default_backend(:gradient_backend, backend),
+  hprod_backend = get_default_backend(:hprod_backend, backend),
+  jprod_backend = get_default_backend(:jprod_backend, backend),
+  jtprod_backend = get_default_backend(:jtprod_backend, backend),
+  jacobian_backend = get_default_backend(:jacobian_backend, backend, matrix_free),
+  hessian_backend = get_default_backend(:hessian_backend, backend, matrix_free),
+  ghjvprod_backend = get_default_backend(:ghjvprod_backend, backend),
   kwargs...,
-) where {GB, HvB, JvB, JtvB, JB, HB, GHJ}
+)
+
+  GB = gradient_backend
   b = @elapsed begin
-    gradient_backend = GB(nvar, f, ncon, c!; kwargs...)
+    gradient_backend = if gradient_backend isa AbstractNLPModel
+      gradient_backend
+    else
+      GB(nvar, f, ncon, c!; kwargs...)
+    end
   end
   show_time && println("gradient backend $GB: $b seconds;")
+
+  HvB = hprod_backend
   b = @elapsed begin
-    hprod_backend = HvB(nvar, f, ncon, c!; kwargs...)
+    hprod_backend = if hprod_backend isa AbstractNLPModel
+      hprod_backend
+    else
+      HvB(nvar, f, ncon, c!; kwargs...)
+    end
   end
   show_time && println("hprod    backend $HvB: $b seconds;")
+
+  JvB = jprod_backend
   b = @elapsed begin
-    jprod_backend = JvB(nvar, f, ncon, c!; kwargs...)
+    jprod_backend = if jprod_backend isa AbstractNLPModel
+      jprod_backend
+    else
+      JvB(nvar, f, ncon, c!; kwargs...)
+    end
   end
   show_time && println("jprod    backend $JvB: $b seconds;")
+
+  JtvB = jtprod_backend
   b = @elapsed begin
-    jtprod_backend = JtvB(nvar, f, ncon, c!; kwargs...)
+    jtprod_backend = if jtprod_backend isa AbstractNLPModel
+      jtprod_backend
+    else
+      JtvB(nvar, f, ncon, c!; kwargs...)
+    end
   end
   show_time && println("jtprod   backend $JtvB: $b seconds;")
+
+  JB = jacobian_backend
   b = @elapsed begin
-    jacobian_backend = JB(nvar, f, ncon, c!; kwargs...)
+    jacobian_backend = if jacobian_backend isa AbstractNLPModel
+      jacobian_backend
+    else
+      JB(nvar, f, ncon, c!; kwargs...)
+    end
   end
   show_time && println("jacobian backend $JB: $b seconds;")
+
+  HB = hessian_backend
   b = @elapsed begin
-    hessian_backend = HB(nvar, f, ncon, c!; kwargs...)
+    hessian_backend = if hessian_backend isa AbstractNLPModel
+      hessian_backend
+    else
+      HB(nvar, f, ncon, c!; kwargs...)
+    end
   end
   show_time && println("hessian  backend $HB: $b seconds;")
+
+  GHJ = ghjvprod_backend
   b = @elapsed begin
-    ghjvprod_backend = GHJ(nvar, f, ncon, c!; kwargs...)
+    ghjvprod_backend = if ghjvprod_backend isa AbstractNLPModel
+      ghjvprod_backend
+    else
+      GHJ(nvar, f, ncon, c!; kwargs...)
+    end
   end
   show_time && println("ghjvprod backend $GHJ: $b seconds. \n")
+
   return ADModelBackend(
     gradient_backend,
     hprod_backend,
@@ -177,17 +237,16 @@ function ADModelNLSBackend(
   backend::Symbol = :default,
   matrix_free::Bool = false,
   show_time::Bool = false,
-  gradient_backend::Type{GB} = get_default_backend(:gradient_backend, backend),
-  hprod_backend::Type{HvB} = get_default_backend(:hprod_backend, backend),
-  hessian_backend::Type{HB} = get_default_backend(:hessian_backend, backend, matrix_free),
-  ghjvprod_backend::Type{GHJ} = get_default_backend(:ghjvprod_backend, backend),
-  hprod_residual_backend::Type{HvBLS} = get_default_backend(:hprod_residual_backend, backend),
-  jprod_residual_backend::Type{JvBLS} = get_default_backend(:jprod_residual_backend, backend),
-  jtprod_residual_backend::Type{JtvBLS} = get_default_backend(:jtprod_residual_backend, backend),
-  jacobian_residual_backend::Type{JBLS} = get_default_backend(:jacobian_residual_backend, backend, matrix_free),
-  hessian_residual_backend::Type{HBLS} = get_default_backend(:hessian_residual_backend, backend, matrix_free),
+  gradient_backend = get_default_backend(:gradient_backend, backend),
+  hprod_backend = get_default_backend(:hprod_backend, backend),
+  hessian_backend = get_default_backend(:hessian_backend, backend, matrix_free),
+  hprod_residual_backend = get_default_backend(:hprod_residual_backend, backend),
+  jprod_residual_backend = get_default_backend(:jprod_residual_backend, backend),
+  jtprod_residual_backend = get_default_backend(:jtprod_residual_backend, backend),
+  jacobian_residual_backend = get_default_backend(:jacobian_residual_backend, backend, matrix_free),
+  hessian_residual_backend = get_default_backend(:hessian_residual_backend, backend, matrix_free),
   kwargs...,
-) where {GB, HvB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS}
+)
   function F(x; nequ = nequ)
     Fx = similar(x, nequ)
     F!(Fx, x)
@@ -198,37 +257,83 @@ function ADModelNLSBackend(
   c! = (args...) -> []
   ncon = 0
 
+  GB = gradient_backend
   b = @elapsed begin
-    gradient_backend = GB(nvar, f, ncon, c!; kwargs...)
+    gradient_backend = if gradient_backend isa AbstractNLPModel
+      gradient_backend
+    else
+      GB(nvar, f, ncon, c!; kwargs...)
+    end
   end
-  show_time && println("gradient          backend $GB: $b seconds;")
-  b = @elapsed begin
-    hprod_backend = HvB(nvar, f, ncon, c!; kwargs...)
-  end
-  show_time && println("hprod             backend $HvB: $b seconds;")
-  b = @elapsed begin
-    hessian_backend = HB(nvar, f, ncon, c!; kwargs...)
-  end
-  show_time && println("hessian           backend $HB: $b seconds;")
+  show_time && println("gradient backend $GB: $b seconds;")
 
+  HvB = hprod_backend
   b = @elapsed begin
-    hprod_residual_backend = HvBLS(nvar, f, nequ, F!; kwargs...)
+    hprod_backend = if hprod_backend isa AbstractNLPModel
+      hprod_backend
+    else
+      HvB(nvar, f, ncon, c!; kwargs...)
+    end
+  end
+  show_time && println("hprod    backend $HvB: $b seconds;")
+
+  HB = hessian_backend
+  b = @elapsed begin
+    hessian_backend = if hessian_backend isa AbstractNLPModel
+      hessian_backend
+    else
+      HB(nvar, f, ncon, c!; kwargs...)
+    end
+  end
+  show_time && println("hessian  backend $HB: $b seconds;")
+
+  HvBLS = hprod_residual_backend
+  b = @elapsed begin
+    hprod_residual_backend = if hprod_residual_backend isa AbstractNLPModel
+      hprod_residual_backend
+    else
+      HvBLS(nvar, f, nequ, F!; kwargs...)
+    end
   end
   show_time && println("hprod_residual    backend $HvBLS: $b seconds;")
+
+  JvBLS = jprod_residual_backend
   b = @elapsed begin
-    jprod_residual_backend = JvBLS(nvar, f, nequ, F!; kwargs...)
+    jprod_residual_backend = if jprod_residual_backend isa AbstractNLPModel
+      jprod_residual_backend
+    else
+      JvBLS(nvar, f, nequ, F!; kwargs...)
+    end
   end
   show_time && println("jprod_residual    backend $JvBLS: $b seconds;")
+
+  JtvBLS = jtprod_residual_backend
   b = @elapsed begin
-    jtprod_residual_backend = JtvBLS(nvar, f, nequ, F!; kwargs...)
+    jtprod_residual_backend = if jtprod_residual_backend isa AbstractNLPModel
+      jtprod_residual_backend
+    else
+      JtvBLS(nvar, f, nequ, F!; kwargs...)
+    end
   end
   show_time && println("jtprod_residual   backend $JtvBLS: $b seconds;")
+
+  JBLS = jacobian_residual_backend
   b = @elapsed begin
-    jacobian_residual_backend = JBLS(nvar, f, nequ, F!; kwargs...)
+    jacobian_residual_backend = if jacobian_residual_backend isa AbstractNLPModel
+      jacobian_residual_backend
+    else
+      JBLS(nvar, f, nequ, F!; kwargs...)
+    end
   end
   show_time && println("jacobian_residual backend $JBLS: $b seconds;")
+
+  HBLS = hessian_residual_backend
   b = @elapsed begin
-    hessian_residual_backend = HBLS(nvar, f, nequ, F!; kwargs...)
+    hessian_residual_backend = if hessian_residual_backend isa AbstractNLPModel
+      hessian_residual_backend
+    else
+      HBLS(nvar, f, nequ, F!; kwargs...)
+    end
   end
   show_time && println("hessian_residual  backend $HBLS: $b seconds. \n")
 
@@ -257,20 +362,20 @@ function ADModelNLSBackend(
   backend::Symbol = :default,
   matrix_free::Bool = false,
   show_time::Bool = false,
-  gradient_backend::Type{GB} = get_default_backend(:gradient_backend, backend),
-  hprod_backend::Type{HvB} = get_default_backend(:hprod_backend, backend),
-  jprod_backend::Type{JvB} = get_default_backend(:jprod_backend, backend),
-  jtprod_backend::Type{JtvB} = get_default_backend(:jtprod_backend, backend),
-  jacobian_backend::Type{JB} = get_default_backend(:jacobian_backend, backend, matrix_free),
-  hessian_backend::Type{HB} = get_default_backend(:hessian_backend, backend, matrix_free),
-  ghjvprod_backend::Type{GHJ} = get_default_backend(:ghjvprod_backend, backend),
-  hprod_residual_backend::Type{HvBLS} = get_default_backend(:hprod_residual_backend, backend),
-  jprod_residual_backend::Type{JvBLS} = get_default_backend(:jprod_residual_backend, backend),
-  jtprod_residual_backend::Type{JtvBLS} = get_default_backend(:jtprod_residual_backend, backend),
-  jacobian_residual_backend::Type{JBLS} = get_default_backend(:jacobian_residual_backend, backend, matrix_free),
-  hessian_residual_backend::Type{HBLS} = get_default_backend(:hessian_residual_backend, backend, matrix_free),
+  gradient_backend = get_default_backend(:gradient_backend, backend),
+  hprod_backend = get_default_backend(:hprod_backend, backend),
+  jprod_backend = get_default_backend(:jprod_backend, backend),
+  jtprod_backend = get_default_backend(:jtprod_backend, backend),
+  jacobian_backend = get_default_backend(:jacobian_backend, backend, matrix_free),
+  hessian_backend = get_default_backend(:hessian_backend, backend, matrix_free),
+  ghjvprod_backend = get_default_backend(:ghjvprod_backend, backend),
+  hprod_residual_backend = get_default_backend(:hprod_residual_backend, backend),
+  jprod_residual_backend = get_default_backend(:jprod_residual_backend, backend),
+  jtprod_residual_backend = get_default_backend(:jtprod_residual_backend, backend),
+  jacobian_residual_backend = get_default_backend(:jacobian_residual_backend, backend, matrix_free),
+  hessian_residual_backend = get_default_backend(:hessian_residual_backend, backend, matrix_free),
   kwargs...,
-) where {GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS}
+)
   function F(x; nequ = nequ)
     Fx = similar(x, nequ)
     F!(Fx, x)
@@ -278,53 +383,123 @@ function ADModelNLSBackend(
   end
   f = x -> mapreduce(Fi -> Fi^2, +, F(x)) / 2
 
+  GB = gradient_backend
   b = @elapsed begin
-    gradient_backend = GB(nvar, f, ncon, c!; kwargs...)
+    gradient_backend = if gradient_backend isa AbstractNLPModel
+      gradient_backend
+    else
+      GB(nvar, f, ncon, c!; kwargs...)
+    end
   end
-  show_time && println("gradient          backend $GB: $b seconds;")
-  b = @elapsed begin
-    hprod_backend = HvB(nvar, f, ncon, c!; kwargs...)
-  end
-  show_time && println("hprod             backend $HvB: $b seconds;")
-  b = @elapsed begin
-    jprod_backend = JvB(nvar, f, ncon, c!; kwargs...)
-  end
-  show_time && println("jprod             backend $JvB: $b seconds;")
-  b = @elapsed begin
-    jtprod_backend = JtvB(nvar, f, ncon, c!; kwargs...)
-  end
-  show_time && println("jtprod            backend $JtvB: $b seconds;")
-  b = @elapsed begin
-    jacobian_backend = JB(nvar, f, ncon, c!; kwargs...)
-  end
-  show_time && println("jacobian          backend $JB: $b seconds;")
-  b = @elapsed begin
-    hessian_backend = HB(nvar, f, ncon, c!; kwargs...)
-  end
-  show_time && println("hessian           backend $HB: $b seconds;")
-  b = @elapsed begin
-    ghjvprod_backend = GHJ(nvar, f, ncon, c!; kwargs...)
-  end
-  show_time && println("ghjvprod          backend $GHJ: $b seconds;")
+  show_time && println("gradient backend $GB: $b seconds;")
 
+  HvB = hprod_backend
   b = @elapsed begin
-    hprod_residual_backend = HvBLS(nvar, f, nequ, F!; kwargs...)
+    hprod_backend = if hprod_backend isa AbstractNLPModel
+      hprod_backend
+    else
+      HvB(nvar, f, ncon, c!; kwargs...)
+    end
+  end
+  show_time && println("hprod    backend $HvB: $b seconds;")
+
+  JvB = jprod_backend
+  b = @elapsed begin
+    jprod_backend = if jprod_backend isa AbstractNLPModel
+      jprod_backend
+    else
+      JvB(nvar, f, ncon, c!; kwargs...)
+    end
+  end
+  show_time && println("jprod    backend $JvB: $b seconds;")
+
+  JtvB = jtprod_backend
+  b = @elapsed begin
+    jtprod_backend = if jtprod_backend isa AbstractNLPModel
+      jtprod_backend
+    else
+      JtvB(nvar, f, ncon, c!; kwargs...)
+    end
+  end
+  show_time && println("jtprod   backend $JtvB: $b seconds;")
+
+  JB = jacobian_backend
+  b = @elapsed begin
+    jacobian_backend = if jacobian_backend isa AbstractNLPModel
+      jacobian_backend
+    else
+      JB(nvar, f, ncon, c!; kwargs...)
+    end
+  end
+  show_time && println("jacobian backend $JB: $b seconds;")
+
+  HB = hessian_backend
+  b = @elapsed begin
+    hessian_backend = if hessian_backend isa AbstractNLPModel
+      hessian_backend
+    else
+      HB(nvar, f, ncon, c!; kwargs...)
+    end
+  end
+  show_time && println("hessian  backend $HB: $b seconds;")
+
+  GHJ = ghjvprod_backend
+  b = @elapsed begin
+    ghjvprod_backend = if ghjvprod_backend isa AbstractNLPModel
+      ghjvprod_backend
+    else
+      GHJ(nvar, f, ncon, c!; kwargs...)
+    end
+  end
+  show_time && println("ghjvprod backend $GHJ: $b seconds. \n")
+
+  HvBLS = hprod_residual_backend
+  b = @elapsed begin
+    hprod_residual_backend = if hprod_residual_backend isa AbstractNLPModel
+      hprod_residual_backend
+    else
+      HvBLS(nvar, f, nequ, F!; kwargs...)
+    end
   end
   show_time && println("hprod_residual    backend $HvBLS: $b seconds;")
+
+  JvBLS = jprod_residual_backend
   b = @elapsed begin
-    jprod_residual_backend = JvBLS(nvar, f, nequ, F!; kwargs...)
+    jprod_residual_backend = if jprod_residual_backend isa AbstractNLPModel
+      jprod_residual_backend
+    else
+      JvBLS(nvar, f, nequ, F!; kwargs...)
+    end
   end
   show_time && println("jprod_residual    backend $JvBLS: $b seconds;")
+
+  JtvBLS = jtprod_residual_backend
   b = @elapsed begin
-    jtprod_residual_backend = JtvBLS(nvar, f, nequ, F!; kwargs...)
+    jtprod_residual_backend = if jtprod_residual_backend isa AbstractNLPModel
+      jtprod_residual_backend
+    else
+      JtvBLS(nvar, f, nequ, F!; kwargs...)
+    end
   end
   show_time && println("jtprod_residual   backend $JtvBLS: $b seconds;")
+
+  JBLS = jacobian_residual_backend
   b = @elapsed begin
-    jacobian_residual_backend = JBLS(nvar, f, nequ, F!; kwargs...)
+    jacobian_residual_backend = if jacobian_residual_backend isa AbstractNLPModel
+      jacobian_residual_backend
+    else
+      JBLS(nvar, f, nequ, F!; kwargs...)
+    end
   end
   show_time && println("jacobian_residual backend $JBLS: $b seconds;")
+
+  HBLS = hessian_residual_backend
   b = @elapsed begin
-    hessian_residual_backend = HBLS(nvar, f, nequ, F!; kwargs...)
+    hessian_residual_backend = if hessian_residual_backend isa AbstractNLPModel
+      hessian_residual_backend
+    else
+      HBLS(nvar, f, nequ, F!; kwargs...)
+    end
   end
   show_time && println("hessian_residual  backend $HBLS: $b seconds. \n")
 

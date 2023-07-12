@@ -270,7 +270,7 @@ function Hvprod!(
   return Hv
 end
 
-function hprod!(
+function NLPModels.hprod!(
   b::ForwardDiffADHvprod{Tag, GT, S, T},
   nlp::ADModel,
   x::AbstractVector,
@@ -303,7 +303,7 @@ function hprod!(
   return Hv
 end
 
-function hprod_residual!(
+function NLPModels.hprod_residual!(
   b::ForwardDiffADHvprod{Tag, GT, S, T},
   nls::AbstractADNLSModel,
   x::AbstractVector,
