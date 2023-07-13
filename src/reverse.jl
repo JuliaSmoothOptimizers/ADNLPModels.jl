@@ -83,7 +83,7 @@ function GenericReverseDiffADJprod(
 )
   return GenericReverseDiffADJprod()
 end
-function Jprod!(::GenericReverseDiffADJprod, Jv, f, x, v)
+function Jprod!(::GenericReverseDiffADJprod, Jv, f, x, v, ::Val)
   Jv .= vec(ReverseDiff.jacobian(t -> f(x + t[1] * v), [0.0]))
   return Jv
 end
@@ -121,7 +121,7 @@ function ReverseDiffADJprod(
   return ReverseDiffADJprod(ϕ!, tmp_in, tmp_out, _tmp_out, z)
 end
 
-function Jprod!(b::ReverseDiffADJprod, Jv, c!, x, v)
+function Jprod!(b::ReverseDiffADJprod, Jv, c!, x, v, ::Val)
   ReverseDiff.jacobian!(Jv, (out, t) -> b.ϕ!(out, t, x = x, v = v), b._tmp_out, b.z)
   return Jv
 end
@@ -135,7 +135,7 @@ function GenericReverseDiffADJtprod(
 )
   return GenericReverseDiffADJtprod()
 end
-function Jtprod!(::GenericReverseDiffADJtprod, Jtv, f, x, v)
+function Jtprod!(::GenericReverseDiffADJtprod, Jtv, f, x, v, ::Val)
   Jtv .= ReverseDiff.gradient(x -> dot(f(x), v), x)
   return Jtv
 end
@@ -168,7 +168,7 @@ function ReverseDiffADJtprod(
   return ReverseDiffADJtprod(gtape, _tmp_out, _rval)
 end
 
-function ADNLPModels.Jtprod!(b::ReverseDiffADJtprod, Jtv, c!, x, v)
+function ADNLPModels.Jtprod!(b::ReverseDiffADJtprod, Jtv, c!, x, v, ::Val)
   ReverseDiff.gradient!((Jtv, b._rval), b.gtape, (x, v))
   return Jtv
 end

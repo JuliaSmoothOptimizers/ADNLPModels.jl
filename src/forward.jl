@@ -66,7 +66,7 @@ function GenericForwardDiffADJprod(
 )
   return GenericForwardDiffADJprod()
 end
-function Jprod!(::GenericForwardDiffADJprod, Jv, f, x, v)
+function Jprod!(::GenericForwardDiffADJprod, Jv, f, x, v, ::Val)
   Jv .= ForwardDiff.derivative(t -> f(x + t * v), 0)
   return Jv
 end
@@ -91,7 +91,7 @@ function ForwardDiffADJprod(
   return ForwardDiffADJprod(z, cz)
 end
 
-function ADNLPModels.Jprod!(b::ForwardDiffADJprod{T, Tag}, Jv, c!, x, v) where {T, Tag}
+function ADNLPModels.Jprod!(b::ForwardDiffADJprod{T, Tag}, Jv, c!, x, v, ::Val) where {T, Tag}
   map!(ForwardDiff.Dual{Tag}, b.z, x, v) # x + ε * v
   c!(b.cz, b.z) # c!(cz, x + ε * v)
   ForwardDiff.extract_derivative!(Tag, Jv, b.cz) # ∇c!(cx, x)ᵀv
@@ -108,7 +108,7 @@ function GenericForwardDiffADJtprod(
 )
   return GenericForwardDiffADJtprod()
 end
-function Jtprod!(::GenericForwardDiffADJtprod, Jtv, f, x, v)
+function Jtprod!(::GenericForwardDiffADJtprod, Jtv, f, x, v, ::Val)
   Jtv .= ForwardDiff.gradient(x -> dot(f(x), v), x)
   return Jtv
 end
@@ -144,7 +144,7 @@ function ForwardDiffADJtprod(
   return ForwardDiffADJtprod(cfg, ψ, temp, sol)
 end
 
-function ADNLPModels.Jtprod!(b::ForwardDiffADJtprod{Tag, GT, S}, Jtv, c!, x, v) where {Tag, GT, S}
+function ADNLPModels.Jtprod!(b::ForwardDiffADJtprod{Tag, GT, S}, Jtv, c!, x, v, ::Val) where {Tag, GT, S}
   ncon = length(v)
   nvar = length(x)
 

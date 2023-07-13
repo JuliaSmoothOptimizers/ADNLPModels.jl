@@ -1,4 +1,4 @@
-export ADNLSModel
+export ADNLSModel, ADNLSModel!
 
 mutable struct ADNLSModel{T, S, Si} <: AbstractADNLSModel{T, S}
   meta::NLPModelMeta{T, S}
@@ -827,7 +827,7 @@ function NLPModels.jprod_residual!(
   @lencheck nls.nls_meta.nequ Jv
   increment!(nls, :neval_jprod_residual)
   F = get_F(nls, nls.adbackend.jprod_residual_backend)
-  Jprod!(nls.adbackend.jprod_residual_backend, Jv, F, x, v)
+  Jprod!(nls.adbackend.jprod_residual_backend, Jv, F, x, v, Val(:F))
   return Jv
 end
 
@@ -841,10 +841,11 @@ function NLPModels.jtprod_residual!(
   @lencheck nls.nls_meta.nequ v
   increment!(nls, :neval_jtprod_residual)
   F = get_F(nls, nls.adbackend.jtprod_residual_backend)
-  Jtprod!(nls.adbackend.jtprod_residual_backend, Jtv, F, x, v)
+  Jtprod!(nls.adbackend.jtprod_residual_backend, Jtv, F, x, v, Val(:F))
   return Jtv
 end
 
+#=
 function NLPModels.hess_residual(nls::ADNLSModel, x::AbstractVector, v::AbstractVector)
   @lencheck nls.meta.nvar x
   @lencheck nls.nls_meta.nequ v
@@ -853,6 +854,7 @@ function NLPModels.hess_residual(nls::ADNLSModel, x::AbstractVector, v::Abstract
   ϕ(x) = dot(F(x), v)
   return Symmetric(hessian(nls.adbackend.hessian_residual_backend, ϕ, x), :L)
 end
+=#
 
 function NLPModels.hess_structure_residual!(
   nls::ADNLSModel,
@@ -983,7 +985,7 @@ function NLPModels.jprod_nln!(
   @lencheck nls.meta.nnln Jv
   increment!(nls, :neval_jprod_nln)
   c = get_c(nls, nls.adbackend.jprod_backend)
-  Jprod!(nls.adbackend.jprod_backend, Jv, c, x, v)
+  Jprod!(nls.adbackend.jprod_backend, Jv, c, x, v, Val(:c))
   return Jv
 end
 
@@ -1031,7 +1033,7 @@ function NLPModels.jtprod_nln!(
   @lencheck nls.meta.nnln v
   increment!(nls, :neval_jtprod_nln)
   c = get_c(nls, nls.adbackend.jtprod_backend)
-  Jtprod!(nls.adbackend.jtprod_backend, Jtv, c, x, v)
+  Jtprod!(nls.adbackend.jtprod_backend, Jtv, c, x, v, Val(:c))
   return Jtv
 end
 
