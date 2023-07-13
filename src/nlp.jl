@@ -617,7 +617,7 @@ function NLPModels.jprod_nln!(
   @lencheck nlp.meta.nnln Jv
   increment!(nlp, :neval_jprod_nln)
   c = get_c(nlp, nlp.adbackend.jprod_backend)
-  Jprod!(nlp.adbackend.jprod_backend, Jv, c, x, v)
+  Jprod!(nlp.adbackend.jprod_backend, Jv, c, x, v, Val(:c))
   return Jv
 end
 
@@ -665,7 +665,7 @@ function NLPModels.jtprod_nln!(
   @lencheck nlp.meta.nnln v
   increment!(nlp, :neval_jtprod_nln)
   c = get_c(nlp, nlp.adbackend.jtprod_backend)
-  Jtprod!(nlp.adbackend.jtprod_backend, Jtv, c, x, v)
+  Jtprod!(nlp.adbackend.jtprod_backend, Jtv, c, x, v, Val(:c))
   return Jtv
 end
 

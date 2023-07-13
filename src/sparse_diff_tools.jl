@@ -107,7 +107,7 @@
       return SDTForwardDiffADJprod(tmp_in, tmp_out)
     end
 
-    function Jprod!(b::SDTForwardDiffADJprod, Jv, c!, x, v)
+    function Jprod!(b::SDTForwardDiffADJprod, Jv, c!, x, v, ::Val)
       SparseDiffTools.auto_jacvec!(Jv, c!, x, v, b.tmp_in, b.tmp_out)
       return Jv
     end

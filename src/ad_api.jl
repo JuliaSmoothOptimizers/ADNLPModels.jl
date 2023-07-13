@@ -28,7 +28,6 @@ end
 
 """
     get_residual_nnzj(b::ADModelBackend, nvar, nequ)
-    get_residual_nnzj(nls::AbstractNLPModel, nvar, ncon)
 
 Return `get_nln_nnzj(b.jacobian_residual_backend, nvar, nequ)`.
 """
@@ -36,7 +35,8 @@ function get_residual_nnzj(b::ADModelBackend, nvar, nequ)
   get_nln_nnzj(b.jacobian_residual_backend, nvar, nequ)
 end
 
-function get_residual_nnzj(nls::AbstractNLPModel, nvar, ncon)
+function get_residual_nnzj(b::ADModelBackend{GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS}, nvar, nequ) where {GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS <: AbstractNLPModel, HBLS}
+  nls = b.jacobian_residual_backend
   nls.nls_meta.nnzj
 end
 
@@ -66,16 +66,18 @@ gradient(b::ADBackend, ::Any, ::Any) = throw_error(b)
 gradient!(b::ADBackend, ::Any, ::Any, ::Any) = throw_error(b)
 jacobian(b::ADBackend, ::Any, ::Any) = throw_error(b)
 hessian(b::ADBackend, ::Any, ::Any) = throw_error(b)
-Jprod!(b::ADBackend, ::Any, ::Any, ::Any, ::Any) = throw_error(b)
-Jtprod!(b::ADBackend, ::Any, ::Any, ::Any, ::Any) = throw_error(b)
+Jprod!(b::ADBackend, ::Any, ::Any, ::Any, ::Any, ::Any) = throw_error(b)
+Jtprod!(b::ADBackend, ::Any, ::Any, ::Any, ::Any, ::Any) = throw_error(b)
 Hvprod!(b::ADBackend, ::Any, ::Any, ::Any, ::Any, ::Any, args...) = throw_error(b)
 directional_second_derivative(::ADBackend, ::Any, ::Any, ::Any, ::Any) = throw_error(b)
 
 # API for AbstractNLPModel as backend
 gradient(nlp::AbstractNLPModel, f, x) = grad(nlp, x)
 gradient!(nlp::AbstractNLPModel, g, f, x) = grad!(nlp, x, g)
-Jprod!(nlp::AbstractNLPModel, Jv, c, x, v) = jprod_nln!(nlp, x, v, Jv)
-Jtprod!(nlp::AbstractNLPModel, Jtv, c, x, v) = jtprod_nln!(nlp, x, v, Jtv)
+Jprod!(nlp::AbstractNLPModel, Jv, c, x, v, ::Val{:c}) = jprod_nln!(nlp, x, v, Jv)
+Jprod!(nlp::AbstractNLPModel, Jv, c, x, v, ::Val{:F}) = jprod_residual!(nlp, x, v, Jv)
+Jtprod!(nlp::AbstractNLPModel, Jtv, c, x, v, ::Val{:c}) = jtprod_nln!(nlp, x, v, Jtv)
+Jtprod!(nlp::AbstractNLPModel, Jtv, c, x, v, ::Val{:F}) = jtprod_residual!(nlp, x, v, Jtv)
 function Hvprod!(nlp::AbstractNLPModel, Hv, x, v, ℓ, ::Val{:obj}, obj_weight)
   return hprod!(nlp, x, v, Hv, obj_weight = obj_weight)
 end
@@ -272,7 +274,7 @@ function NLPModels.hprod_residual!(
   x::AbstractVector,
   v::AbstractVector,
   i::Integer,
-  Hv::AbstractVector,
+  Hiv::AbstractVector,
 )
   return hprod_residual!(nlp, x, i, v, Hiv)
 end
