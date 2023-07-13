@@ -35,7 +35,11 @@ function get_residual_nnzj(b::ADModelBackend, nvar, nequ)
   get_nln_nnzj(b.jacobian_residual_backend, nvar, nequ)
 end
 
-function get_residual_nnzj(b::ADModelBackend{GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS}, nvar, nequ) where {GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS <: AbstractNLPModel, HBLS}
+function get_residual_nnzj(
+  b::ADModelBackend{GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS},
+  nvar,
+  nequ,
+) where {GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS <: AbstractNLPModel, HBLS}
   nls = b.jacobian_residual_backend
   nls.nls_meta.nnzj
 end
