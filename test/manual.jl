@@ -92,3 +92,70 @@
   @test jac(nlp, x) == [1 1]
   @test ghjvprod(nlp, x, g, v) == [0]
 end
+
+@testset "Test mixed models with $problem" for problem in NLPModelsTest.nlp_problems
+  model = eval(Meta.parse(problem))()
+
+  nvar, ncon = model.meta.nvar, model.meta.ncon
+
+  if model.meta.nlin > 0
+    nlp = ADNLPModel!(
+      x -> obj(model, x),
+      model.meta.x0,
+      jac_lin(model, model.meta.x0),
+      (cx, x) -> cons!(model, x, cx),
+      model.meta.lcon,
+      model.meta.ucon,
+      gradient_backend = model,
+      hprod_backend = model,
+      hessian_backend = model,
+      jprod_backend = model,
+      jtprod_backend = model,
+      jacobian_backend = model,
+      ghjvprod_backend = model,
+    )
+  else
+    nlp = ADNLPModel!(
+      x -> obj(model, x),
+      model.meta.x0,
+      (cx, x) -> cons!(model, x, cx),
+      model.meta.lcon,
+      model.meta.ucon,
+      gradient_backend = model,
+      hprod_backend = model,
+      hessian_backend = model,
+      jprod_backend = model,
+      jtprod_backend = model,
+      jacobian_backend = model,
+      ghjvprod_backend = model,
+    )
+  end
+
+  x = ones(nvar)
+  v = 2 * ones(nvar)
+  y = ones(ncon)
+
+  @test grad(nlp, x) == grad(model, x)
+  @test neval_grad(model) == 2
+  @test hess(nlp, x) == hess(model, x)
+  @test neval_hess(model) == 2
+  @test hprod(nlp, x, v) == hprod(model, x, v)
+  @test neval_hprod(model) == 2
+  if model.meta.nnln > 0
+    @test jac(nlp, x) == jac(model, x)
+    @test neval_jac_nln(model) == 2
+    @test jprod(nlp, x, v) == jprod(model, x, v)
+    @test neval_jprod_nln(model) == 2
+    @test jtprod(nlp, x, y) == jtprod(model, x, y)
+    @test hess(nlp, x, y) == hess(model, x, y)
+    @test neval_hess(model) == 4
+    @test hprod(nlp, x, y, v) == hprod(model, x, y, v)
+    @test neval_hprod(model) == 4
+    @test ghjvprod(nlp, x, x, v) == ghjvprod(model, x, x, v)
+    @test neval_hprod(model) == 6
+    for j in model.meta.nln
+      @test jth_hess(nlp, x, j) == jth_hess(model, x, j)
+      @test jth_hprod(nlp, x, v, j) == jth_hprod(model, x, v, j)
+    end
+  end
+end

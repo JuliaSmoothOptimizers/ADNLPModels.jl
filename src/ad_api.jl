@@ -80,9 +80,22 @@ function Hvprod!(nlp::AbstractNLPModel, Hv, x, v, ℓ, ::Val{:obj}, obj_weight)
   return hprod!(nlp, x, v, Hv, obj_weight = obj_weight)
 end
 function Hvprod!(nlp::AbstractNLPModel, Hv, x, v, ℓ, ::Val{:lag}, y, obj_weight)
+  if nlp.meta.nlin > 0
+    # y is of length nnln, and hprod expectes ncon...
+    yfull = zeros(eltype(x), nlp.meta.ncon)
+    k = 0
+    for i in nlp.meta.nln
+      k += 1
+      yfull[i] = y[k]
+    end
+    return hprod!(nlp, x, yfull, v, Hv, obj_weight = obj_weight)
+  end
   return hprod!(nlp, x, y, v, Hv, obj_weight = obj_weight)
 end
-directional_second_derivative(nlp::AbstractNLPModel, c, x, v, g) = ghjvprod(nlp, x, g, v)
+function directional_second_derivative(nlp::AbstractNLPModel, c, x, v, g)
+  gHv = ghjvprod(nlp, x, g, v)
+  return view(gHv, (nlp.meta.nlin + 1):(nlp.meta.ncon))
+end
 
 function NLPModels.hess_structure!(
   b::ADBackend,
@@ -132,7 +145,17 @@ function NLPModels.hess_coord!(
   obj_weight::Real,
   vals::AbstractVector,
 )
-  return NLPModels.hess_coord!(nlp, x, y, vals, obj_weight = obj_weight)
+  if nlp.meta.nlin > 0
+    # y is of length nnln, and hess expectes ncon...
+    yfull = zeros(eltype(x), nlp.meta.ncon)
+    k = 0
+    for i in nlp.meta.nln
+      k += 1
+      yfull[i] = y[k]
+    end
+    return hess_coord!(nlp, x, yfull, vals, obj_weight = obj_weight)
+  end
+  return hess_coord!(nlp, x, y, vals, obj_weight = obj_weight)
 end
 
 function NLPModels.hess_coord!(

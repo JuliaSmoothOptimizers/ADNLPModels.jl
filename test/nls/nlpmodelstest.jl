@@ -1,5 +1,5 @@
-@testset "Checking NLPModelsTest tests with $backend" for backend in
-                                                          keys(ADNLPModels.predefined_backend)
+@testset "Checking NLPModelsTest (NLS) tests with $backend" for backend in
+                                                                keys(ADNLPModels.predefined_backend)
   @testset "Checking NLPModelsTest tests on problem $problem" for problem in
                                                                   NLPModelsTest.nls_problems
     nls_from_T = eval(Meta.parse(lowercase(problem) * "_autodiff"))
