@@ -266,8 +266,8 @@ end
 
 function Hvprod!(
   b::ReverseDiffADHvprod{T, S, Tagf},
-  Hv::S,
-  x::S,
+  Hv,
+  x,
   v,
   f,
   ::Val{:obj},
