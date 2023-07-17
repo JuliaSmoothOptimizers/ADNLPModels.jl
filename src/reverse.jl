@@ -248,7 +248,7 @@ function Hvprod!(
   ::Val{:lag},
   y,
   obj_weight::Real = one(T),
-) where {T, S, Tagf, F, Tagψ, P}
+) where {T, S, Tagf, F, Tagψ}
 
   map!(ForwardDiff.Dual{Tagf}, b.z, x, v) # x + ε * v
   b.∇f!(b.gz, b.z) # ∇f(x + ε * v) = ∇f(x) + ε * ∇²f(x)ᵀv
