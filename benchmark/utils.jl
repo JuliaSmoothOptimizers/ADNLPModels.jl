@@ -66,6 +66,7 @@ benchmarked_optimized_backends = Dict(
   "hessian_backend" => Dict(
     #"sparse-SDTcol" => SparseADHessianSDTColoration,
     "sparse" => ADNLPModels.SparseADHessian,
+    "sparse-rev" => ADNLPModels.SparseReverseADHessian,
     "forward" => ADNLPModels.ForwardDiffADHessian,
     # "sym" => ADNLPModels.SparseADHessian, # out of memory for large problems
   ),

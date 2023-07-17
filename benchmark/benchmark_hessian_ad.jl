@@ -7,7 +7,7 @@ TODO:
 =#
 using Pkg
 Pkg.activate(".")
-Pkg.add(url = "https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl", rev = "imp-hessian")
+Pkg.add(url = "https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl", rev = "reverseforwardhpro")
 using ADNLPModels
 
 using Dates, DelimitedFiles, JLD2, LinearAlgebra, Printf, SparseArrays
