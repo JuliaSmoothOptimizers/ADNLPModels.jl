@@ -216,6 +216,7 @@ function ReverseDiffADHvprod(
   cfgf = ReverseDiff.compile(f_tape)
   ∇f!(gz, z; cfg = cfgf) = ReverseDiff.gradient!(gz, cfg, z)
 
+  # constraints
   ψ(x, u) = begin # ; tmp_out = _tmp_out
     ncon = length(u)
     tmp_out = similar(x, ncon)
@@ -239,7 +240,7 @@ function ReverseDiffADHvprod(
 end
 
 function Hvprod!(
-  b::ReverseDiffADHvprod{T},
+  b::ReverseDiffADHvprod{T, S, Tagf, F, Tagψ},
   Hv,
   x::AbstractVector{T},
   v,
@@ -247,8 +248,19 @@ function Hvprod!(
   ::Val{:lag},
   y,
   obj_weight::Real = one(T),
-) where {T}
-  Hv .= ForwardDiff.derivative(t -> ReverseDiff.gradient(ℓ, x + t * v), 0)
+) where {T, S, Tagf, F, Tagψ, P}
+
+  map!(ForwardDiff.Dual{Tagf}, b.z, x, v) # x + ε * v
+  b.∇f!(b.gz, b.z) # ∇f(x + ε * v) = ∇f(x) + ε * ∇²f(x)ᵀv
+  ForwardDiff.extract_derivative!(Tagf, Hv, b.gz)  # ∇²f(x)ᵀv
+  Hv .*= obj_weight
+
+  map!(ForwardDiff.Dual{Tagψ}, b.zψ, x, v)
+  b.yψ .= y
+  b.∇l!(b.gzψ, b.gyψ, b.zψ, b.yψ)
+  ForwardDiff.extract_derivative!(Tagψ, b.Hv_temp, b.gzψ)
+  Hv .+= b.Hv_temp
+
   return Hv
 end
 
