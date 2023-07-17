@@ -7,7 +7,7 @@ TODO:
 =#
 using Pkg
 Pkg.activate(".")
-Pkg.add(url = "https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl", rev = "addForwardDiffHprod")
+Pkg.add(url = "https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl", rev = "reverseforwardhpro")
 using ADNLPModels
 
 using Dates, DelimitedFiles, JLD2, LinearAlgebra, Printf, SparseArrays
@@ -23,6 +23,24 @@ include("utils.jl")
 
 using ReverseDiff, ForwardDiff
 
+#=
+julia> scalable_cons_problems
+12-element Vector{String}:
+ "camshape": Cannot determine ordering of Dual tags ForwardDiff.Tag{ReverseDiff.var"#129#132"{typeof(*), ForwardDiff.Dual{ForwardDiff.Tag{OptimizationProblems.ADNLPProblems.var"#f#273"{Int64, Int64}, Float64}, Float64, 1}}, ForwardDiff.Dual{ForwardDiff.Tag{OptimizationProblems.ADNLPProblems.var"#f#273"{Int64, Int64}, Float64}, Float64, 1}} and ForwardDiff.Tag{OptimizationProblems.ADNLPProblems.var"#f#273"{Int64, Int64}, Float64}
+ "chain": OK
+ "channel": OK
+ "clnlbeam": OK
+ "controlinvestment": OK
+ "elec": OK
+ "hovercraft1d": OK 
+ "polygon": OK 
+ "polygon1": OK 
+ "polygon3": OK 
+ "robotarm": OK 
+ "structural": Cannot determine ordering of Dual tags ForwardDiff.Tag{ReverseDiff.var"#129#132"{typeof(*), ForwardDiff.Dual{ForwardDiff.Tag{OptimizationProblems.ADNLPProblems.var"#f#1844"{OptimizationProblems.ADNLPProblems.var"#f#1838#1845"{Vector{Float64}}, Int64}, Float64}, Float64, 1}}, ForwardDiff.Dual{ForwardDiff.Tag{OptimizationProblems.ADNLPProblems.var"#f#1844"{OptimizationProblems.ADNLPProblems.var"#f#1838#1845"{Vector{Float64}}, Int64}, Float64}, Float64, 1}} and ForwardDiff.Tag{OptimizationProblems.ADNLPProblems.var"#f#1844"{OptimizationProblems.ADNLPProblems.var"#f#1838#1845"{Vector{Float64}}, Int64}, Float64}
+
+=#
+
 ########################################################
 # There are 6 levels:
 # - bench-type (see `benchs`);
@@ -31,7 +49,7 @@ using ReverseDiff, ForwardDiff
 # - backend (see `set_back_list(Val(f), test_back)`)
 problem_sets = Dict(
   #"all" => setdiff(all_cons_problems, ["camshape"]), # crash
-  "scalable" => setdiff(scalable_cons_problems), # , ["polygon", "polygon1", "clnlbeam"]
+  "scalable" => setdiff(scalable_cons_problems, ["camshape", "clnlbeam", "polygon1", "structural"]), # , ["polygon", "polygon1", "clnlbeam"]
 )
 benchs = [
   "optimized",
@@ -41,7 +59,7 @@ data_types = [Float64] # [Float16, Float32, Float64]
 tested_backs = Dict(
   "hprod_backend" => :hprod,
 )
-const nscal = nn * 10
+const nscal = nn * 1
 name = "$(today())_adnlpmodels_benchmark_hprod_lag"
 if "all" in keys(problem_sets)
   name *= "_all"
