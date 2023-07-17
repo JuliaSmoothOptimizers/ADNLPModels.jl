@@ -67,12 +67,87 @@ function SparseADHessian(
   return SparseADHessian(d, rowval, colptr, colors, ncolors, res, lz, glz, sol, longv, Hvp, ∇φ!, y)
 end
 
-function get_nln_nnzh(b::SparseADHessian, nvar)
+struct SparseReverseADHessian{T, S, Tagf, F, Tagψ, P} <: ADNLPModels.ADBackend
+  d::BitVector
+  rowval::Vector{Int}
+  colptr::Vector{Int}
+  colors::Vector{Int}
+  ncolors::Int
+  res::S
+  z::Vector{ForwardDiff.Dual{Tagf, T, 1}}
+  gz::Vector{ForwardDiff.Dual{Tagf, T, 1}}
+  ∇f!::F
+  zψ::Vector{ForwardDiff.Dual{Tagψ, T, 1}}
+  yψ::Vector{ForwardDiff.Dual{Tagψ, T, 1}}
+  gzψ::Vector{ForwardDiff.Dual{Tagψ, T, 1}}
+  gyψ::Vector{ForwardDiff.Dual{Tagψ, T, 1}}
+  ∇l!::P
+  Hv_temp::S
+  y::S
+end
+
+function SparseReverseADHessian(
+  nvar,
+  f,
+  ncon,
+  c!;
+  x0::AbstractVector{T} = rand(nvar),
+  alg = ColPackColoration(),
+  kwargs...,
+) where {T}
+  S = compute_hessian_sparsity(f, nvar, c!, ncon)
+  H = ncon == 0 ? S : S[1:nvar, 1:nvar]
+
+  colors = sparse_matrix_colors(H, alg)
+  ncolors = maximum(colors)
+
+  d = BitVector(undef, nvar)
+
+  trilH = tril(H)
+  rowval = trilH.rowval
+  colptr = trilH.colptr
+
+  # prepare directional derivatives
+  res = similar(x0)
+
+  # unconstrained Hessian
+  tagf = ForwardDiff.Tag{typeof(f), T}
+  z = Vector{ForwardDiff.Dual{tagf, T, 1}}(undef, nvar)
+  gz = similar(z)
+  f_tape = ReverseDiff.GradientTape(f, z)
+  cfgf = ReverseDiff.compile(f_tape)
+  ∇f!(gz, z; cfg = cfgf) = ReverseDiff.gradient!(gz, cfg, z)
+ 
+  # constraints
+  ψ(x, u) = begin # ; tmp_out = _tmp_out
+    ncon = length(u)
+    tmp_out = similar(x, ncon)
+    c!(tmp_out, x)
+    dot(tmp_out, u)
+  end
+  tagψ = ForwardDiff.Tag{typeof(ψ), T}
+  zψ = Vector{ForwardDiff.Dual{tagψ, T, 1}}(undef, nvar)
+  yψ = fill!(similar(zψ, ncon), zero(T))
+  ψ_tape = ReverseDiff.GradientConfig((zψ, yψ))
+  cfgψ = ReverseDiff.compile(ReverseDiff.GradientTape(ψ, (zψ, yψ), ψ_tape))
+ 
+  gzψ = similar(zψ)
+  gyψ = similar(yψ)
+  function ∇l!(gz, gy, z, y; cfg = cfgψ)
+    ReverseDiff.gradient!((gz, gy), cfg, (z, y))
+  end
+  Hv_temp = similar(x0)
+
+  y = zeros(T, ncon)
+  return SparseReverseADHessian(d, rowval, colptr, colors, ncolors, res, z, gz, ∇f!, zψ, yψ, gzψ, gyψ, ∇l!, Hv_temp, y)
+end
+
+function get_nln_nnzh(b::Union{SparseADHessian, SparseReverseADHessian}, nvar)
   return length(b.rowval)
 end
 
 function NLPModels.hess_structure!(
-  b::SparseADHessian,
+  b::Union{SparseADHessian, SparseReverseADHessian},
   nlp::ADModel,
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
@@ -124,8 +199,47 @@ function sparse_hess_coord!(
   return vals
 end
 
+function sparse_hess_coord!(
+  ℓ::Function,
+  b::SparseReverseADHessian{T, S, Tagf, F, Tagψ, P},
+  x::AbstractVector,
+  obj_weight,
+  y::AbstractVector,
+  vals::AbstractVector,
+) where {T, S, Tagf, F, Tagψ, P}
+  nvar = length(x)
+
+  for icol = 1:(b.ncolors)
+    b.d .= (b.colors .== icol)
+
+    # objective
+    map!(ForwardDiff.Dual{Tagf}, b.z, x, b.d) # x + ε * v
+    b.∇f!(b.gz, b.z)
+    ForwardDiff.extract_derivative!(Tagf, b.res, b.gz)
+    b.res .*= obj_weight
+
+    # constraints
+    map!(ForwardDiff.Dual{Tagψ}, b.zψ, x, b.d)
+    b.yψ .= y
+    b.∇l!(b.gzψ, b.gyψ, b.zψ, b.yψ)
+    ForwardDiff.extract_derivative!(Tagψ, b.Hv_temp, b.gzψ)
+    b.res .+= b.Hv_temp
+
+    for j = 1:nvar
+      if b.colors[j] == icol
+        for k = b.colptr[j]:(b.colptr[j + 1] - 1)
+          i = b.rowval[k]
+          vals[k] = b.res[i]
+        end
+      end
+    end
+  end
+
+  return vals
+end
+
 function NLPModels.hess_coord!(
-  b::SparseADHessian,
+  b::Union{SparseADHessian, SparseReverseADHessian},
   nlp::ADModel,
   x::AbstractVector,
   y::AbstractVector,
@@ -137,7 +251,7 @@ function NLPModels.hess_coord!(
 end
 
 function NLPModels.hess_coord!(
-  b::SparseADHessian,
+  b::Union{SparseADHessian, SparseReverseADHessian},
   nlp::ADModel,
   x::AbstractVector,
   obj_weight::Real,
@@ -149,7 +263,7 @@ function NLPModels.hess_coord!(
 end
 
 function NLPModels.hess_coord!(
-  b::SparseADHessian,
+  b::Union{SparseADHessian, SparseReverseADHessian},
   nlp::ADModel,
   x::AbstractVector,
   j::Integer,

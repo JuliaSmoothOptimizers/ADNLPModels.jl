@@ -64,7 +64,7 @@ include("nls.jl")
     predefined_backend[:optimized][:jacobian_residual_backend] = SparseADJacobian
 
     predefined_backend[:default][:hessian_backend] = SparseADHessian
-    predefined_backend[:optimized][:hessian_backend] = SparseADHessian
+    predefined_backend[:optimized][:hessian_backend] = SparseReverseADHessian
   end
 end
 
