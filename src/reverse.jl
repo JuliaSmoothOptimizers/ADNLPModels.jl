@@ -188,10 +188,16 @@ function Hvprod!(::GenericReverseDiffADHvprod, Hv, x, v, f, args...)
   return Hv
 end
 
-struct ReverseDiffADHvprod{T, Tagf, F} <: ADBackend
+struct ReverseDiffADHvprod{T, S, Tagf, F, Tagψ, P} <: ADBackend
   z::Vector{ForwardDiff.Dual{Tagf, T, 1}}
   gz::Vector{ForwardDiff.Dual{Tagf, T, 1}}
   ∇f!::F
+  zψ::Vector{ForwardDiff.Dual{Tagψ, T, 1}}
+  yψ::Vector{ForwardDiff.Dual{Tagψ, T, 1}}
+  gzψ::Vector{ForwardDiff.Dual{Tagψ, T, 1}}
+  gyψ::Vector{ForwardDiff.Dual{Tagψ, T, 1}}
+  ∇l!::P
+  Hv_temp::S
 end
 
 function ReverseDiffADHvprod(
@@ -210,7 +216,26 @@ function ReverseDiffADHvprod(
   cfgf = ReverseDiff.compile(f_tape)
   ∇f!(gz, z; cfg = cfgf) = ReverseDiff.gradient!(gz, cfg, z)
 
-  return ReverseDiffADHvprod(z, gz, ∇f!)
+  ψ(x, u) = begin # ; tmp_out = _tmp_out
+    ncon = length(u)
+    tmp_out = similar(x, ncon)
+    c!(tmp_out, x)
+    dot(tmp_out, u)
+  end
+  tagψ = ForwardDiff.Tag{typeof(ψ), T}
+  zψ = Vector{ForwardDiff.Dual{tagψ, T, 1}}(undef, nvar)
+  yψ = fill!(similar(zψ, ncon), zero(T))
+  ψ_tape = ReverseDiff.GradientConfig((zψ, yψ))
+  cfgψ = ReverseDiff.compile(ReverseDiff.GradientTape(ψ, (zψ, yψ), ψ_tape))
+
+  gzψ = similar(zψ)
+  gyψ = similar(yψ)
+  function ∇l!(gz, gy, z, y; cfg = cfgψ)
+    ReverseDiff.gradient!((gz, gy), cfg, (z, y))
+  end
+  Hv_temp = similar(x0)
+
+  return ReverseDiffADHvprod(z, gz, ∇f!, zψ, yψ, gzψ, gyψ, ∇l!, Hv_temp)
 end
 
 function Hvprod!(
@@ -240,14 +265,14 @@ function Hvprod!(
 end
 
 function Hvprod!(
-  b::ReverseDiffADHvprod{T, Tagf},
-  Hv,
-  x::AbstractVector{T},
+  b::ReverseDiffADHvprod{T, S, Tagf},
+  Hv::S,
+  x::S,
   v,
   f,
   ::Val{:obj},
   obj_weight::Real = one(T),
-) where {T, Tagf}
+) where {T, S, Tagf}
   map!(ForwardDiff.Dual{Tagf}, b.z, x, v) # x + ε * v
   b.∇f!(b.gz, b.z) # ∇f(x + ε * v) = ∇f(x) + ε * ∇²f(x)ᵀv
   ForwardDiff.extract_derivative!(Tagf, Hv, b.gz)  # ∇²f(x)ᵀv
