@@ -1,10 +1,28 @@
 # ADNLPModels
 
-This package provides AD-based model implementations that conform to the [NLPModels](https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl) API. The following packages are supported: `ForwardDiff.jl`, `ReverseDiff.jl`, and `Zygote.jl`.
+This package provides automatic differentiation (AD)-based model implementations that conform to the [NLPModels](https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl) API.
+The general form of the optimization problem is
+```math
+\begin{aligned}
+\min \quad & f(x) \\
+& c_L \leq c(x) \leq c_U \\
+& \ell \leq x \leq u,
+\end{aligned}
+```
 
 ## Install
 
-Install ADNLPModels.jl with the following command.
+<p>
+ADNLPModels is a &nbsp;
+    <a href="https://julialang.org">
+        <img src="https://raw.githubusercontent.com/JuliaLang/julia-logo-graphics/master/images/julia.ico" width="16em">
+        Julia Language
+    </a>
+    &nbsp; package. To install ADNLPModels,
+    please <a href="https://docs.julialang.org/en/v1/manual/getting-started/">open
+    Julia's interactive session (known as REPL)</a> and press <kbd>]</kbd> key in the REPL to use the package mode, then type the following command
+</p>
+
 ```julia
 pkg> add ADNLPModels
 ```
