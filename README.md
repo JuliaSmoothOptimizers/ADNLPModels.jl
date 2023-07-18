@@ -89,9 +89,12 @@ We refer to the documentation for more details on the resulting models, and you 
 ## AD backend
 
 The following AD packages are supported:
+
 - `ForwardDiff.jl`;
 - `ReverseDiff.jl`;
+
 and as optional dependencies (you must load the package before):
+
 - `Enzyme.jl`;
 - `SparseDiffTools.jl`;
 - `Symbolics.jl`;
