@@ -15,13 +15,13 @@ default_backend = Dict(
 
 optimized = Dict(
   :gradient_backend => ReverseDiffADGradient, # EnzymeADGradient
-  :hprod_backend => ForwardDiffADHvprod,
+  :hprod_backend => ReverseDiffADHvprod,
   :jprod_backend => ForwardDiffADJprod,
   :jtprod_backend => ReverseDiffADJtprod,
   :jacobian_backend => ForwardDiffADJacobian,
   :hessian_backend => ForwardDiffADHessian,
   :ghjvprod_backend => ForwardDiffADGHjvprod,
-  :hprod_residual_backend => ForwardDiffADHvprod,
+  :hprod_residual_backend => ReverseDiffADHvprod,
   :jprod_residual_backend => ForwardDiffADJprod,
   :jtprod_residual_backend => ReverseDiffADJtprod,
   :jacobian_residual_backend => ForwardDiffADJacobian,
