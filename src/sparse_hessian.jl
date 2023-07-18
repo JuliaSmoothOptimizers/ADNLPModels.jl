@@ -117,7 +117,7 @@ function SparseReverseADHessian(
   f_tape = ReverseDiff.GradientTape(f, z)
   cfgf = ReverseDiff.compile(f_tape)
   ∇f!(gz, z; cfg = cfgf) = ReverseDiff.gradient!(gz, cfg, z)
- 
+
   # constraints
   ψ(x, u) = begin # ; tmp_out = _tmp_out
     ncon = length(u)
@@ -130,7 +130,7 @@ function SparseReverseADHessian(
   yψ = fill!(similar(zψ, ncon), zero(T))
   ψ_tape = ReverseDiff.GradientConfig((zψ, yψ))
   cfgψ = ReverseDiff.compile(ReverseDiff.GradientTape(ψ, (zψ, yψ), ψ_tape))
- 
+
   gzψ = similar(zψ)
   gyψ = similar(yψ)
   function ∇l!(gz, gy, z, y; cfg = cfgψ)
@@ -139,7 +139,24 @@ function SparseReverseADHessian(
   Hv_temp = similar(x0)
 
   y = zeros(T, ncon)
-  return SparseReverseADHessian(d, rowval, colptr, colors, ncolors, res, z, gz, ∇f!, zψ, yψ, gzψ, gyψ, ∇l!, Hv_temp, y)
+  return SparseReverseADHessian(
+    d,
+    rowval,
+    colptr,
+    colors,
+    ncolors,
+    res,
+    z,
+    gz,
+    ∇f!,
+    zψ,
+    yψ,
+    gzψ,
+    gyψ,
+    ∇l!,
+    Hv_temp,
+    y,
+  )
 end
 
 function get_nln_nnzh(b::Union{SparseADHessian, SparseReverseADHessian}, nvar)

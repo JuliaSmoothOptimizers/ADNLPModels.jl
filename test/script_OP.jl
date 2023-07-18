@@ -22,15 +22,15 @@ for pb in names
   nlp = try
     OptimizationProblems.ADNLPProblems.eval(Meta.parse(pb))(backend = :default, show_time = true)
   catch e
-      println("Error $e with ADNLPModel")
-      continue
+    println("Error $e with ADNLPModel")
+    continue
   end
-  
+
   jum = try
     MathOptNLPModel(OptimizationProblems.PureJuMP.eval(Meta.parse(pb))())
   catch e
-      println("Error $e with JuMP")
-      continue
+    println("Error $e with JuMP")
+    continue
   end
 
   n, m = nlp.meta.nvar, nlp.meta.ncon
@@ -53,8 +53,8 @@ for pb in names
       end
     end
   catch e
-      println("Error $e with API")
-      continue
+    println("Error $e with API")
+    continue
   end
 end
 
