@@ -249,7 +249,6 @@ function Hvprod!(
   y,
   obj_weight::Real = one(T),
 ) where {T, S, Tagf, F, Tagψ}
-
   map!(ForwardDiff.Dual{Tagf}, b.z, x, v) # x + ε * v
   b.∇f!(b.gz, b.z) # ∇f(x + ε * v) = ∇f(x) + ε * ∇²f(x)ᵀv
   ForwardDiff.extract_derivative!(Tagf, Hv, b.gz)  # ∇²f(x)ᵀv
@@ -264,14 +263,7 @@ function Hvprod!(
   return Hv
 end
 
-function Hvprod!(
-  b::ReverseDiffADHvprod{T},
-  Hv,
-  x::AbstractVector{T},
-  v,
-  ci,
-  ::Val{:ci},
-) where {T}
+function Hvprod!(b::ReverseDiffADHvprod{T}, Hv, x::AbstractVector{T}, v, ci, ::Val{:ci}) where {T}
   Hv .= ForwardDiff.derivative(t -> ReverseDiff.gradient(ci, x + t * v), 0)
   return Hv
 end
