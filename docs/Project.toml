@@ -1,10 +1,12 @@
 [deps]
 ADNLPModels = "54578032-b7ea-4c30-94aa-7cbd1cce6c9a"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+ManualNLPModels = "30dfa513-9b2f-4fb3-9796-781eabac1617"
 NLPModels = "a4795742-8479-5a88-8948-cc11e1c8c1a6"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 
 [compat]
 Documenter = "0.27"
+ManualNLPModels = "0.1"
 NLPModels = "0.20"
 Symbolics = "5.3"

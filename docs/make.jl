@@ -15,6 +15,7 @@ makedocs(
     "Tutorial" => "tutorial.md",
     "Backend" => "backend.md",
     "Default backends" => "predefined.md",
+    "Build a hybrid NLPModel" => "mixed.md",
     "Support multiple precision" => "generic.md",
     "Reference" => "reference.md",
   ],
