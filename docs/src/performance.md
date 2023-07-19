@@ -171,12 +171,12 @@ for name in scalable_problems
   global x = ones(n)
   global g = zeros(n)
   global pb = Meta.parse(name)
-  nlp = MathOptNLPModel(OptimizationProblems.PureJuMP.eval(pb)(n = nscal))
+  global nlp = MathOptNLPModel(OptimizationProblems.PureJuMP.eval(pb)(n = nscal))
   b = @benchmark grad!(nlp, x, g)
   stats[:jump][stats[:jump].name .== name, :time] = [median(b.times)]
   stats[:jump][stats[:jump].name .== name, :allocs] = [median(b.allocs)]
   for back in keys(list_backends)
-    global nlp = OptimizationProblems.ADNLPProblems.eval(pb)(n = nscal, gradient_backend = list_backends[back], matrix_free = true)
+    nlp = OptimizationProblems.ADNLPProblems.eval(pb)(n = nscal, gradient_backend = list_backends[back], matrix_free = true)
     b = @benchmark grad!(nlp, x, g)
     stats[back][stats[back].name .== name, :time] = [median(b.times)]
     stats[back][stats[back].name .== name, :allocs] = [median(b.allocs)]
