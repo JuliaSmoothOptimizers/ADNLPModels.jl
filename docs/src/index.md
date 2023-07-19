@@ -12,16 +12,7 @@ The general form of the optimization problem is
 
 ## Install
 
-<p>
-ADNLPModels is a &nbsp;
-    <a href="https://julialang.org">
-        <img src="https://raw.githubusercontent.com/JuliaLang/julia-logo-graphics/master/images/julia.ico" width="16em">
-        Julia Language
-    </a>
-    &nbsp; package. To install ADNLPModels,
-    please <a href="https://docs.julialang.org/en/v1/manual/getting-started/">open
-    Julia's interactive session (known as REPL)</a> and press <kbd>]</kbd> key in the REPL to use the package mode, then type the following command
-</p>
+ADNLPModels Julia Language package. To install ADNLPModels, please open Julia's interactive session (known as REPL) and press the `]` key in the REPL to use the package mode, then type the following command
 
 ```julia
 pkg> add ADNLPModels
