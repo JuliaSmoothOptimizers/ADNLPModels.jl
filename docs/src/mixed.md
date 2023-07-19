@@ -40,7 +40,11 @@ However, methods involving the Hessian or Jacobian-vector products are not imple
 ```@example ex1
 using NLPModels
 v = ones(2)
-jprod(model, x0, v)
+try
+  jprod(model, x0, v)
+catch e
+  println("$e")
+end
 ```
 
 This is where building hybrid models with `ADNLPModels.jl` becomes useful.
