@@ -1,11 +1,11 @@
 # Performance tips
 
-The package `ADNLPModels.jl` is designed to easily model optimization problems and is designed to allow an efficient access to the [`NLPModel API`](https://github.com/JuliaSmoothOptimizers/NLPModels.jl).
+The package `ADNLPModels.jl` is designed to easily model optimization problems andto allow an efficient access to the [`NLPModel API`](https://github.com/JuliaSmoothOptimizers/NLPModels.jl).
 In this tutorial, we will see some tips to ensure the maximum performance of the model.
 
 ## Use in-place constructor
 
-When dealing with a constrained optimization problem, it is recommended to use in-place constraint function.
+When dealing with a constrained optimization problem, it is recommended to use in-place constraint functions.
 
 ```@example ex1
 using ADNLPModels, NLPModels
@@ -123,7 +123,7 @@ nlp = ADNLPModel!(f, x0, c_in, lcon, ucon, show_time = true, matrix_free = true)
 ## Benchmarks
 
 This package implements several backends for each method and it is possible to design your own backend as well. 
-Then, one way to choose the most efficient is to run benchmarks.
+Then, one way to choose the most efficient one is to run benchmarks.
 
 ```@example ex3
 using ADNLPModels, NLPModels, OptimizationProblems
@@ -132,7 +132,7 @@ using ADNLPModels, NLPModels, OptimizationProblems
 The package [`OptimizationProblems.jl`](https://github.com/JuliaSmoothOptimizers/OptimizationProblems.jl) provides a collection of optimization problems in JuMP and ADNLPModels syntax.
 
 ```@example ex3
-meta = OptimizationProblems.meta
+meta = OptimizationProblems.meta;
 ```
 
 We select the problems that are scalable, so that there size can be modified. By default, the size is close to `100`.
