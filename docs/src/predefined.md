@@ -1,6 +1,6 @@
 # Default backend and performance in ADNLPModels
 
-As illustrated in [Backend](@ref) tutorial, `ADNLPModels.jl` use different backend for each method from the `NLPModel API` that are implemented.
+As illustrated in the tutorial on backends, `ADNLPModels.jl` use different backend for each method from the `NLPModel API` that are implemented.
 By default, it uses the following:
 ```@example ex1
 using ADNLPModels, NLPModels
