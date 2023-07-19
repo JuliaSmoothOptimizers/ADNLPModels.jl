@@ -28,17 +28,17 @@ ADNLPModels.default_backend
 ```
 
 More generally, the package anticipates more uses
-``` ex1
+```@example ex1
 ADNLPModels.predefined_backend
 ```
 
-The backend `optimized` will mainly focus on the most efficient approaches, for instance using `ReverseDiff` to compute the gradient instead of `ForwardDiff`.
+The backend `:optimized` will mainly focus on the most efficient approaches, for instance using `ReverseDiff` to compute the gradient instead of `ForwardDiff`.
 
 ```@example ex1
 ADNLPModels.predefined_backend[:optimized]
 ```
 
-The backend `generic` focuses on backend that make no assumptions on the element type, see [Creating an ADNLPModels backend that supports multiple precisions](https://jso.dev/tutorials/generic-adnlpmodels/).
+The backend `:generic` focuses on backend that make no assumptions on the element type, see [Creating an ADNLPModels backend that supports multiple precisions](https://jso.dev/tutorials/generic-adnlpmodels/).
 
 It is possible to use these pre-defined backends using the keyword argument `backend` when instantiating the model.
 
@@ -55,7 +55,7 @@ It is to be noted that by default the Jacobian and Hessian matrices are dense.
 (get_nnzj(nlp), get_nnzh(nlp)) # number of nonzeros elements in the Jacobian and Hessian
 ```
 
-To enable sparse computations of these entries, one needs to first load the package [`Symbolics.jl`](https://github.com/JuliaSymbolics/Symbolics.jl).
+To enable sparse computations of these entries, one needs to first load the package [`Symbolics.jl`](https://github.com/JuliaSymbolics/Symbolics.jl)
 
 ```@example ex1
 using Symbolics
@@ -71,7 +71,7 @@ ADNLPModels.predefined_backend[:optimized][:jacobian_backend]
 ADNLPModels.predefined_backend[:optimized][:hessian_backend]
 ```
 
-So, taking another optimization problem with the optimized backend will compute sparse Jacobian and Hessian matrices.
+Choosing another optimization problem with the optimized backend will compute sparse Jacobian and Hessian matrices.
 
 ```@example ex1
 f(x) = (x[1] - 1)^2
