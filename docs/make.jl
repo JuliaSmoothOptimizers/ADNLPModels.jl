@@ -16,6 +16,7 @@ makedocs(
     "Backend" => "backend.md",
     "Default backends" => "predefined.md",
     "Support multiple precision" => "generic.md",
+    "Performance tips" => "performance.md",
     "Reference" => "reference.md",
   ],
 )
