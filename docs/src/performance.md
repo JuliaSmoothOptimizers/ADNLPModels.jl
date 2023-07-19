@@ -138,7 +138,7 @@ meta = OptimizationProblems.meta
 We select the problems that are scalable, so that there size can be modified. By default, the size is close to `100`.
 
 ```@example ex3
-scalable_problems = meta[meta.variable_nvar .== true, :name]
+scalable_problems = meta[(meta.variable_nvar .== true) .& (meta.ncon .> 0), :name]
 ```
 
 ```@example ex3
