@@ -14,6 +14,7 @@ makedocs(
     "Home" => "index.md",
     "Tutorial" => "tutorial.md",
     "Backend" => "backend.md",
+    "Support multiple precision" => "generic.md",
     "Reference" => "reference.md",
   ],
 )
