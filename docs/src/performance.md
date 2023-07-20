@@ -132,14 +132,11 @@ using ADNLPModels, NLPModels, OptimizationProblems
 The package [`OptimizationProblems.jl`](https://github.com/JuliaSmoothOptimizers/OptimizationProblems.jl) provides a collection of optimization problems in JuMP and ADNLPModels syntax.
 
 ```@example ex3
-meta = OptimizationProblems.meta;
+meta = OptimizationProblems.meta
+scalable_problems = meta[meta.variable_nvar .== true, :name]
 ```
 
 We select the problems that are scalable, so that there size can be modified. By default, the size is close to `100`.
-
-```@example ex3
-scalable_problems = meta[(meta.variable_nvar .== true) .& (meta.ncon .> 0), :name]
-```
 
 ```@example ex3
 using NLPModelsJuMP, Zygote
