@@ -39,7 +39,7 @@ benchmarked_optimized_backends = Dict(
   "gradient_backend" => Dict(
     "forward" => ADNLPModels.ForwardDiffADGradient,
     "reverse" => ADNLPModels.ReverseDiffADGradient,
-    "enzyme" => ADNLPModels.EnzymeADGradient,
+    # "enzyme" => ADNLPModels.EnzymeADGradient,
   ),
   "hprod_backend" => Dict(
     "forward" => ADNLPModels.ForwardDiffADHvprod,

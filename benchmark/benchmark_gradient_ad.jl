@@ -16,7 +16,7 @@ using BenchmarkTools, DataFrames, JuMP, Plots
 #JSO packages
 using NLPModels, BenchmarkProfiles, NLPModelsJuMP, OptimizationProblems, SolverBenchmark
 #This package
-using Enzyme, ReverseDiff, Zygote, ForwardDiff
+using  ReverseDiff, Zygote, ForwardDiff # Enzyme,
 
 include("additional_backends.jl")
 include("utils.jl")
@@ -72,7 +72,7 @@ problems_not_supported_enzyme = [
 ]
 problem_sets = Dict(
   #"all" => all_problems,
-  "scalable" => setdiff(scalable_problems, problems_not_supported_enzyme),
+  "scalable" => scalable_problems, # setdiff(scalable_problems, problems_not_supported_enzyme),
 )
 benchs = [
   "optimized",
