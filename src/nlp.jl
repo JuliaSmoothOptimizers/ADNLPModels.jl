@@ -543,7 +543,7 @@ function NLPModels.grad!(nlp::ADNLPModel, x::AbstractVector, g::AbstractVector)
   return g
 end
 
-function NLPModels.cons_lin!(nlp::ADNLPModel, x::AbstractVector, c::AbstractVector)
+function NLPModels.cons_lin!(nlp::ADModel, x::AbstractVector, c::AbstractVector)
   @lencheck nlp.meta.nvar x
   @lencheck nlp.meta.nlin c
   increment!(nlp, :neval_cons_lin)
@@ -551,7 +551,7 @@ function NLPModels.cons_lin!(nlp::ADNLPModel, x::AbstractVector, c::AbstractVect
   return c
 end
 
-function NLPModels.cons_nln!(nlp::ADNLPModel, x::AbstractVector, c::AbstractVector)
+function NLPModels.cons_nln!(nlp::ADModel, x::AbstractVector, c::AbstractVector)
   @lencheck nlp.meta.nvar x
   @lencheck nlp.meta.nnln c
   increment!(nlp, :neval_cons_nln)
@@ -560,7 +560,7 @@ function NLPModels.cons_nln!(nlp::ADNLPModel, x::AbstractVector, c::AbstractVect
 end
 
 function NLPModels.jac_lin_structure!(
-  nlp::ADNLPModel,
+  nlp::ADModel,
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
 )
@@ -571,7 +571,7 @@ function NLPModels.jac_lin_structure!(
 end
 
 function NLPModels.jac_nln_structure!(
-  nlp::ADNLPModel,
+  nlp::ADModel,
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
 )
@@ -579,7 +579,7 @@ function NLPModels.jac_nln_structure!(
   return jac_structure!(nlp.adbackend.jacobian_backend, nlp, rows, cols)
 end
 
-function NLPModels.jac_lin_coord!(nlp::ADNLPModel, x::AbstractVector, vals::AbstractVector)
+function NLPModels.jac_lin_coord!(nlp::ADModel, x::AbstractVector, vals::AbstractVector)
   @lencheck nlp.meta.nvar x
   @lencheck nlp.meta.lin_nnzj vals
   increment!(nlp, :neval_jac_lin)
@@ -587,7 +587,7 @@ function NLPModels.jac_lin_coord!(nlp::ADNLPModel, x::AbstractVector, vals::Abst
   return vals
 end
 
-function NLPModels.jac_nln_coord!(nlp::ADNLPModel, x::AbstractVector, vals::AbstractVector)
+function NLPModels.jac_nln_coord!(nlp::ADModel, x::AbstractVector, vals::AbstractVector)
   @lencheck nlp.meta.nvar x
   @lencheck nlp.meta.nln_nnzj vals
   increment!(nlp, :neval_jac_nln)
@@ -595,7 +595,7 @@ function NLPModels.jac_nln_coord!(nlp::ADNLPModel, x::AbstractVector, vals::Abst
 end
 
 function NLPModels.jprod_lin!(
-  nlp::ADNLPModel,
+  nlp::ADModel,
   x::AbstractVector,
   v::AbstractVector,
   Jv::AbstractVector{T},
@@ -608,7 +608,7 @@ function NLPModels.jprod_lin!(
 end
 
 function NLPModels.jprod_nln!(
-  nlp::ADNLPModel,
+  nlp::ADModel,
   x::AbstractVector,
   v::AbstractVector,
   Jv::AbstractVector,
@@ -622,7 +622,7 @@ function NLPModels.jprod_nln!(
 end
 
 function NLPModels.jtprod!(
-  nlp::ADNLPModel,
+  nlp::ADModel,
   x::AbstractVector,
   v::AbstractVector,
   Jtv::AbstractVector{T},
@@ -643,7 +643,7 @@ function NLPModels.jtprod!(
 end
 
 function NLPModels.jtprod_lin!(
-  nlp::ADNLPModel,
+  nlp::ADModel,
   x::AbstractVector,
   v::AbstractVector,
   Jtv::AbstractVector{T},
@@ -656,7 +656,7 @@ function NLPModels.jtprod_lin!(
 end
 
 function NLPModels.jtprod_nln!(
-  nlp::ADNLPModel,
+  nlp::ADModel,
   x::AbstractVector,
   v::AbstractVector,
   Jtv::AbstractVector,
@@ -670,7 +670,7 @@ function NLPModels.jtprod_nln!(
 end
 
 function NLPModels.hess_structure!(
-  nlp::ADNLPModel,
+  nlp::ADModel,
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
 )
@@ -679,7 +679,7 @@ function NLPModels.hess_structure!(
 end
 
 function NLPModels.hess_coord!(
-  nlp::ADNLPModel,
+  nlp::ADModel,
   x::AbstractVector,
   vals::AbstractVector;
   obj_weight::Real = one(eltype(x)),
@@ -691,7 +691,7 @@ function NLPModels.hess_coord!(
 end
 
 function NLPModels.hess_coord!(
-  nlp::ADNLPModel,
+  nlp::ADModel,
   x::AbstractVector,
   y::AbstractVector,
   vals::AbstractVector;
@@ -712,7 +712,7 @@ function NLPModels.hess_coord!(
 end
 
 function NLPModels.hprod!(
-  nlp::ADNLPModel,
+  nlp::ADModel,
   x::AbstractVector,
   v::AbstractVector,
   Hv::AbstractVector;
@@ -727,7 +727,7 @@ function NLPModels.hprod!(
 end
 
 function NLPModels.hprod!(
-  nlp::ADNLPModel,
+  nlp::ADModel,
   x::AbstractVector,
   y::AbstractVector,
   v::AbstractVector,
@@ -745,7 +745,7 @@ function NLPModels.hprod!(
 end
 
 function NLPModels.jth_hess_coord!(
-  nlp::ADNLPModel,
+  nlp::ADModel,
   x::AbstractVector,
   j::Integer,
   vals::AbstractVector{T},
@@ -763,7 +763,7 @@ function NLPModels.jth_hess_coord!(
 end
 
 function NLPModels.jth_hprod!(
-  nlp::ADNLPModel,
+  nlp::ADModel,
   x::AbstractVector,
   v::AbstractVector,
   j::Integer,
@@ -781,7 +781,7 @@ function NLPModels.jth_hprod!(
 end
 
 function NLPModels.ghjvprod!(
-  nlp::ADNLPModel,
+  nlp::ADModel,
   x::AbstractVector,
   g::AbstractVector,
   v::AbstractVector,
