@@ -52,7 +52,120 @@ include("sparse_diff_tools.jl")
 include("zygote.jl")
 include("predefined_backend.jl")
 include("nlp.jl")
+
+function ADNLPModel!(model::AbstractNLPModel; kwargs...)
+  return if model.meta.nlin > 0
+    ADNLPModel!(
+      x -> obj(model, x),
+      model.meta.x0,
+      model.meta.lvar,
+      model.meta.uvar,
+      jac_lin(model, model.meta.x0),
+      (cx, x) -> cons!(model, x, cx),
+      model.meta.lcon,
+      model.meta.ucon;
+      kwargs...,
+    )
+  else
+    ADNLPModel!(
+      x -> obj(model, x),
+      model.meta.x0,
+      model.meta.lvar,
+      model.meta.uvar,
+      (cx, x) -> cons!(model, x, cx),
+      model.meta.lcon,
+      model.meta.ucon;
+      kwargs...,
+    )
+  end
+end
+
+function ADNLPModel(model::AbstractNLPModel; kwargs...)
+  return if model.meta.nlin > 0
+    ADNLPModel(
+      x -> obj(model, x),
+      model.meta.x0,
+      model.meta.lvar,
+      model.meta.uvar,
+      jac_lin(model, model.meta.x0),
+      x -> cons(model, x),
+      model.meta.lcon,
+      model.meta.ucon;
+      kwargs...,
+    )
+  else
+    ADNLPModel(
+      x -> obj(model, x),
+      model.meta.x0,
+      model.meta.lvar,
+      model.meta.uvar,
+      x -> cons(model, x),
+      model.meta.lcon,
+      model.meta.ucon;
+      kwargs...,
+    )
+  end
+end
+
 include("nls.jl")
+
+function ADNLSModel(model::AbstractNLSModel; kwargs...)
+  return if model.meta.nlin > 0
+    ADNLSModel(
+      x -> residual(model, x),
+      model.meta.x0,
+      model.nls_meta.nequ,
+      model.meta.lvar,
+      model.meta.uvar,
+      jac_lin(model, model.meta.x0),
+      x -> cons(model, x),
+      model.meta.lcon,
+      model.meta.ucon;
+      kwargs...,
+    )
+  else
+    ADNLSModel(
+    x -> residual(model, x),
+    model.meta.x0,
+    model.nls_meta.nequ,
+    model.meta.lvar,
+    model.meta.uvar,
+    x -> cons(model, x),
+    model.meta.lcon,
+    model.meta.ucon;
+    kwargs...,
+  )
+  end
+end
+
+function ADNLSModel!(model::AbstractNLSModel; kwargs...)
+  return if model.meta.nlin > 0
+    ADNLSModel!(
+      (Fx, x) -> residual!(model, x, Fx),
+      model.meta.x0,
+      model.nls_meta.nequ,
+      model.meta.lvar,
+      model.meta.uvar,
+      jac_lin(model, model.meta.x0),
+      (cx, x) -> cons!(model, x, cx),
+      model.meta.lcon,
+      model.meta.ucon;
+      kwargs...,
+    )
+  else
+    ADNLSModel!(
+      (Fx, x) -> residual!(model, x, Fx),
+      model.meta.x0,
+      model.nls_meta.nequ,
+      model.meta.lvar,
+      model.meta.uvar,
+      (cx, x) -> cons!(model, x, cx),
+      model.meta.lcon,
+      model.meta.ucon;
+      kwargs...,
+    )
+  end
+end
 
 @init begin
   @require Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7" begin
