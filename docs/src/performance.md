@@ -142,11 +142,10 @@ scalable_problems = meta[(meta.variable_nvar .== true) .& (meta.ncon .> 0), :nam
 ```
 
 ```@example ex3
-using NLPModelsJuMP, Zygote
+using NLPModelsJuMP
 list_backends = Dict(
   :forward => ADNLPModels.ForwardDiffADGradient,
   :reverse => ADNLPModels.ReverseDiffADGradient,
-  :zygote => ADNLPModels.ZygoteADGradient,
 )
 ```
 
