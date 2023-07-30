@@ -56,12 +56,8 @@
     jtprod = jtv!,
     jac_coord = ([1; 1], [1; 2], j!),
   )
-  nlp = ADNLPModel!(
-    f,
-    x0,
-    c!,
-    [0.0],
-    [0.0],
+  nlp = ADNLPModel(
+    model,
     gradient_backend = model,
     hprod_backend = model,
     hessian_backend = model,
@@ -98,38 +94,16 @@ end
 
   nvar, ncon = model.meta.nvar, model.meta.ncon
 
-  if model.meta.nlin > 0
-    nlp = ADNLPModel!(
-      x -> obj(model, x),
-      model.meta.x0,
-      jac_lin(model, model.meta.x0),
-      (cx, x) -> cons!(model, x, cx),
-      model.meta.lcon,
-      model.meta.ucon,
-      gradient_backend = model,
-      hprod_backend = model,
-      hessian_backend = model,
-      jprod_backend = model,
-      jtprod_backend = model,
-      jacobian_backend = model,
-      ghjvprod_backend = model,
-    )
-  else
-    nlp = ADNLPModel!(
-      x -> obj(model, x),
-      model.meta.x0,
-      (cx, x) -> cons!(model, x, cx),
-      model.meta.lcon,
-      model.meta.ucon,
-      gradient_backend = model,
-      hprod_backend = model,
-      hessian_backend = model,
-      jprod_backend = model,
-      jtprod_backend = model,
-      jacobian_backend = model,
-      ghjvprod_backend = model,
-    )
-  end
+  nlp = ADNLPModel!(
+    model,
+    gradient_backend = model,
+    hprod_backend = model,
+    hessian_backend = model,
+    jprod_backend = model,
+    jtprod_backend = model,
+    jacobian_backend = model,
+    ghjvprod_backend = model,
+  )
 
   x = ones(nvar)
   v = 2 * ones(nvar)
@@ -165,50 +139,21 @@ end
 
   nvar, ncon = model.meta.nvar, model.meta.ncon
 
-  if model.meta.nlin > 0
-    nlp = ADNLSModel!(
-      (Fx, x) -> residual!(model, x, Fx),
-      model.meta.x0,
-      model.nls_meta.nequ,
-      jac_lin(model, model.meta.x0),
-      (cx, x) -> cons!(model, x, cx),
-      model.meta.lcon,
-      model.meta.ucon,
-      gradient_backend = model,
-      hprod_backend = model,
-      hessian_backend = model,
-      jprod_backend = model,
-      jtprod_backend = model,
-      jacobian_backend = model,
-      ghjvprod_backend = model,
-      hprod_residual_backend = model,
-      jprod_residual_backend = model,
-      jtprod_residual_backend = model,
-      jacobian_residual_backend = model,
-      hessian_residual_backend = model,
-    )
-  else
-    nlp = ADNLSModel!(
-      (Fx, x) -> residual!(model, x, Fx),
-      model.meta.x0,
-      model.nls_meta.nequ,
-      (cx, x) -> cons!(model, x, cx),
-      model.meta.lcon,
-      model.meta.ucon,
-      gradient_backend = model,
-      hprod_backend = model,
-      hessian_backend = model,
-      jprod_backend = model,
-      jtprod_backend = model,
-      jacobian_backend = model,
-      ghjvprod_backend = model,
-      hprod_residual_backend = model,
-      jprod_residual_backend = model,
-      jtprod_residual_backend = model,
-      jacobian_residual_backend = model,
-      hessian_residual_backend = model,
-    )
-  end
+  nlp = ADNLSModel!(
+    model,
+    gradient_backend = model,
+    hprod_backend = model,
+    hessian_backend = model,
+    jprod_backend = model,
+    jtprod_backend = model,
+    jacobian_backend = model,
+    ghjvprod_backend = model,
+    hprod_residual_backend = model,
+    jprod_residual_backend = model,
+    jtprod_residual_backend = model,
+    jacobian_residual_backend = model,
+    hessian_residual_backend = model,
+  )
 
   @test nlp.nls_meta.nnzj == model.nls_meta.nnzj
 
