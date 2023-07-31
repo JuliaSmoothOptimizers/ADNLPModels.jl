@@ -43,6 +43,7 @@ ADNLPModels.show_header(io::IO, nls::ADNLSModel) = println(
     ADNLSModel(F, x0, nequ, lvar, uvar, c, lcon, ucon)
     ADNLSModel(F, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, c, lcon, ucon)
     ADNLSModel(F, x0, nequ, lvar, uvar, A, c, lcon, ucon)
+    ADNLSModel(model::AbstractNLSModel)
 
 ADNLSModel is an Nonlinear Least Squares model using automatic differentiation to
 compute the derivatives.
@@ -115,6 +116,7 @@ For in-place constraints and residual function, use one of the following constru
     ADNLSModel!(F!, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, lcon, ucon)
     ADNLSModel!(F!, x0, nequ, lvar, uvar, A, c!, lcon, ucon)
     ADNLSModel!(F!, x0, nequ, lvar, uvar, A, clcon, ucon)
+    ADNLSModel!(model::AbstractNLSModel)
 
 where the constraint function has the signature `c!(output, input)`.
 

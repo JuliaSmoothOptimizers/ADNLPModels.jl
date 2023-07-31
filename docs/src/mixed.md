@@ -51,6 +51,11 @@ This is where building hybrid models with `ADNLPModels.jl` becomes useful.
 
 ```@example ex1
 using ADNLPModels
+nlp = ADNLPModel!(model, gradient_backend = model, jacobian_backend = model)
+```
+
+This would be equivalent to do.
+```julia
 nlp = ADNLPModel!(
   f,
   x0,
