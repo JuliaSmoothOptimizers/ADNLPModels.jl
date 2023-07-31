@@ -39,6 +39,7 @@ ADNLPModels.show_header(io::IO, nlp::ADNLPModel) =
     ADNLPModel(f, x0, lvar, uvar, c, lcon, ucon)
     ADNLPModel(f, x0, lvar, uvar, clinrows, clincols, clinvals, c, lcon, ucon)
     ADNLPModel(f, x0, lvar, uvar, A, c, lcon, ucon)
+    ADNLPModel(model::AbstractNLPModel)
 
 ADNLPModel is an AbstractNLPModel using automatic differentiation to compute the derivatives.
 The problem is defined as
@@ -99,6 +100,7 @@ For in-place constraints function, use one of the following constructors:
     ADNLPModel(f, x0, lvar, uvar, c!, lcon, ucon)
     ADNLPModel(f, x0, lvar, uvar, clinrows, clincols, clinvals, c!, lcon, ucon)
     ADNLPModel(f, x0, lvar, uvar, A, c!, lcon, ucon)
+    ADNLSModel!(model::AbstractNLSModel)
 
 where the constraint function has the signature `c!(output, input)`.
 
