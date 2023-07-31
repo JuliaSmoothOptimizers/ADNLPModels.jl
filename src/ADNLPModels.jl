@@ -125,16 +125,16 @@ function ADNLSModel(model::AbstractNLSModel; kwargs...)
     )
   else
     ADNLSModel(
-    x -> residual(model, x),
-    model.meta.x0,
-    model.nls_meta.nequ,
-    model.meta.lvar,
-    model.meta.uvar,
-    x -> cons(model, x),
-    model.meta.lcon,
-    model.meta.ucon;
-    kwargs...,
-  )
+      x -> residual(model, x),
+      model.meta.x0,
+      model.nls_meta.nequ,
+      model.meta.lvar,
+      model.meta.uvar,
+      x -> cons(model, x),
+      model.meta.lcon,
+      model.meta.ucon;
+      kwargs...,
+    )
   end
 end
 

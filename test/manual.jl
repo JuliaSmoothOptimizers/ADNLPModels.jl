@@ -148,7 +148,7 @@ end
     ghjvprod_backend = model,
   )
   test_nlp_consistency(nlp, model)
-  
+
   reset!(model)
   nlp = ADNLPModel(
     model,
