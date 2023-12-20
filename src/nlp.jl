@@ -21,7 +21,7 @@ ADNLPModel(
   adbackend::ADModelBackend,
   f,
   c,
-) where {T, S} = ADNLPModel(meta, counters, adbackend, f, Int[], Int[], T[], c)
+) where {T, S} = ADNLPModel(meta, counters, adbackend, f, Int[], Int[], similar(x0, 0), c)
 
 ADNLPModels.show_header(io::IO, nlp::ADNLPModel) =
   println(io, "ADNLPModel - Model with automatic differentiation backend $(nlp.adbackend)")
