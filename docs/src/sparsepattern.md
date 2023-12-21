@@ -7,7 +7,7 @@ Our test problem is an academic investment control problem:
 ```math
 \begin{aligned}
 \min_{u,x} \quad & \int_0^1 (u(t) - 1) x(t) \\
-& \dot{x}(t) = gamma * (u(t) * x(t)).
+& \dot{x}(t) = \gamma u(t) x(t).
 \end{aligned}
 ```
 
@@ -54,8 +54,8 @@ function ADNLPModels.compute_jacobian_sparsity(c!, cx, x0; n = n, N = N)
     # S = Symbolics.jacobian_sparsity(c!, cx, x0)
     # return S
     return hcat(
-        spdiagm(0 => ones(Bool, N), 1 => ones(Bool, N - 1)),
-        spdiagm(0 => ones(Bool, N), 1 => ones(Bool, N - 1)),
+        spdiagm(0 => ones(Bool, N - 1), 1 => ones(Bool, N - 1)),
+        spdiagm(0 => ones(Bool, N - 1), 1 => ones(Bool, N - 1)),
       )[1:(N - 1),:]
 end
 
