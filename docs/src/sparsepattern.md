@@ -20,18 +20,20 @@ using OptimizationProblems
 using Symbolics
 using SparseArrays
 
-n = 10
-@btime begin
-  nlp = OptimizationProblems.ADNLPProblems.controlinvestment(n = n, show_time = true)
+n = 1000
+@elapsed begin
+  nlp = OptimizationProblems.ADNLPProblems.controlinvestment(n = n, hessian_backend = ADNLPModels.EmptyADbackend)
 end
 ```
 
 After adding the package `Symbolics.jl`, the `ADNLPModel` will automatically try to prepare AD-backend to compute sparse Jacobian and Hessian.
+We disabled the Hessian computation here to focus the measurement on the Jacobian computation.
+The keyword argument `show_time = true` can also be passed to the problem's constructor to get more detailed information about the time used to prepare the AD backend.
 
 ```@example ex1
 using NLPModels
 x = sqrt(2) * ones(n)
-jac(nlp, x)
+jac_nln(nlp, x)
 ```
 
 However, it can be rather costly to determine for a given function the sparsity pattern of the Jacobian and the Lagrangian Hessian matrices.
@@ -45,18 +47,20 @@ using OptimizationProblems
 using Symbolics
 using SparseArrays
 
-function ADNLPModels.compute_jacobian_sparsity(c!, cx, x0)
+n = 1000
+N = div(n, 2)
+
+function ADNLPModels.compute_jacobian_sparsity(c!, cx, x0; n = n, N = N)
     # S = Symbolics.jacobian_sparsity(c!, cx, x0)
     # return S
     return hcat(
-        spdiagm(0 => ones(Bool, 5), 1 => ones(Bool, 4)),
-        spdiagm(0 => ones(Bool, 5), 1 => ones(Bool, 4)),
-      )
+        spdiagm(0 => ones(Bool, N), 1 => ones(Bool, N - 1)),
+        spdiagm(0 => ones(Bool, N), 1 => ones(Bool, N - 1)),
+      )[1:(N - 1),:]
 end
 
-n = 10
-@btime begin
-  nlp = OptimizationProblems.ADNLPProblems.controlinvestment(n = n, show_time = true)
+@elapsed begin
+  nlp = OptimizationProblems.ADNLPProblems.controlinvestment(n = n, hessian_backend = ADNLPModels.EmptyADbackend)
 end
 ```
 
@@ -65,7 +69,7 @@ A similar Jacobian matrix is obtained at a lower price.
 ```@example ex2
 using NLPModels
 x = sqrt(2) * ones(n)
-jac(nlp, x)
+jac_nln(nlp, x)
 ```
 
 The function `compute_hessian_sparsity(f, nvar, c!, ncon)` does the same for the Lagrangian Hessian.
