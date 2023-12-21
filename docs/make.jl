@@ -18,6 +18,7 @@ makedocs(
     "Build a hybrid NLPModel" => "mixed.md",
     "Support multiple precision" => "generic.md",
     "Performance tips" => "performance.md",
+    "Fine-tune sparse derivatives" => "sparsepattern.md",
     "Reference" => "reference.md",
   ],
 )
