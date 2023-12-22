@@ -182,8 +182,8 @@ struct ForwardDiffADHvprod{Tag, GT, S, T, F, Tagf} <: ADBackend
   lz::Vector{ForwardDiff.Dual{Tag, T, 1}}
   glz::Vector{ForwardDiff.Dual{Tag, T, 1}}
   sol::S
-  longv::S
-  Hvp::S
+  longv
+  Hvp
   ∇φ!::GT
   z::Vector{ForwardDiff.Dual{Tagf, T, 1}}
   gz::Vector{ForwardDiff.Dual{Tagf, T, 1}}
