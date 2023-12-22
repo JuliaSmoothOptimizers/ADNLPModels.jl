@@ -20,10 +20,11 @@ using OptimizationProblems
 using Symbolics
 using SparseArrays
 
-n = 1000
+n = 1000000
 @elapsed begin
   nlp = OptimizationProblems.ADNLPProblems.controlinvestment(n = n, hessian_backend = ADNLPModels.EmptyADbackend)
 end
+
 ```
 
 After adding the package `Symbolics.jl`, the `ADNLPModel` will automatically try to prepare AD-backend to compute sparse Jacobian and Hessian.
@@ -47,16 +48,19 @@ using OptimizationProblems
 using Symbolics
 using SparseArrays
 
-n = 1000
+n = 1000000
 N = div(n, 2)
 
 function ADNLPModels.compute_jacobian_sparsity(c!, cx, x0; n = n, N = N)
-    # S = Symbolics.jacobian_sparsity(c!, cx, x0)
-    # return S
-    return hcat(
-        spdiagm(0 => ones(Bool, N - 1), 1 => ones(Bool, N - 1)),
-        spdiagm(0 => ones(Bool, N - 1), 1 => ones(Bool, N - 1)),
-      )[1:(N - 1),:]
+  # S = Symbolics.jacobian_sparsity(c!, cx, x0)
+  S = spzeros(Bool, N - 1, n)
+  for i =1:(N - 1)
+    S[i, i] = true
+    S[i, i + 1] = true
+    S[i, N + i] = true
+    S[i, N + i + 1] = true
+  end
+  return S
 end
 
 @elapsed begin
