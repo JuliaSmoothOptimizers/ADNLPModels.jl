@@ -23,7 +23,8 @@ ADNLSModel(
   adbackend::ADModelBackend,
   F,
   c,
-) where {T, S} = ADNLSModel(meta, nls_meta, counters, adbackend, F, Int[], Int[], similar(meta.x0, 0), c)
+) where {T, S} =
+  ADNLSModel(meta, nls_meta, counters, adbackend, F, Int[], Int[], similar(meta.x0, 0), c)
 
 ADNLPModels.show_header(io::IO, nls::ADNLSModel) = println(
   io,
