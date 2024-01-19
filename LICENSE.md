@@ -1,4 +1,4 @@
-Copyright (c) 2015-2024: Tangi Migot, Alexis Montoison, Dominique Orban and Abel Soares Siqueira
+Copyright (c) 2015-present: Tangi Migot, Alexis Montoison, Dominique Orban and Abel Soares Siqueira
 
 ADNLPModels.jl is licensed under the [MPL version 2.0](https://www.mozilla.org/MPL/2.0/).
 
