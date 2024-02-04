@@ -3,7 +3,7 @@
 The package `ADNLPModels.jl` implements the [`NLPModel API`](https://github.com/JuliaSmoothOptimizers/NLPModels.jl) using automatic differentiation (AD) backends.
 It is also possible to build hybrid models that use AD to complete the implementation of a given `NLPModel`.
 
-In the following example, we use [`ManualNLPModels.jl`](ManualNLPModels.jl) to build an NLPModel with the gradient and the Jacobian functions implemented.
+In the following example, we use [`ManualNLPModels.jl`](https://github.com/JuliaSmoothOptimizers/ManualNLPModels.jl) to build an NLPModel with the gradient and the Jacobian functions implemented.
 
 ```@example ex1
 using ManualNLPModels
