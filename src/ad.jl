@@ -48,24 +48,6 @@ struct ADModelBackend{GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBL
   hessian_residual_backend::HBLS
 end
 
-function Base.show(
-  io::IO,
-  backend::ADModelBackend{GB, HvB, JvB, JtvB, JB, HB, GHJ},
-) where {GB, HvB, JvB, JtvB, JB, HB, GHJ}
-  print(io, replace(replace(
-    "ADModelBackend{
-  $GB,
-  $HvB,
-  $JvB,
-  $JtvB,
-  $JB,
-  $HB,
-  $GHJ,
-}",
-    "ADNLPModels." => "",
-  ), r"\{(.+)\}" => s""))
-end
-
 function ADModelBackend(
   nvar::Integer,
   f;
