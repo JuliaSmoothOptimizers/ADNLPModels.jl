@@ -9,7 +9,20 @@ EmptyADbackend(args...; kwargs...) = EmptyADbackend()
 function Base.show(
   io::IO,
   backend::ADModelBackend{GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS},
-) where {GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS <: EmptyADbackend, JvBLS <: EmptyADbackend, JtvBLS <: EmptyADbackend, JBLS <: EmptyADbackend, HBLS <: EmptyADbackend}
+) where {
+  GB,
+  HvB,
+  JvB,
+  JtvB,
+  JB,
+  HB,
+  GHJ,
+  HvBLS <: EmptyADbackend,
+  JvBLS <: EmptyADbackend,
+  JtvBLS <: EmptyADbackend,
+  JBLS <: EmptyADbackend,
+  HBLS <: EmptyADbackend,
+}
   print(io, replace(replace(
     "ADModelBackend{
   $GB,
