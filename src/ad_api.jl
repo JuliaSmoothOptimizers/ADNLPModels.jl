@@ -6,6 +6,47 @@ abstract type InPlaceADbackend <: ADBackend end
 struct EmptyADbackend <: ADBackend end
 EmptyADbackend(args...; kwargs...) = EmptyADbackend()
 
+function Base.show(
+  io::IO,
+  backend::ADModelBackend{GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS},
+) where {GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS <: EmptyADbackend, JvBLS <: EmptyADbackend, JtvBLS <: EmptyADbackend, JBLS <: EmptyADbackend, HBLS <: EmptyADbackend}
+  print(io, replace(replace(
+    "ADModelBackend{
+  $GB,
+  $HvB,
+  $JvB,
+  $JtvB,
+  $JB,
+  $HB,
+  $GHJ,
+}",
+    "ADNLPModels." => "",
+  ), r"\{(.+)\}" => s""))
+end
+
+function Base.show(
+  io::IO,
+  backend::ADModelBackend{GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS},
+) where {GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS}
+  print(io, replace(replace(
+    "ADModelBackend{
+  $GB,
+  $HvB,
+  $JvB,
+  $JtvB,
+  $JB,
+  $HB,
+  $GHJ,
+  $HvBLS,
+  $JvBLS,
+  $JtvBLS,
+  $JBLS,
+  $HBLS,
+}",
+    "ADNLPModels." => "",
+  ), r"\{(.+)\}" => s""))
+end
+
 """
     get_nln_nnzj(::ADBackend, nvar, ncon)
     get_nln_nnzj(b::ADModelBackend, nvar, ncon)
