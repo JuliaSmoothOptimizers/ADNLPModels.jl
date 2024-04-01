@@ -81,6 +81,11 @@ function ADNLPModel!(model::AbstractNLPModel; kwargs...)
 end
 
 function ADNLPModel(model::AbstractNLPModel; kwargs...)
+  function model_c(x; model = model)
+    cx = similar(x, model.meta.ncon)
+    return cons!(model, x, cx)
+  end
+
   return if model.meta.nlin > 0
     ADNLPModel(
       x -> obj(model, x),
@@ -88,7 +93,7 @@ function ADNLPModel(model::AbstractNLPModel; kwargs...)
       model.meta.lvar,
       model.meta.uvar,
       jac_lin(model, model.meta.x0),
-      x -> cons(model, x),
+      model_c,
       model.meta.lcon,
       model.meta.ucon;
       kwargs...,
@@ -99,7 +104,7 @@ function ADNLPModel(model::AbstractNLPModel; kwargs...)
       model.meta.x0,
       model.meta.lvar,
       model.meta.uvar,
-      x -> cons(model, x),
+      model_c,
       model.meta.lcon,
       model.meta.ucon;
       kwargs...,
@@ -110,27 +115,36 @@ end
 include("nls.jl")
 
 function ADNLSModel(model::AbstractNLSModel; kwargs...)
+  function model_c(x; model = model)
+    cx = similar(x, model.meta.ncon)
+    return cons!(model, x, cx)
+  end
+  function model_F(x; model = model)
+    Fx = similar(x, model.nls_meta.nequ)
+    return residual!(model, x, Fx)
+  end
+
   return if model.meta.nlin > 0
     ADNLSModel(
-      x -> residual(model, x),
+      model_F,
       model.meta.x0,
       model.nls_meta.nequ,
       model.meta.lvar,
       model.meta.uvar,
       jac_lin(model, model.meta.x0),
-      x -> cons(model, x),
+      model_c,
       model.meta.lcon,
       model.meta.ucon;
       kwargs...,
     )
   else
     ADNLSModel(
-      x -> residual(model, x),
+      model_F,
       model.meta.x0,
       model.nls_meta.nequ,
       model.meta.lvar,
       model.meta.uvar,
-      x -> cons(model, x),
+      model_c,
       model.meta.lcon,
       model.meta.ucon;
       kwargs...,
