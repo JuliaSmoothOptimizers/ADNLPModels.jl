@@ -19,12 +19,13 @@ function SparseADHessian(
   f,
   ncon,
   c!;
-  x0::AbstractVector{T} = rand(nvar),
+  x0::S = rand(nvar),
   alg = ColPackColoration(),
   kwargs...,
-) where {T}
-  S = compute_hessian_sparsity(f, nvar, c!, ncon)
-  H = ncon == 0 ? S : S[1:nvar, 1:nvar]
+) where {S}
+  T = eltype(S)
+  Hs = compute_hessian_sparsity(f, nvar, c!, ncon)
+  H = ncon == 0 ? Hs : Hs[1:nvar, 1:nvar]
 
   colors = sparse_matrix_colors(H, alg)
   ncolors = maximum(colors)
@@ -59,10 +60,9 @@ function SparseADHessian(
     ForwardDiff.gradient!(gz, lag, z, cfg)
     return gz
   end
-  longv = zeros(T, ntotal)
-  Hvp = zeros(T, ntotal)
-
-  y = zeros(T, ncon)
+  longv = fill!(S(undef, ntotal), 0)
+  Hvp = fill!(S(undef, ntotal), 0)
+  y = fill!(S(undef, ncon), 0)
 
   return SparseADHessian(d, rowval, colptr, colors, ncolors, res, lz, glz, sol, longv, Hvp, ∇φ!, y)
 end
@@ -95,8 +95,8 @@ function SparseReverseADHessian(
   alg = ColPackColoration(),
   kwargs...,
 ) where {T}
-  S = compute_hessian_sparsity(f, nvar, c!, ncon)
-  H = ncon == 0 ? S : S[1:nvar, 1:nvar]
+  Hs = compute_hessian_sparsity(f, nvar, c!, ncon)
+  H = ncon == 0 ? Hs : Hs[1:nvar, 1:nvar]
 
   colors = sparse_matrix_colors(H, alg)
   ncolors = maximum(colors)
@@ -138,7 +138,7 @@ function SparseReverseADHessian(
   end
   Hv_temp = similar(x0)
 
-  y = zeros(T, ncon)
+  y = similar(x0, ncon)
   return SparseReverseADHessian(
     d,
     rowval,

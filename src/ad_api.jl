@@ -139,10 +139,10 @@ Jtprod!(nlp::AbstractNLPModel, Jtv, c, x, v, ::Val{:F}) = jtprod_residual!(nlp, 
 function Hvprod!(nlp::AbstractNLPModel, Hv, x, v, ℓ, ::Val{:obj}, obj_weight)
   return hprod!(nlp, x, v, Hv, obj_weight = obj_weight)
 end
-function Hvprod!(nlp::AbstractNLPModel, Hv, x, v, ℓ, ::Val{:lag}, y, obj_weight)
+function Hvprod!(nlp::AbstractNLPModel, Hv, x::S, v, ℓ, ::Val{:lag}, y, obj_weight) where {S}
   if nlp.meta.nlin > 0
     # y is of length nnln, and hprod expectes ncon...
-    yfull = zeros(eltype(x), nlp.meta.ncon)
+    yfull = fill!(S(undef, nlp.meta.ncon), 0)
     k = 0
     for i in nlp.meta.nln
       k += 1
@@ -200,14 +200,14 @@ end
 function NLPModels.hess_coord!(
   nlp::AbstractNLPModel,
   ::ADModel,
-  x::AbstractVector,
+  x::S,
   y::AbstractVector,
   obj_weight::Real,
   vals::AbstractVector,
-)
+) where {S}
   if nlp.meta.nlin > 0
     # y is of length nnln, and hess expectes ncon...
-    yfull = zeros(eltype(x), nlp.meta.ncon)
+    yfull = fill!(S(undef, nlp.meta.ncon), 0)
     k = 0
     for i in nlp.meta.nln
       k += 1
