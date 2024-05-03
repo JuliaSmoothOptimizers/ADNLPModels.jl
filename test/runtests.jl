@@ -1,4 +1,4 @@
-using CUDA, LinearAlgebra, SparseArrays, Test
+using LinearAlgebra, SparseArrays, Test
 using ADNLPModels, ManualNLPModels, NLPModels, NLPModelsModifiers, NLPModelsTest
 using ADNLPModels:
   gradient, gradient!, jacobian, hessian, Jprod!, Jtprod!, directional_second_derivative, Hvprod!

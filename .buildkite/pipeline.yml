@@ -7,6 +7,8 @@ steps:
       queue: "juliagpu"
       cuda: "*"
     command: |
-      julia --color=yes --project -e 'using Pkg; Pkg.add("CUDA"); Pkg.instantiate(); using CUDA'
+      julia --color=yes --project -e 'using Pkg; Pkg.add("CUDA"); Pkg.add("ManualNLPModels");
+                                      Pkg.add("NLPModels"); Pkg.add("NLPModelsModifiers");
+                                      Pkg.add("NLPModelsTest"); Pkg.instantiate(); using CUDA'
       julia --color=yes --project -e 'include("test/gpu.jl")'
     timeout_in_minutes: 30

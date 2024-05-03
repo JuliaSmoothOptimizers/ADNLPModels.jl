@@ -18,14 +18,6 @@
     @testset "Check multiple precision" begin
       multiple_precision_nlp(nlp_from_T, exclude = [], linear_api = true)
     end
-    if CUDA.functional()
-      @testset "Check GPU multiple precision" begin
-        CUDA.allowscalar() do
-          # sparse Jacobian/Hessian doesn't work here
-          multiple_precision_nlp_array(T -> nlp_from_T(T; jacobian_backend = ADNLPModels.ForwardDiffADJacobian, hessian_backend = ADNLPModels.ForwardDiffADHessian), CuArray, exclude = [jth_hprod], linear_api = true)
-        end
-      end
-    end
     @testset "Check view subarray" begin
       view_subarray_nlp(nlp_ad, exclude = [])
     end
