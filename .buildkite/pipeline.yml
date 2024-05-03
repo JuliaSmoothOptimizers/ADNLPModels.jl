@@ -1,0 +1,12 @@
+steps:
+  - label: "Nvidia GPUs -- CUDA.jl"
+    plugins:
+      - JuliaCI/julia#v1:
+          version: "1.10"
+    agents:
+      queue: "juliagpu"
+      cuda: "*"
+    command: |
+      julia --color=yes --project -e 'using Pkg; Pkg.add("CUDA"); Pkg.instantiate(); using CUDA'
+      julia --color=yes --project -e 'include("test/gpu.jl")'
+    timeout_in_minutes: 30
