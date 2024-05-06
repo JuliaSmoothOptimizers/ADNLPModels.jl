@@ -1,4 +1,4 @@
-using LinearAlgebra, SparseArrays, Test
+using CUDA, LinearAlgebra, SparseArrays, Test
 using ADNLPModels, ManualNLPModels, NLPModels, NLPModelsModifiers, NLPModelsTest
 using ADNLPModels:
   gradient, gradient!, jacobian, hessian, Jprod!, Jtprod!, directional_second_derivative, Hvprod!
@@ -145,3 +145,9 @@ include("nlp/basic.jl")
 include("nls/basic.jl")
 include("nlp/nlpmodelstest.jl")
 include("nls/nlpmodelstest.jl")
+
+if CUDA.functional()
+  @testset "NLPModelsTest (NLP) tests - GPU multiple precision" begin
+    include("gpu.jl")
+  end
+end
