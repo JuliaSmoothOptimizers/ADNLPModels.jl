@@ -1,5 +1,12 @@
 using CUDA, LinearAlgebra, SparseArrays, Test
-using ADNLPModels, ManualNLPModels, NLPModels, NLPModelsModifiers, NLPModelsTest
+using ADNLPModels, NLPModels, NLPModelsTest
+
+for problem in NLPModelsTest.nlp_problems ∪ ["GENROSE"]
+  include("nlp/problems/$(lowercase(problem)).jl")
+end
+for problem in NLPModelsTest.nls_problems
+  include("nls/problems/$(lowercase(problem)).jl")
+end
 
 @test CUDA.functional()
 
