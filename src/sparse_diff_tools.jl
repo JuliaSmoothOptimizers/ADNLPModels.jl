@@ -13,16 +13,17 @@
       f,
       ncon,
       c!;
-      x0::AbstractVector{T} = rand(nvar),
+      x0::S = rand(nvar),
       alg::SparseDiffTools.SparseDiffToolsColoringAlgorithm = SparseDiffTools.GreedyD1Color(),
       kwargs...,
-    ) where {T}
+    ) where {S}
+      T = eltype(S)
       output = similar(x0, ncon)
       J = compute_jacobian_sparsity(c!, output, x0)
       colors = sparse_matrix_colors(J, alg)
       jac = SparseMatrixCSC{T, Int}(J.m, J.n, J.colptr, J.rowval, T.(J.nzval))
 
-      dx = zeros(T, ncon)
+      dx = fill!(S(undef, ncon), 0)
       cfJ = SparseDiffTools.ForwardColorJacCache(c!, x0, colorvec = colors, dx = dx, sparsity = jac)
       SDTSparseADJacobian(cfJ)
     end

@@ -102,9 +102,9 @@ function SparseSymbolicsADHessian(
   f,
   ncon,
   c!;
-  x0::AbstractVector{T} = rand(nvar),
+  x0::S = rand(nvar),
   kwargs...,
-) where {T}
+) where {S}
   Symbolics.@variables xs[1:nvar], μs
   xsi = Symbolics.scalarize(xs)
   fun = μs * f(xsi)
@@ -122,7 +122,7 @@ function SparseSymbolicsADHessian(
   # cfH is a Tuple{Expr, Expr}, cfH[2] is the in-place function
   # that we need to update a vector `vals` with the nonzeros of ∇²ℓ(x, y, μ).
   cfH = Symbolics.build_function(vals, xsi, ysi, μs, expression = Val{false})
-  y = zeros(T, ncon)
+  y = fill!(S(undef, ncon), 0)
   return SparseSymbolicsADHessian(nnzh, rows, cols, y, cfH[2])
 end
 

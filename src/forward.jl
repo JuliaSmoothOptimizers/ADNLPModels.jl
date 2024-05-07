@@ -195,9 +195,10 @@ function ForwardDiffADHvprod(
   f,
   ncon::Integer = 0,
   c!::Function = (args...) -> [];
-  x0::AbstractVector{T} = rand(nvar),
+  x0::S = rand(nvar),
   kwargs...,
-) where {T}
+) where {S}
+  T = eltype(S)
   function lag(z; nvar = nvar, ncon = ncon, f = f, c! = c!)
     cx, x, y, ob = view(z, 1:ncon),
     view(z, (ncon + 1):(nvar + ncon)),
@@ -221,8 +222,8 @@ function ForwardDiffADHvprod(
     ForwardDiff.gradient!(gz, lag, z, cfg)
     return gz
   end
-  longv = zeros(T, ntotal)
-  Hvp = zeros(T, ntotal)
+  longv = fill!(S(undef, ntotal), 0)
+  Hvp = fill!(S(undef, ntotal), 0)
 
   # unconstrained Hessian
   tagf = ForwardDiff.Tag{typeof(f), T}

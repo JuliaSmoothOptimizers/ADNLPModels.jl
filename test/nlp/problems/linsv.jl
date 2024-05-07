@@ -1,14 +1,15 @@
 export linsv_autodiff
 
-function linsv_autodiff(::Type{T} = Float64; kwargs...) where {T}
-  x0 = zeros(T, 2)
+linsv_autodiff(::Type{T}; kwargs...) where {T <: Number} = linsv_autodiff(Vector{T}; kwargs...)
+function linsv_autodiff(::Type{S} = Vector{Float64}; kwargs...) where {S}
+  x0 = fill!(S(undef, 2), 0)
   f(x) = x[1]
-  lcon = T[3.0; 1.0]
-  ucon = T[Inf; Inf]
+  lcon = S([3; 1])
+  ucon = S([Inf; Inf])
 
   clinrows = [1, 1, 2]
   clincols = [1, 2, 2]
-  clinvals = T[1, 1, 1]
+  clinvals = S([1, 1, 1])
 
   return ADNLPModel(
     f,

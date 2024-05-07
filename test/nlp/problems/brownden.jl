@@ -1,7 +1,9 @@
 export brownden_autodiff
 
-function brownden_autodiff(::Type{T} = Float64; kwargs...) where {T}
-  x0 = T[25.0; 5.0; -5.0; -1.0]
+brownden_autodiff(::Type{T}; kwargs...) where {T <: Number} = brownden_autodiff(Vector{T}; kwargs...)
+function brownden_autodiff(::Type{S} = Vector{Float64}; kwargs...) where {S}
+  T = eltype(S)
+  x0 = S([25.0; 5.0; -5.0; -1.0])
   f(x) = begin
     s = zero(T)
     for i = 1:20
