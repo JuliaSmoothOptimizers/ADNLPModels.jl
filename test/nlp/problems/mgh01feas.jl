@@ -1,6 +1,7 @@
 export mgh01feas_autodiff
 
-mgh01feas_autodiff(::Type{T}; kwargs...) where {T <: Number} = mgh01feas_autodiff(Vector{T}; kwargs...)
+mgh01feas_autodiff(::Type{T}; kwargs...) where {T <: Number} =
+  mgh01feas_autodiff(Vector{T}; kwargs...)
 function mgh01feas_autodiff(::Type{S} = Vector{Float64}; kwargs...) where {S}
   x0 = S([-12 // 10; 1])
   f(x) = zero(eltype(x))

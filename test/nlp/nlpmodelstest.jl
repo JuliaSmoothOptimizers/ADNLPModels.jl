@@ -22,7 +22,16 @@
       if CUDA.functional()
         CUDA.allowscalar() do
           # sparse Jacobian/Hessian doesn't work here
-          multiple_precision_nlp_array(T -> nlp_from_T(T; jacobian_backend = ADNLPModels.ForwardDiffADJacobian, hessian_backend = ADNLPModels.ForwardDiffADHessian), CuArray, exclude = [jth_hprod, hprod, jprod], linear_api = true)
+          multiple_precision_nlp_array(
+            T -> nlp_from_T(
+              T;
+              jacobian_backend = ADNLPModels.ForwardDiffADJacobian,
+              hessian_backend = ADNLPModels.ForwardDiffADHessian,
+            ),
+            CuArray,
+            exclude = [jth_hprod, hprod, jprod],
+            linear_api = true,
+          )
         end
       end
     end

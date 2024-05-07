@@ -97,14 +97,7 @@ struct SparseSymbolicsADHessian{T, H} <: ADBackend
   cfH::H
 end
 
-function SparseSymbolicsADHessian(
-  nvar,
-  f,
-  ncon,
-  c!;
-  x0::S = rand(nvar),
-  kwargs...,
-) where {S}
+function SparseSymbolicsADHessian(nvar, f, ncon, c!; x0::S = rand(nvar), kwargs...) where {S}
   Symbolics.@variables xs[1:nvar], μs
   xsi = Symbolics.scalarize(xs)
   fun = μs * f(xsi)
