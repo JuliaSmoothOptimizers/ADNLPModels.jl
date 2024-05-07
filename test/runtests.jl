@@ -145,9 +145,3 @@ include("nlp/basic.jl")
 include("nls/basic.jl")
 include("nlp/nlpmodelstest.jl")
 include("nls/nlpmodelstest.jl")
-
-if CUDA.functional()
-  @testset "NLPModelsTest (NLP) tests - GPU multiple precision" begin
-    include("gpu.jl")
-  end
-end

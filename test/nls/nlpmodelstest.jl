@@ -36,9 +36,11 @@
       multiple_precision_nls(nls_from_T, exclude = exclude, linear_api = true)
     end
     @testset "Check multiple precision GPU" begin
-      CUDA.allowscalar() do
-        # sparse Jacobian/Hessian doesn't work here
-        multiple_precision_nls_array(T -> nls_from_T(T; jacobian_backend = ADNLPModels.ForwardDiffADJacobian, hessian_backend = ADNLPModels.ForwardDiffADHessian, jacobian_residual_backend = ADNLPModels.ForwardDiffADJacobian, hessian_residual_backend = ADNLPModels.ForwardDiffADHessian), CuArray, exclude = [jprod, jprod_residual, hprod_residual], linear_api = true)
+      if CUDA.functional()
+        CUDA.allowscalar() do
+          # sparse Jacobian/Hessian doesn't work here
+          multiple_precision_nls_array(T -> nls_from_T(T; jacobian_backend = ADNLPModels.ForwardDiffADJacobian, hessian_backend = ADNLPModels.ForwardDiffADHessian, jacobian_residual_backend = ADNLPModels.ForwardDiffADJacobian, hessian_residual_backend = ADNLPModels.ForwardDiffADHessian), CuArray, exclude = [jprod, jprod_residual, hprod_residual], linear_api = true)
+        end
       end
     end
     @testset "Check view subarray" begin
