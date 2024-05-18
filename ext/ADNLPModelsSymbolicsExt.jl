@@ -1,3 +1,8 @@
+module ADNLPModelsSymbolicsExt
+
+using Symbolics, ADNLPModels, NLPModels
+import ADNLPModels: ADBackend, ADModel, AbstractADNLSModel
+
 function compute_hessian_sparsity(f, nvar, c!, ncon)
   Symbolics.@variables xs[1:nvar]
   xsi = Symbolics.scalarize(xs)
@@ -171,4 +176,6 @@ function NLPModels.hess_coord!(
   obj_weight = zero(T)
   @eval $(b.cfH)($vals, $x, $(b.y), $obj_weight)
   return vals
+end
+
 end

@@ -5,7 +5,7 @@ task:
         image_family: freebsd-13-3
       env:
         matrix:
-          - JULIA_VERSION: 1.6
+          - JULIA_VERSION: 1.9
           - JULIA_VERSION: 1
     - name: musl Linux
       container:
