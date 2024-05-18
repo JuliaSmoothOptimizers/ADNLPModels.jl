@@ -2,9 +2,11 @@ module ADNLPModels
 
 # stdlib
 using LinearAlgebra, SparseArrays
+
 # external
 using ADTypes: ADTypes
-using ColPack, ForwardDiff, ReverseDiff
+using SparseConnectivityTracer, ColPack, ForwardDiff, ReverseDiff
+
 # JSO
 using NLPModels
 using Requires
@@ -17,39 +19,13 @@ const ADModel{T, S} = Union{AbstractADNLPModel{T, S}, AbstractADNLSModel{T, S}}
 include("ad.jl")
 include("ad_api.jl")
 
-"""
-    compute_jacobian_sparsity(c!, cx, x0)
-
-Return a sparse matrix.
-"""
-function compute_jacobian_sparsity(args...)
-  throw(
-    ArgumentError(
-      "Please load Symbolics.jl to enable sparse Jacobian or implement `compute_jacobian_sparsity`.",
-    ),
-  )
-end
-
-"""
-    compute_hessian_sparsity(f, nvar, c!, ncon)
-
-Return a sparse matrix.
-"""
-function compute_hessian_sparsity(args...)
-  throw(
-    ArgumentError(
-      "Please load Symbolics.jl to enable sparse Hessian or implement `compute_hessian_sparsity`.",
-    ),
-  )
-end
-
+include("sparsity_pattern.jl")
 include("sparse_jacobian.jl")
 include("sparse_hessian.jl")
 
 include("forward.jl")
 include("reverse.jl")
 include("enzyme.jl")
-include("sparse_diff_tools.jl")
 include("zygote.jl")
 include("predefined_backend.jl")
 include("nlp.jl")
@@ -183,17 +159,12 @@ function ADNLSModel!(model::AbstractNLSModel; kwargs...)
 end
 
 @init begin
-  @require Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7" begin
-    include("sparse_sym.jl")
-
-    predefined_backend[:default][:jacobian_backend] = SparseADJacobian
-    predefined_backend[:default][:jacobian_residual_backend] = SparseADJacobian
-    predefined_backend[:optimized][:jacobian_backend] = SparseADJacobian
-    predefined_backend[:optimized][:jacobian_residual_backend] = SparseADJacobian
-
-    predefined_backend[:default][:hessian_backend] = SparseADHessian
-    predefined_backend[:optimized][:hessian_backend] = SparseReverseADHessian
-  end
+  predefined_backend[:default][:jacobian_backend] = SparseADJacobian
+  predefined_backend[:default][:jacobian_residual_backend] = SparseADJacobian
+  predefined_backend[:optimized][:jacobian_backend] = SparseADJacobian
+  predefined_backend[:optimized][:jacobian_residual_backend] = SparseADJacobian
+  predefined_backend[:default][:hessian_backend] = SparseADHessian
+  predefined_backend[:optimized][:hessian_backend] = SparseReverseADHessian
 end
 
 export get_adbackend, set_adbackend!

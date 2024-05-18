@@ -1,9 +1,6 @@
 list_sparse_hess_backend = (
   (ADNLPModels.SparseADHessian, Dict()),
-  (ADNLPModels.SparseADHessian, Dict(:alg => SparseDiffTools.GreedyD1Color())),
-  (ADNLPModels.SparseADHessian, Dict(:alg => SparseDiffTools.AcyclicColoring())),
   (ADNLPModels.ForwardDiffADHessian, Dict()),
-  (ADNLPModels.SparseSymbolicsADHessian, Dict()),
 )
 
 dt = (Float32, Float64)

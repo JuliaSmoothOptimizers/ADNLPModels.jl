@@ -2,8 +2,6 @@
 
 # optional deps
 # using Enzyme
-# using SparseDiffTools
-using Symbolics
 
 # AD deps
 using ForwardDiff, ReverseDiff

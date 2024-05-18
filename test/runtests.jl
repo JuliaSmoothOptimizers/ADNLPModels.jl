@@ -3,7 +3,7 @@ using ADNLPModels, ManualNLPModels, NLPModels, NLPModelsModifiers, NLPModelsTest
 using ADNLPModels:
   gradient, gradient!, jacobian, hessian, Jprod!, Jtprod!, directional_second_derivative, Hvprod!
 
-@testset "Error without loading package for sparsity pattern" begin
+@testset "Test sparsity pattern of Jacobian and Hessian" begin
   f(x) = sum(x)
   c!(cx, x) = begin
     cx .= 1
@@ -12,11 +12,9 @@ using ADNLPModels:
   nvar, ncon = 2, 1
   x0 = ones(nvar)
   cx = rand(ncon)
-  @test_throws ArgumentError ADNLPModels.compute_jacobian_sparsity(c!, cx, x0)
-  @test_throws ArgumentError ADNLPModels.compute_hessian_sparsity(f, nvar, c!, ncon)
+  S = ADNLPModels.compute_jacobian_sparsity(c!, cx, x0)
+  S = ADNLPModels.compute_hessian_sparsity(f, nvar, c!, ncon)
 end
-
-using SparseDiffTools, Symbolics
 
 @testset "Test using a NLPModel instead of AD-backend" begin
   include("manual.jl")
