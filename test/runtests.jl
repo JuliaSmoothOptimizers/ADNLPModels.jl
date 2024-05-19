@@ -5,13 +5,12 @@ using ADNLPModels:
 
 @testset "Test sparsity pattern of Jacobian and Hessian" begin
   f(x) = sum(x)
-  c!(cx, x) = begin
-    cx .= 1
-    return x
-  end
-  nvar, ncon = 2, 1
+  c(x) = x
+  c!(cx, x) = copyto!(cx, x)
+  nvar, ncon = 2, 2
   x0 = ones(nvar)
   cx = rand(ncon)
+  S = ADNLPModels.compute_jacobian_sparsity(c, x0)
   S = ADNLPModels.compute_jacobian_sparsity(c!, cx, x0)
   S = ADNLPModels.compute_hessian_sparsity(f, nvar, c!, ncon)
 end
@@ -41,13 +40,11 @@ push!(
   ADNLPModels.predefined_backend,
   :zygote_backend => Dict(
     :gradient_backend => ADNLPModels.ZygoteADGradient,
-    :hprod_backend => ADNLPModels.SDTForwardDiffADHvprod,
     :jprod_backend => ADNLPModels.ZygoteADJprod,
     :jtprod_backend => ADNLPModels.ZygoteADJtprod,
     :jacobian_backend => ADNLPModels.ZygoteADJacobian,
     :hessian_backend => ADNLPModels.ZygoteADHessian,
     :ghjvprod_backend => ADNLPModels.ForwardDiffADGHjvprod,
-    :hprod_residual_backend => ADNLPModels.SDTForwardDiffADHvprod,
     :jprod_residual_backend => ADNLPModels.ZygoteADJprod,
     :jtprod_residual_backend => ADNLPModels.ZygoteADJtprod,
     :jacobian_residual_backend => ADNLPModels.ZygoteADJacobian,
