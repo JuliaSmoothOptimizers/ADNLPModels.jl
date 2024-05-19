@@ -19,8 +19,6 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [extensions]
 ADNLPModelsEnzymeExt = "Enzyme"
-ADNLPModelsSparseDiffToolsExt = "SparseDiffTools"
-ADNLPModelsSymbolicsExt = "Symbolics"
 ADNLPModelsZygoteExt = "Zygote"
 
 [compat]
