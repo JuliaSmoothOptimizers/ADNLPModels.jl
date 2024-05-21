@@ -13,6 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         pkg: [
+          "control-toolbox/OptimalControl.jl",
           "JuliaSmoothOptimizers/CaNNOLeS.jl",
           "JuliaSmoothOptimizers/DCISolver.jl",
           "JuliaSmoothOptimizers/DerivativeFreeSolvers.jl",
@@ -55,6 +56,9 @@ jobs:
           set -v
           mkdir -p ./pr
           echo "${{ github.event.number }}" > ./pr/NR
+          if [ $URL == "control-toolbox/OptimalControl.jl" ]; then
+            julia -e 'using Pkg; Pkg.Registry.add(RegistrySpec(url = "https://github.com/control-toolbox/ct-registry.git"))'
+          fi
           git clone https://github.com/$URL
           export PKG=$(echo $URL | cut -f2 -d/)
           cd $PKG
