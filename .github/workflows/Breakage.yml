@@ -13,6 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         pkg: [
+          "control-toolbox/OptimalControl.jl",
           "JuliaSmoothOptimizers/CaNNOLeS.jl",
           "JuliaSmoothOptimizers/DCISolver.jl",
           "JuliaSmoothOptimizers/DerivativeFreeSolvers.jl",
