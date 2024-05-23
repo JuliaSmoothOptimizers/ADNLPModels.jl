@@ -510,8 +510,8 @@ end
 
 function ColPackColoration(;
   partition_choice = (m, n) -> false, # TODO: (m, n; μ = 0.6) -> n < μ * m ? true : false,
-  coloring::ColPack.ColoringMethod = d1_coloring("DISTANCE_ONE"),
-  ordering::ColPack.ColoringOrder = incidence_degree_ordering("INCIDENCE_DEGREE"),
+  coloring::ColPack.ColoringMethod = d1_coloring(),
+  ordering::ColPack.ColoringOrder = incidence_degree_ordering(),
 )
   return ColPackColoration{typeof(partition_choice), typeof(coloring), typeof(ordering)}(
     partition_choice,
