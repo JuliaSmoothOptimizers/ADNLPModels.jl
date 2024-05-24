@@ -1,6 +1,6 @@
 name = "ADNLPModels"
 uuid = "54578032-b7ea-4c30-94aa-7cbd1cce6c9a"
-version = "0.7.3"
+version = "0.7.2"
 
 [deps]
 ColPack = "ffa27691-3a59-46ab-a8d4-551f45b8d401"
