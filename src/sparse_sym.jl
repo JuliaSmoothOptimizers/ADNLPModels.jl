@@ -1,6 +1,10 @@
 function compute_hessian_sparsity(f, nvar, c!, ncon)
   detector = Symbolics.SymbolicsSparsityDetector()  # replaceable
-  lagrangian(x) = f(x) + dot(rand(ncon), c!(zeros(ncon), x))
+  function lagrangian(x)
+    cx = zeros(eltype(x), ncon)
+    c!(cx, x)
+    return f(x) + dot(rand(ncon), cx)
+  end
   S = ADTypes.hessian_sparsity(lagrangian, rand(nvar), detector) # , full = false
   return S
 end

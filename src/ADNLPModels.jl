@@ -3,6 +3,7 @@ module ADNLPModels
 # stdlib
 using LinearAlgebra, SparseArrays
 # external
+using ADTypes: ADTypes
 using ColPack, ForwardDiff, ReverseDiff
 # JSO
 using NLPModels
