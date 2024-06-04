@@ -8,7 +8,7 @@ function compute_jacobian_sparsity end
 
 function compute_jacobian_sparsity(c, x0)
   detector = SparseConnectivityTracer.TracerSparsityDetector()  # replaceable
-  S = SparseConnectivityTracer.jacobian_pattern(c, x0, detector)
+  S = ADTypes.jacobian_sparsity(c, x0, detector)
   return S
 end
 

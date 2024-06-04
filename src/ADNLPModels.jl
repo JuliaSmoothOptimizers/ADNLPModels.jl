@@ -158,15 +158,6 @@ function ADNLSModel!(model::AbstractNLSModel; kwargs...)
   end
 end
 
-@init begin
-  predefined_backend[:default][:jacobian_backend] = SparseADJacobian
-  predefined_backend[:default][:jacobian_residual_backend] = SparseADJacobian
-  predefined_backend[:optimized][:jacobian_backend] = SparseADJacobian
-  predefined_backend[:optimized][:jacobian_residual_backend] = SparseADJacobian
-  predefined_backend[:default][:hessian_backend] = SparseADHessian
-  predefined_backend[:optimized][:hessian_backend] = SparseReverseADHessian
-end
-
 export get_adbackend, set_adbackend!
 
 """
