@@ -1,19 +1,13 @@
 function compute_hessian_sparsity(f, nvar, c!, ncon)
-  Symbolics.@variables xs[1:nvar]
-  xsi = Symbolics.scalarize(xs)
-  fun = f(xsi)
-  if ncon > 0
-    Symbolics.@variables ys[1:ncon]
-    ysi = Symbolics.scalarize(ys)
-    cx = similar(ysi)
-    fun = fun + dot(c!(cx, xsi), ysi)
-  end
-  S = Symbolics.hessian_sparsity(fun, ncon == 0 ? xsi : [xsi; ysi]) # , full = false
+  detector = Symbolics.SymbolicsSparsityDetector()  # replaceable
+  lagrangian(x) = f(x) + dot(rand(ncon), c!(zeros(ncon), x))
+  S = ADTypes.hessian_sparsity(lagrangian, rand(nvar), detector) # , full = false
   return S
 end
 
 function compute_jacobian_sparsity(c!, cx, x0)
-  S = Symbolics.jacobian_sparsity(c!, cx, x0)
+  detector = Symbolics.SymbolicsSparsityDetector()  # replaceable
+  S = ADTypes.jacobian_sparsity(c!, cx, x0, detector)
   return S
 end
 
