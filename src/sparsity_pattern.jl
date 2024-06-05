@@ -1,29 +1,27 @@
 """
-    compute_jacobian_sparsity(c, x0)
-    compute_jacobian_sparsity(c!, cx, x0)
+    compute_jacobian_sparsity(c, x0; detector)
+    compute_jacobian_sparsity(c!, cx, x0; detector)
 
-Return a sparse matrix.
+Return a sparse boolean matrix that represents the adjacency matrix of the Jacobian of c(x).
 """
 function compute_jacobian_sparsity end
 
-function compute_jacobian_sparsity(c, x0)
-  detector = SparseConnectivityTracer.TracerSparsityDetector()  # replaceable
+function compute_jacobian_sparsity(c, x0; detector::AbstractSparsityDetector=TracerSparsityDetector())
   S = ADTypes.jacobian_sparsity(c, x0, detector)
   return S
 end
 
-function compute_jacobian_sparsity(c!, cx, x0)
-  detector = SparseConnectivityTracer.TracerSparsityDetector()  # replaceable
+function compute_jacobian_sparsity(c!, cx, x0; detector::AbstractSparsityDetector=TracerSparsityDetector())
   S = ADTypes.jacobian_sparsity(c!, cx, x0, detector)
   return S
 end
 
 """
-    compute_hessian_sparsity(f, nvar, c!, ncon)
+    compute_hessian_sparsity(f, nvar, c!, ncon; detector)
 
-Return a sparse matrix.
+Return a sparse boolean matrix that represents the adjacency matrix of the Hessian of f(x) + λᵀc(x).
 """
-function compute_hessian_sparsity(f, nvar, c!, ncon)
+function compute_hessian_sparsity(f, nvar, c!, ncon; detector::AbstractSparsityDetector=TracerSparsityDetector())
   function lagrangian(x)
     if ncon == 0
       return f(x)
@@ -34,7 +32,6 @@ function compute_hessian_sparsity(f, nvar, c!, ncon)
     end
   end
 
-  detector = SparseConnectivityTracer.TracerSparsityDetector()  # replaceable
   x0 = rand(nvar)
   S = ADTypes.hessian_sparsity(lagrangian, x0, detector)
   return S

@@ -4,7 +4,7 @@ module ADNLPModels
 using LinearAlgebra, SparseArrays
 
 # external
-using ADTypes: ADTypes
+using ADTypes: ADTypes, AbstractSparsityDetector
 using SparseConnectivityTracer, ColPack, ForwardDiff, ReverseDiff
 
 # JSO

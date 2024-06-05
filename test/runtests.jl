@@ -4,15 +4,18 @@ using ADNLPModels:
   gradient, gradient!, jacobian, hessian, Jprod!, Jtprod!, directional_second_derivative, Hvprod!
 
 @testset "Test sparsity pattern of Jacobian and Hessian" begin
-  f(x) = sum(x)
+  f(x) = sum(x.^2)
   c(x) = x
   c!(cx, x) = copyto!(cx, x)
   nvar, ncon = 2, 2
   x0 = ones(nvar)
   cx = rand(ncon)
   S = ADNLPModels.compute_jacobian_sparsity(c, x0)
+  @test S == I
   S = ADNLPModels.compute_jacobian_sparsity(c!, cx, x0)
+  @test S == I
   S = ADNLPModels.compute_hessian_sparsity(f, nvar, c!, ncon)
+  @test S == I
 end
 
 @testset "Test using a NLPModel instead of AD-backend" begin

@@ -75,5 +75,5 @@ jac(nlp, x)
 ```
 
 The package [`SparseConnectivityTracer.jl`](https://github.com/adrhill/SparseConnectivityTracer.jl) is used to compute the sparsity pattern of Jacobians and Hessians.
-The evaluation of the number of directional derivatives needed to evaluate the matrix is done by [`ColPack.jl`](https://github.com/exanauts/ColPack.jl).
+The evaluation of the number of directional derivatives and the seeds needed to evaluate the compressed Jacobians and Hessians is done by [`ColPack.jl`](https://github.com/exanauts/ColPack.jl).
 We acknowledge Guillaume Dalle (@gdalle), Adrian Hill (@adrhill), and Michel Schanen (@michel2323) for the development of these packages.
