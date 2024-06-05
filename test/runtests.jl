@@ -4,7 +4,7 @@ using ADNLPModels:
   gradient, gradient!, jacobian, hessian, Jprod!, Jtprod!, directional_second_derivative, Hvprod!
 
 @testset "Test sparsity pattern of Jacobian and Hessian" begin
-  f(x) = sum(x.^2)
+  f(x) = sum(x .^ 2)
   c(x) = x
   c!(cx, x) = copyto!(cx, x)
   nvar, ncon = 2, 2

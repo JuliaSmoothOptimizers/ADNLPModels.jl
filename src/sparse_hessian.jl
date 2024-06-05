@@ -25,7 +25,7 @@ function SparseADHessian(
   kwargs...,
 ) where {S}
   T = eltype(S)
-  H = compute_hessian_sparsity(f, nvar, c!, ncon, detector=detector)
+  H = compute_hessian_sparsity(f, nvar, c!, ncon, detector = detector)
 
   colors = sparse_matrix_colors(H, alg)
   ncolors = maximum(colors)
@@ -96,7 +96,7 @@ function SparseReverseADHessian(
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
   kwargs...,
 ) where {T}
-  H = compute_hessian_sparsity(f, nvar, c!, ncon, detector=detector)
+  H = compute_hessian_sparsity(f, nvar, c!, ncon, detector = detector)
 
   colors = sparse_matrix_colors(H, alg)
   ncolors = maximum(colors)
