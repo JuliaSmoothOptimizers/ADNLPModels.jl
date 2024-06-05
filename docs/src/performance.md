@@ -84,7 +84,7 @@ v = ones(2)
 It is tempting to define the most generic and efficient `ADNLPModel` from the start.
 
 ```@example ex2
-using ADNLPModels, NLPModels, Symbolics
+using ADNLPModels, NLPModels
 f(x) = (x[1] - x[2])^2
 x0 = ones(2)
 lcon = ucon = ones(1)

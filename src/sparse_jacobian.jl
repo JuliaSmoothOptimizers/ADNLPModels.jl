@@ -16,10 +16,11 @@ function SparseADJacobian(
   c!;
   x0::AbstractVector{T} = rand(nvar),
   alg = ColPackColoration(),
+  detector::AbstractSparsityDetector = TracerSparsityDetector(),
   kwargs...,
 ) where {T}
   output = similar(x0, ncon)
-  J = compute_jacobian_sparsity(c!, output, x0)
+  J = compute_jacobian_sparsity(c!, output, x0, detector=detector)
 
   colors = sparse_matrix_colors(J, alg)
   ncolors = maximum(colors)

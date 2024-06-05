@@ -96,8 +96,6 @@ The following AD packages are supported:
 and as optional dependencies (you must load the package before):
 
 - `Enzyme.jl`;
-- `SparseDiffTools.jl`;
-- `Symbolics.jl`;
 - `Zygote.jl`.
 
 ## Bug reports and discussions

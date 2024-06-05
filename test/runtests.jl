@@ -3,20 +3,20 @@ using ADNLPModels, ManualNLPModels, NLPModels, NLPModelsModifiers, NLPModelsTest
 using ADNLPModels:
   gradient, gradient!, jacobian, hessian, Jprod!, Jtprod!, directional_second_derivative, Hvprod!
 
-@testset "Error without loading package for sparsity pattern" begin
-  f(x) = sum(x)
-  c!(cx, x) = begin
-    cx .= 1
-    return x
-  end
-  nvar, ncon = 2, 1
+@testset "Test sparsity pattern of Jacobian and Hessian" begin
+  f(x) = sum(x.^2)
+  c(x) = x
+  c!(cx, x) = copyto!(cx, x)
+  nvar, ncon = 2, 2
   x0 = ones(nvar)
   cx = rand(ncon)
-  @test_throws ArgumentError ADNLPModels.compute_jacobian_sparsity(c!, cx, x0)
-  @test_throws ArgumentError ADNLPModels.compute_hessian_sparsity(f, nvar, c!, ncon)
+  S = ADNLPModels.compute_jacobian_sparsity(c, x0)
+  @test S == I
+  S = ADNLPModels.compute_jacobian_sparsity(c!, cx, x0)
+  @test S == I
+  S = ADNLPModels.compute_hessian_sparsity(f, nvar, c!, ncon)
+  @test S == I
 end
-
-using SparseDiffTools, Symbolics
 
 @testset "Test using a NLPModel instead of AD-backend" begin
   include("manual.jl")
@@ -43,15 +43,15 @@ push!(
   ADNLPModels.predefined_backend,
   :zygote_backend => Dict(
     :gradient_backend => ADNLPModels.ZygoteADGradient,
-    :hprod_backend => ADNLPModels.SDTForwardDiffADHvprod,
     :jprod_backend => ADNLPModels.ZygoteADJprod,
     :jtprod_backend => ADNLPModels.ZygoteADJtprod,
+    :hprod_backend => ADNLPModels.ForwardDiffADHvprod,
     :jacobian_backend => ADNLPModels.ZygoteADJacobian,
     :hessian_backend => ADNLPModels.ZygoteADHessian,
     :ghjvprod_backend => ADNLPModels.ForwardDiffADGHjvprod,
-    :hprod_residual_backend => ADNLPModels.SDTForwardDiffADHvprod,
     :jprod_residual_backend => ADNLPModels.ZygoteADJprod,
     :jtprod_residual_backend => ADNLPModels.ZygoteADJtprod,
+    :hprod_residual_backend => ADNLPModels.ForwardDiffADHvprod,
     :jacobian_residual_backend => ADNLPModels.ZygoteADJacobian,
     :hessian_residual_backend => ADNLPModels.ZygoteADHessian,
   ),

@@ -7,14 +7,14 @@ The backend information is in a structure [`ADNLPModels.ADModelBackend`](@ref) i
 
 The functions used internally to define the NLPModel API and the possible backends are defined in the following table:
 
-| Functions | FowardDiff backends | ReverseDiff backends | Zygote backends | Enzyme backend | SparseDiffTools backend | Symbolics backend |
+| Functions | FowardDiff backends | ReverseDiff backends | Zygote backends | Enzyme backend | Sparse backend |
 | ----------- | ----------- | ----------- | ----------- |  ----------- |  ----------- |  ----------- |
-| `gradient` and `gradient!` | `ForwardDiffADGradient`/`GenericForwardDiffADGradient` | `ReverseDiffADGradient`/`GenericReverseDiffADGradient` | `ZygoteADGradient` | `EnzymeADGradient` | -- | -- |
-| `jacobian` | `ForwardDiffADJacobian` | `ReverseDiffADJacobian` | `ZygoteADJacobian` | -- | `SDTSparseADJacobian` | `SparseADJacobian`/`SparseSymbolicsADJacobian` |
-| `hessian` | `ForwardDiffADHessian` | `ReverseDiffADHessian` | `ZygoteADHessian` | -- | -- | `SparseADHessian`/`SparseSymbolicsADHessian` |
-| `Jprod` | `ForwardDiffADJprod`/`GenericForwardDiffADJprod` | `ReverseDiffADJprod`/`GenericReverseDiffADJprod` | `ZygoteADJprod` | -- | `SDTForwardDiffADJprod` | -- | 
-| `Jtprod` | `ForwardDiffADJtprod`/`GenericForwardDiffADJtprod` | `ReverseDiffADJtprod`/`GenericReverseDiffADJtprod` | `ZygoteADJtprod` | -- | -- | -- | 
-| `Hvprod` | `ForwardDiffADHvprod`/`GenericForwardDiffADHvprod` | `ReverseDiffADHvprod`/`GenericReverseDiffADHvprod` | -- | -- | `SDTForwardDiffADHvprod` | -- | 
+| `gradient` and `gradient!` | `ForwardDiffADGradient`/`GenericForwardDiffADGradient` | `ReverseDiffADGradient`/`GenericReverseDiffADGradient` | `ZygoteADGradient` | `EnzymeADGradient` | -- |
+| `jacobian` | `ForwardDiffADJacobian` | `ReverseDiffADJacobian` | `ZygoteADJacobian` | -- | `SparseADJacobian` |
+| `hessian` | `ForwardDiffADHessian` | `ReverseDiffADHessian` | `ZygoteADHessian` | -- | `SparseADHessian` |
+| `Jprod` | `ForwardDiffADJprod`/`GenericForwardDiffADJprod` | `ReverseDiffADJprod`/`GenericReverseDiffADJprod` | `ZygoteADJprod` | -- |
+| `Jtprod` | `ForwardDiffADJtprod`/`GenericForwardDiffADJtprod` | `ReverseDiffADJtprod`/`GenericReverseDiffADJtprod` | `ZygoteADJtprod` | -- |
+| `Hvprod` | `ForwardDiffADHvprod`/`GenericForwardDiffADHvprod` | `ReverseDiffADHvprod`/`GenericReverseDiffADHvprod` | -- |
 | `directional_second_derivative` | `ForwardDiffADGHjvprod` | -- | -- | -- | -- | 
 
 The functions `hess_structure!`, `hess_coord!`, `jac_structure!` and `jac_coord!` defined in `ad.jl` are generic to all the backends for now.
@@ -49,7 +49,7 @@ Thanks to the backends inside `ADNLPModels.jl`, it is easy to change the backend
 
 ```@example adnlp
 nlp = ADNLPModel(f, x0, gradient_backend = ADNLPModels.ReverseDiffADGradient)
-grad(nlp, nlp.meta.x0) # returns the gradient at x0 using `ReverseDiff`
+grad(nlp, nlp.meta.x0)  # returns the gradient at x0 using `ReverseDiff`
 ```
 
 It is also possible to try some new implementation for each function. First, we define a new `ADBackend` structure.
@@ -81,7 +81,7 @@ Finally, we use the homemade backend to compute the gradient.
 
 ```@example adnlp
 nlp = ADNLPModel(sum, ones(3), gradient_backend = NewADGradient)
-grad(nlp, nlp.meta.x0) # returns the gradient at x0 using `NewADGradient`
+grad(nlp, nlp.meta.x0)  # returns the gradient at x0 using `NewADGradient`
 ```
 
 ### Change backend
@@ -104,7 +104,7 @@ set_adbackend!(nlp, adback)
 get_adbackend(nlp)
 ```
 
-The alternative is to use ``set_adbackend!` and pass the new backends via `kwargs`. In the second approach, it is possible to pass either the type of the desired backend or an instance as shown below.
+The alternative is to use `set_adbackend!` and pass the new backends via `kwargs`. In the second approach, it is possible to pass either the type of the desired backend or an instance as shown below.
 
 ```@example adnlp2
 set_adbackend!(

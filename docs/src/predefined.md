@@ -49,29 +49,11 @@ get_adbackend(nlp)
 
 ## Hessian and Jacobian computations
 
-It is to be noted that by default the Jacobian and Hessian matrices are dense.
+It is to be noted that by default the Jacobian and Hessian matrices are sparse.
 
 ```@example ex1
-(get_nnzj(nlp), get_nnzh(nlp)) # number of nonzeros elements in the Jacobian and Hessian
+(get_nnzj(nlp), get_nnzh(nlp))  # number of nonzeros elements in the Jacobian and Hessian
 ```
-
-To enable sparse computations of these entries, one needs to first load the package [`Symbolics.jl`](https://github.com/JuliaSymbolics/Symbolics.jl)
-
-```@example ex1
-using Symbolics
-```
-
-and now
-
-```@example ex1
-ADNLPModels.predefined_backend[:optimized][:jacobian_backend]
-```
-
-```@example ex1
-ADNLPModels.predefined_backend[:optimized][:hessian_backend]
-```
-
-Choosing another optimization problem with the optimized backend will compute sparse Jacobian and Hessian matrices.
 
 ```@example ex1
 f(x) = (x[1] - 1)^2
@@ -92,4 +74,6 @@ x = rand(T, 2)
 jac(nlp, x)
 ```
 
-The package [`Symbolics.jl`](https://github.com/JuliaSymbolics/Symbolics.jl) is used to compute the sparsity pattern of the sparse matrix. The evaluation of the number of directional derivatives needed to evaluate the matrix is done by [`ColPack.jl`](https://github.com/michel2323/ColPack.jl).
+The package [`SparseConnectivityTracer.jl`](https://github.com/adrhill/SparseConnectivityTracer.jl) is used to compute the sparsity pattern of Jacobians and Hessians.
+The evaluation of the number of directional derivatives and the seeds needed to evaluate the compressed Jacobians and Hessians is done by [`ColPack.jl`](https://github.com/exanauts/ColPack.jl).
+We acknowledge Guillaume Dalle (@gdalle), Adrian Hill (@adrhill), and Michel Schanen (@michel2323) for the development of these packages.

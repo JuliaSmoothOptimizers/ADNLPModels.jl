@@ -21,11 +21,11 @@ function SparseADHessian(
   c!;
   x0::S = rand(nvar),
   alg = ColPackColoration(),
+  detector::AbstractSparsityDetector = TracerSparsityDetector(),
   kwargs...,
 ) where {S}
   T = eltype(S)
-  Hs = compute_hessian_sparsity(f, nvar, c!, ncon)
-  H = ncon == 0 ? Hs : Hs[1:nvar, 1:nvar]
+  H = compute_hessian_sparsity(f, nvar, c!, ncon, detector=detector)
 
   colors = sparse_matrix_colors(H, alg)
   ncolors = maximum(colors)
@@ -93,10 +93,10 @@ function SparseReverseADHessian(
   c!;
   x0::AbstractVector{T} = rand(nvar),
   alg = ColPackColoration(),
+  detector::AbstractSparsityDetector = TracerSparsityDetector(),
   kwargs...,
 ) where {T}
-  Hs = compute_hessian_sparsity(f, nvar, c!, ncon)
-  H = ncon == 0 ? Hs : Hs[1:nvar, 1:nvar]
+  H = compute_hessian_sparsity(f, nvar, c!, ncon, detector=detector)
 
   colors = sparse_matrix_colors(H, alg)
   ncolors = maximum(colors)
