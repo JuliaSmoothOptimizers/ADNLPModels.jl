@@ -6,12 +6,21 @@ Return a sparse boolean matrix that represents the adjacency matrix of the Jacob
 """
 function compute_jacobian_sparsity end
 
-function compute_jacobian_sparsity(c, x0; detector::AbstractSparsityDetector=TracerSparsityDetector())
+function compute_jacobian_sparsity(
+  c,
+  x0;
+  detector::AbstractSparsityDetector = TracerSparsityDetector(),
+)
   S = ADTypes.jacobian_sparsity(c, x0, detector)
   return S
 end
 
-function compute_jacobian_sparsity(c!, cx, x0; detector::AbstractSparsityDetector=TracerSparsityDetector())
+function compute_jacobian_sparsity(
+  c!,
+  cx,
+  x0;
+  detector::AbstractSparsityDetector = TracerSparsityDetector(),
+)
   S = ADTypes.jacobian_sparsity(c!, cx, x0, detector)
   return S
 end
@@ -21,7 +30,13 @@ end
 
 Return a sparse boolean matrix that represents the adjacency matrix of the Hessian of f(x) + λᵀc(x).
 """
-function compute_hessian_sparsity(f, nvar, c!, ncon; detector::AbstractSparsityDetector=TracerSparsityDetector())
+function compute_hessian_sparsity(
+  f,
+  nvar,
+  c!,
+  ncon;
+  detector::AbstractSparsityDetector = TracerSparsityDetector(),
+)
   function lagrangian(x)
     if ncon == 0
       return f(x)

@@ -20,7 +20,7 @@ function SparseADJacobian(
   kwargs...,
 ) where {T}
   output = similar(x0, ncon)
-  J = compute_jacobian_sparsity(c!, output, x0, detector=detector)
+  J = compute_jacobian_sparsity(c!, output, x0, detector = detector)
 
   colors = sparse_matrix_colors(J, alg)
   ncolors = maximum(colors)
