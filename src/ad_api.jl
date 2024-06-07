@@ -289,6 +289,25 @@ function NLPModels.hess_coord!(
   return vals
 end
 
+function NLPModels.hess_structure_residuals!(
+  b::ADBackend,
+  nls::AbstractADNLSModel,
+  rows::AbstractVector{<:Integer},
+  cols::AbstractVector{<:Integer},
+)
+  nothing
+end
+
+function NLPModels.hess_coord_residuals!(
+  b::ADBackend,
+  nls::AbstractADNLSModel,
+  x::AbstractVector,
+  v::AbstractVector,
+  vals::AbstractVector,
+)
+  nothing
+end
+
 function NLPModels.hprod!(
   b::ADBackend,
   nlp::ADModel,

@@ -296,3 +296,44 @@ function NLPModels.hess_coord!(
   sparse_hess_coord!(ℓ, b, x, obj_weight, b.y, vals)
   return vals
 end
+
+function NLPModels.hess_structure_residuals!(
+  b::Union{SparseADHessian, SparseReverseADHessian},
+  nls::AbstractADNLSModel,
+  rows::AbstractVector{<:Integer},
+  cols::AbstractVector{<:Integer},
+)
+  function objective(x)
+    F = get_F(nls, b)
+    Fx = F(x)
+    return dot(Fx, Fx) / 2
+  end
+
+  H = compute_hessian_sparsity(objective, nls.meta.nvar, nothing, 0)
+  trilH = tril(H)
+  rowval = trilH.rowval
+  colptr = trilH.colptr
+  rows .= rowval
+  for i = 1:(nls.meta.nvar)
+    for j = colptr[i]:(colptr[i + 1] - 1)
+      cols[j] = i
+    end
+  end
+  return rows, cols
+end
+
+function NLPModels.hess_coord_residuals!(
+  b::Union{SparseADHessian, SparseReverseADHessian},
+  nls::AbstractADNLSModel,
+  x::AbstractVector,
+  v::AbstractVector,
+  vals::AbstractVector,
+)
+  function objective(x)
+    F = get_F(nls, b)
+    Fx = F(x)
+    return dot(Fx, Fx) / 2
+  end
+
+  sparse_hess_coord!(objective, b, x, 1.0, v, vals)
+end
