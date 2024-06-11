@@ -4,8 +4,10 @@ module ADNLPModels
 using LinearAlgebra, SparseArrays
 
 # external
-using ADTypes: ADTypes, AbstractSparsityDetector
-using SparseConnectivityTracer, ColPack, ForwardDiff, ReverseDiff
+using ADTypes: ADTypes, AbstractColoringAlgorithm, AbstractSparsityDetector
+using SparseConnectivityTracer: TracerSparsityDetector
+using SparseMatrixColorings: GreedyColoringAlgorithm
+using ForwardDiff, ReverseDiff
 
 # JSO
 using NLPModels

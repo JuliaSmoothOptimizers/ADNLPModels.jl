@@ -15,14 +15,15 @@ function SparseADJacobian(
   ncon,
   c!;
   x0::AbstractVector{T} = rand(nvar),
-  alg = ColPackColoration(),
+  alg::AbstractColoringAlgorithm = GreedyColoringAlgorithm(),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
   kwargs...,
 ) where {T}
   output = similar(x0, ncon)
   J = compute_jacobian_sparsity(c!, output, x0, detector = detector)
 
-  colors = sparse_matrix_colors(J, alg)
+  # TODO: use ADTypes.row_coloring instead if you have the right decompression and some heuristic recommends it
+  colors = ADTypes.column_coloring(J, alg)
   ncolors = maximum(colors)
 
   d = BitVector(undef, nvar)
