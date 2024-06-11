@@ -93,13 +93,14 @@ function SparseReverseADHessian(
   ncon,
   c!;
   x0::AbstractVector{T} = rand(nvar),
-  alg = ColPackColoration(),
+  alg::AbstractColoringAlgorithm = GreedyColoringAlgorithm(),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
   kwargs...,
 ) where {T}
   H = compute_hessian_sparsity(f, nvar, c!, ncon, detector = detector)
 
-  colors = sparse_matrix_colors(H, alg)
+  # TODO: use ADTypes.symmetric_coloring instead if you have the right decompression
+  colors = ADTypes.column_coloring(H, alg)
   ncolors = maximum(colors)
 
   d = BitVector(undef, nvar)
