@@ -31,13 +31,14 @@ x = rand(T, 2)
 H = hess(nlp, x)
 ```
 
-The available backend for sparse derivatives has keyword arguments (`detector` and `coloring`) to specify the sparsity pattern detector and the coloring algorithm, respectively.
+The available backends for sparse derivatives (`SparseADJacobian`, `SparseADHessian` and `SparseReverseADHessian`) have keyword arguments `detector` and `coloring` to specify the sparsity pattern detector and the coloring algorithm, respectively.
 
-- **Detector**: A `detector` must be of type `ADTypes.AbstractSparsityDetector`. The default detector is `TracerSparsityDetector()` from the `SparseConnectivityTracer.jl` package.
+- **Detector**: A `detector` must be of type `ADTypes.AbstractSparsityDetector`.
+The default detector is `TracerSparsityDetector()` from the package `SparseConnectivityTracer.jl`.
 Prior to version 0.8.0, the default detector was `SymbolicSparsityDetector()` from `Symbolics.jl`.
 
 - **Coloring**: A `coloring` must be of type `ADTypes.AbstractColoringAlgorithm`.
-The default algorithm is `GreedyColoringAlgorithm()` from the `SparseMatrixColorings.jl` package.
+The default algorithm is `GreedyColoringAlgorithm()` from the package `SparseMatrixColorings.jl`.
 
 The package [`SparseConnectivityTracer.jl`](https://github.com/adrhill/SparseConnectivityTracer.jl) is used to compute the sparsity pattern of Jacobians and Hessians.
 The evaluation of the number of directional derivatives and the seeds required to compute compressed Jacobians and Hessians is performed using [`SparseMatrixColorings.jl`](https://github.com/gdalle/SparseMatrixColorings.jl).
