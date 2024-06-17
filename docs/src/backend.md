@@ -11,7 +11,7 @@ The functions used internally to define the NLPModel API and the possible backen
 | --------- | ------------------- | -------------------- | --------------- | -------------- | -------------- |
 | `gradient` and `gradient!` | `ForwardDiffADGradient`/`GenericForwardDiffADGradient` | `ReverseDiffADGradient`/`GenericReverseDiffADGradient` | `ZygoteADGradient` | `EnzymeADGradient` | -- |
 | `jacobian` | `ForwardDiffADJacobian` | `ReverseDiffADJacobian` | `ZygoteADJacobian` | -- | `SparseADJacobian` |
-| `hessian` | `ForwardDiffADHessian` | `ReverseDiffADHessian` | `ZygoteADHessian` | -- | `SparseADHessian` |
+| `hessian` | `ForwardDiffADHessian` | `ReverseDiffADHessian` | `ZygoteADHessian` | -- | `SparseADHessian`/`SparseReverseADHessian` |
 | `Jprod` | `ForwardDiffADJprod`/`GenericForwardDiffADJprod` | `ReverseDiffADJprod`/`GenericReverseDiffADJprod` | `ZygoteADJprod` | -- | -- |
 | `Jtprod` | `ForwardDiffADJtprod`/`GenericForwardDiffADJtprod` | `ReverseDiffADJtprod`/`GenericReverseDiffADJtprod` | `ZygoteADJtprod` | -- | -- |
 | `Hvprod` | `ForwardDiffADHvprod`/`GenericForwardDiffADHvprod` | `ReverseDiffADHvprod`/`GenericReverseDiffADHvprod` | -- | -- | -- |

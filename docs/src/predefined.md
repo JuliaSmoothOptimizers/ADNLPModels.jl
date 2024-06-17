@@ -46,35 +46,3 @@ It is possible to use these pre-defined backends using the keyword argument `bac
 nlp = ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon, backend = :optimized)
 get_adbackend(nlp)
 ```
-
-## Hessian and Jacobian computations
-
-It is to be noted that by default the Jacobian and Hessian matrices are sparse.
-
-```@example ex1
-(get_nnzj(nlp), get_nnzh(nlp))  # number of nonzeros elements in the Jacobian and Hessian
-```
-
-```@example ex1
-f(x) = (x[1] - 1)^2
-T = Float64
-x0 = T[-1.2; 1.0]
-lvar, uvar = zeros(T, 2), ones(T, 2) # must be of same type than `x0`
-lcon, ucon = -T[0.5], T[0.5]
-c!(cx, x) = begin
-  cx[1] = x[2]
-  return cx
-end
-nlp = ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon, backend = :optimized)
-(get_nnzj(nlp), get_nnzh(nlp))
-```
-
-```@example ex1
-x = rand(T, 2)
-jac(nlp, x)
-```
-
-The package [`SparseConnectivityTracer.jl`](https://github.com/adrhill/SparseConnectivityTracer.jl) is used to compute the sparsity pattern of Jacobians and Hessians.
-The evaluation of the number of directional derivatives and the seeds required to compute compressed Jacobians and Hessians is performed using [`SparseMatrixColorings.jl`](https://github.com/gdalle/SparseMatrixColorings.jl).
-As of release v0.8.1, it has replaced [`ColPack.jl`](https://github.com/exanauts/ColPack.jl).
-We acknowledge Guillaume Dalle (@gdalle), Adrian Hill (@adrhill), and Michel Schanen (@michel2323) for the development of these packages.

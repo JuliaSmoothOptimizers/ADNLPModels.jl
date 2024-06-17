@@ -20,7 +20,7 @@ function SparseADHessian(
   ncon,
   c!;
   x0::S = rand(nvar),
-  alg::AbstractColoringAlgorithm = GreedyColoringAlgorithm(),
+  coloring::AbstractColoringAlgorithm = GreedyColoringAlgorithm(),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
   kwargs...,
 ) where {S}
@@ -28,7 +28,7 @@ function SparseADHessian(
   H = compute_hessian_sparsity(f, nvar, c!, ncon, detector = detector)
 
   # TODO: use ADTypes.symmetric_coloring instead if you have the right decompression
-  colors = ADTypes.column_coloring(H, alg)
+  colors = ADTypes.column_coloring(H, coloring)
   ncolors = maximum(colors)
 
   d = BitVector(undef, nvar)
@@ -93,14 +93,14 @@ function SparseReverseADHessian(
   ncon,
   c!;
   x0::AbstractVector{T} = rand(nvar),
-  alg::AbstractColoringAlgorithm = GreedyColoringAlgorithm(),
+  coloring::AbstractColoringAlgorithm = GreedyColoringAlgorithm(),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
   kwargs...,
 ) where {T}
   H = compute_hessian_sparsity(f, nvar, c!, ncon, detector = detector)
 
   # TODO: use ADTypes.symmetric_coloring instead if you have the right decompression
-  colors = ADTypes.column_coloring(H, alg)
+  colors = ADTypes.column_coloring(H, coloring)
   ncolors = maximum(colors)
 
   d = BitVector(undef, nvar)
