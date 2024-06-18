@@ -26,18 +26,17 @@ dt = (Float32, Float64)
   hess_structure_residual!(nls, rows, cols)
   hess_coord_residual!(nls, x, v, vals)
   @test eltype(vals) == T
-  H = sparse(rows, cols, vals, nvar, nvar)
-  # @test H == []
+  H = Symmetric(sparse(rows, cols, vals, nvar, nvar), :L)
+  @test H == [-20 * v[2] 0; 0 0]
 
   # Test also the implementation of the backends
   b = nls.adbackend.hessian_residual_backend
-  obj_weight = 0.5
   @test nls.nls_meta.nnzh == ADNLPModels.get_nln_nnzh(b, nvar)
   ADNLPModels.hess_structure_residual!(b, nls, rows, cols)
-  ADNLPModels.hess_coord_residual!(b, nls, x, y, obj_weight, vals)
+  ADNLPModels.hess_coord_residual!(b, nls, x, v, vals)
   @test eltype(vals) == T
-  H = sparse(rows, cols, vals, nvar, nvar)
-  # @test H == []
+  H = Symmetric(sparse(rows, cols, vals, nvar, nvar), :L)
+  @test H == [-20 * v[2] 0; 0 0]
 
   nls = ADNLPModels.ADNLSModel!(F!, x0, 3, matrix_free = true; kw...)
   @test nls.adbackend.hessian_backend isa ADNLPModels.EmptyADbackend
