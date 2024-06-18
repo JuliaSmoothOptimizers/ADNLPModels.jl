@@ -15,7 +15,7 @@ function SparseADJacobian(
   ncon,
   c!;
   x0::AbstractVector{T} = rand(nvar),
-  alg::AbstractColoringAlgorithm = GreedyColoringAlgorithm(),
+  coloring::AbstractColoringAlgorithm = GreedyColoringAlgorithm(),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
   kwargs...,
 ) where {T}
@@ -23,7 +23,7 @@ function SparseADJacobian(
   J = compute_jacobian_sparsity(c!, output, x0, detector = detector)
 
   # TODO: use ADTypes.row_coloring instead if you have the right decompression and some heuristic recommends it
-  colors = ADTypes.column_coloring(J, alg)
+  colors = ADTypes.column_coloring(J, coloring)
   ncolors = maximum(colors)
 
   d = BitVector(undef, nvar)
