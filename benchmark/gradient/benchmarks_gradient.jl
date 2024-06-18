@@ -7,7 +7,7 @@ We test here the function `grad!` for ADNLPModels with different backends:
   - DNLPModels.EnzymeADGradient (use Enzyme.jl);
   - ADNLPModels.ZygoteADGradient (use Zygote.jl).
 =#
-using  ReverseDiff, Zygote, ForwardDiff, Enzyme
+using ReverseDiff, Zygote, ForwardDiff, Enzyme
 
 include("additional_backends.jl")
 
@@ -29,9 +29,7 @@ benchmarked_generic_gradient_backend = Dict(
 get_backend_list(::Val{:generic}) = keys(benchmarked_generic_gradient_backend)
 get_backend(::Val{:generic}, b::String) = benchmarked_generic_gradient_backend[b]
 
-problem_sets = Dict(
-  "scalable" => scalable_problems,
-)
+problem_sets = Dict("scalable" => scalable_problems)
 nscal = 1000
 
 @info "Initialize grad! benchmark"
@@ -51,7 +49,8 @@ for f in [:optimized, :generic]
           m = eval(Meta.parse("OptimizationProblems.get_" * pb * "_ncon(n = $(nscal))"))
           @info " $(pb): $T with $n vars and $m cons"
           g = zeros(T, n)
-          SUITE["grad!"][f][T][s][b][pb] = @benchmarkable grad!(nlp, get_x0(nlp), $g) setup=(nlp = set_adnlp($pb, "gradient_backend", $(backend), $nscal, $T))
+          SUITE["grad!"][f][T][s][b][pb] = @benchmarkable grad!(nlp, get_x0(nlp), $g) setup =
+            (nlp = set_adnlp($pb, "gradient_backend", $(backend), $nscal, $T))
         end
       end
     end

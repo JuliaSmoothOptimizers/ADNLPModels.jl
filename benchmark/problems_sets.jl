@@ -51,8 +51,8 @@ function set_adnlp(
       push!(backend_structure, k => all_backend_structure[k])
     end
   end
-  return OptimizationProblems.ADNLPProblems.eval(pbs)(
-    ;type = Val(T),
+  return OptimizationProblems.ADNLPProblems.eval(pbs)(;
+    type = Val(T),
     n = n,
     gradient_backend = backend_structure["gradient_backend"],
     hprod_backend = backend_structure["hprod_backend"],
@@ -65,12 +65,12 @@ function set_adnlp(
 end
 
 function set_problem(
-    pb::String,
-    test_back::String,
-    backend::String,
-    s::String,
-    n::Integer = nn,
-    T::DataType = Float64,
+  pb::String,
+  test_back::String,
+  backend::String,
+  s::String,
+  n::Integer = nn,
+  T::DataType = Float64,
 )
   nlp = if backend == "jump"
     model = OptimizationProblems.PureJuMP.eval(Meta.parse(pb))(n = n)
