@@ -1,4 +1,4 @@
-# Build an hybrid NLPModel
+# Build a hybrid NLPModel
 
 The package `ADNLPModels.jl` implements the [`NLPModel API`](https://github.com/JuliaSmoothOptimizers/NLPModels.jl) using automatic differentiation (AD) backends.
 It is also possible to build hybrid models that use AD to complete the implementation of a given `NLPModel`.
