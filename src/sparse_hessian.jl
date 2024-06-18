@@ -297,7 +297,7 @@ function NLPModels.hess_coord!(
   return vals
 end
 
-function NLPModels.hess_structure_residuals!(
+function NLPModels.hess_structure_residual!(
   b::Union{SparseADHessian, SparseReverseADHessian},
   nls::AbstractADNLSModel,
   rows::AbstractVector{<:Integer},
@@ -322,7 +322,7 @@ function NLPModels.hess_structure_residuals!(
   return rows, cols
 end
 
-function NLPModels.hess_coord_residuals!(
+function NLPModels.hess_coord_residual!(
   b::Union{SparseADHessian, SparseReverseADHessian},
   nls::AbstractADNLSModel,
   x::AbstractVector,

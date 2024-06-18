@@ -289,23 +289,41 @@ function NLPModels.hess_coord!(
   return vals
 end
 
-function NLPModels.hess_structure_residuals!(
+function NLPModels.hess_structure_residual!(
   b::ADBackend,
   nls::AbstractADNLSModel,
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
 )
-  nothing
+  n = nls.meta.nvar
+  pos = 0
+  for j = 1:n
+    for i = j:n
+      pos += 1
+      rows[pos] = i
+      cols[pos] = j
+    end
+  end
+  return rows, cols
 end
 
-function NLPModels.hess_coord_residuals!(
+function NLPModels.hess_coord_residual!(
   b::ADBackend,
   nls::AbstractADNLSModel,
   x::AbstractVector,
   v::AbstractVector,
   vals::AbstractVector,
 )
-  nothing
+  F = get_F(nls, b)
+  Hx = hessian(b, x -> dot(F(x), v), x)
+  k = 1
+  for j = 1:(nls.meta.nvar)
+    for i = j:(nls.meta.nvar)
+      vals[k] = Hx[i, j]
+      k += 1
+    end
+  end
+  return vals
 end
 
 function NLPModels.hprod!(

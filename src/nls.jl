@@ -864,11 +864,7 @@ function NLPModels.hess_structure_residual!(
   cols::AbstractVector{<:Integer},
 )
   @lencheck nls.nls_meta.nnzh rows cols
-  n = nls.meta.nvar
-  I = ((i, j) for i = 1:n, j = 1:n if i ≥ j)
-  rows .= getindex.(I, 1)
-  cols .= getindex.(I, 2)
-  return rows, cols
+  return hess_structure_residual!(nls.adbackend.hessian_residual_backend, nls, rows, cols)
 end
 
 function NLPModels.hess_coord_residual!(
@@ -881,16 +877,7 @@ function NLPModels.hess_coord_residual!(
   @lencheck nls.nls_meta.nequ v
   @lencheck nls.nls_meta.nnzh vals
   increment!(nls, :neval_hess_residual)
-  F = get_F(nls, nls.adbackend.hessian_residual_backend)
-  Hx = hessian(nls.adbackend.hessian_residual_backend, x -> dot(F(x), v), x)
-  k = 1
-  for j = 1:(nls.meta.nvar)
-    for i = j:(nls.meta.nvar)
-      vals[k] = Hx[i, j]
-      k += 1
-    end
-  end
-  return vals
+  return hess_coord_residual!(nls.adbackend.hessian_residual_backend, nls, x, v, vals)
 end
 
 function NLPModels.jth_hess_residual(nls::ADNLSModel, x::AbstractVector, i::Int)
