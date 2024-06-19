@@ -118,6 +118,22 @@ function get_nln_nnzh(nlp::AbstractNLPModel, nvar)
   nlp.meta.nnzh
 end
 
+"""
+    get_residual_nnzh(b::ADModelBackend, nvar)
+
+Return `get_nln_nnzh(b.hessian_residual_backend, nvar)`.
+"""
+function get_residual_nnzh(b::ADModelBackend, nvar)
+  get_nln_nnzh(b.hessian_residual_backend, nvar)
+end
+
+function get_residual_nnzh(
+  b::ADModelBackend{GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS},
+  nvar) where {GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS <: AbstractNLPModel}
+  nls = b.hessian_residual_backend
+  nls.nls_meta.nnzh
+end
+
 throw_error(b) =
   throw(ArgumentError("The AD backend $b is not loaded. Please load the corresponding AD package."))
 gradient(b::ADBackend, ::Any, ::Any) = throw_error(b)

@@ -303,13 +303,7 @@ function NLPModels.hess_structure_residual!(
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
 )
-  function objective(x)
-    F = get_F(nls, b)
-    Fx = F(x)
-    return dot(Fx, Fx) / 2
-  end
-
-  H = compute_hessian_sparsity(objective, nls.meta.nvar, nothing, 0)
+  H = compute_hessian_sparsity(x -> 0, nls.meta.nvar, nls.F!, nls.nls_meta.nequ)
   trilH = tril(H)
   rowval = trilH.rowval
   colptr = trilH.colptr
@@ -329,11 +323,8 @@ function NLPModels.hess_coord_residual!(
   v::AbstractVector,
   vals::AbstractVector,
 )
-  function objective(x)
-    F = get_F(nls, b)
-    Fx = F(x)
-    return dot(Fx, Fx) / 2
-  end
-
-  sparse_hess_coord!(objective, b, x, 1.0, v, vals)
+  b.y .= 0
+  Fx = similar(b.y, nls.nls_meta.nequ)
+  Ψ(x) = dot(nls.F!(Fx, x), v)
+  sparse_hess_coord!(Ψ, b, x, 1.0, b.y, vals)
 end
