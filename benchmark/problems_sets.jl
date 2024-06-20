@@ -7,6 +7,9 @@ scalable_problems = meta[meta.variable_nvar .== true, :name] # problems that are
 all_problems = meta[meta.nvar .> 5, :name] # all problems with ≥ 5 variables
 all_problems = setdiff(all_problems, scalable_problems) # avoid duplicate problems
 
+# all scalable least squares problems with ≥ 5 variables
+scalable_nls_problems = meta[(meta.variable_nvar .== true) .&& (meta.nvar .> 5) .&& (meta.objtype .== :least_squares), :name]
+
 all_cons_problems = meta[(meta.nvar .> 5) .&& (meta.ncon .> 5), :name] # all problems with ≥ 5 variables
 scalable_cons_problems = meta[(meta.variable_nvar .== true) .&& (meta.ncon .> 5), :name] # problems that are scalable
 all_cons_problems = setdiff(all_cons_problems, scalable_cons_problems) # avoid duplicate problems
@@ -16,6 +19,7 @@ pre_problem_sets = Dict(
   "scalable" => scalable_problems, # problems that are scalable
   "all_cons" => all_cons_problems, # all problems with ≥ 5 variables anc cons and not scalable
   "scalable_cons" => scalable_cons_problems, # scalable problems with ≥ 5 variables anc cons
+  "scalable_nls" => scalable_nls_problems,
 )
 
 # keys list all the accepted keywords to define backends
@@ -28,17 +32,22 @@ all_backend_structure = Dict(
   "jacobian_backend" => ADNLPModels.EmptyADbackend,
   "hessian_backend" => ADNLPModels.EmptyADbackend,
   "ghjvprod_backend" => ADNLPModels.EmptyADbackend,
+  "hprod_residual_backend" => ADNLPModels.EmptyADbackend,
+  "jprod_residual_backend" => ADNLPModels.EmptyADbackend,
+  "jtprod_residual_backend" => ADNLPModels.EmptyADbackend,
+  "jacobian_residual_backend" => ADNLPModels.EmptyADbackend,
+  "hessian_residual_backend" => ADNLPModels.EmptyADbackend,
 )
 
 """
-    set_adnlp(pb::String, test_back::String, back_struct::Type{<:ADNLPModels.ADBackend}, n::Integer = nn, T::DataType = Float64)
+    set_adnlp(pb::String, test_back::String, back_struct, n::Integer = nn, T::DataType = Float64)
 
 Return an ADNLPModel with `back_struct` as an AD backend for `test_back ∈ keys(all_backend_structure)`
 """
 function set_adnlp(
   pb::String,
   test_back::String, # backend specified
-  back_struct::Type{<:ADNLPModels.ADBackend},
+  back_struct,
   n::Integer = nn,
   T::DataType = Float64,
 )
@@ -52,7 +61,7 @@ function set_adnlp(
     end
   end
   return OptimizationProblems.ADNLPProblems.eval(pbs)(;
-    type = Val(T),
+    type = T,
     n = n,
     gradient_backend = backend_structure["gradient_backend"],
     hprod_backend = backend_structure["hprod_backend"],
@@ -61,6 +70,46 @@ function set_adnlp(
     jacobian_backend = backend_structure["jacobian_backend"],
     hessian_backend = backend_structure["hessian_backend"],
     ghjvprod_backend = backend_structure["ghjvprod_backend"],
+  )
+end
+
+"""
+    set_adnls(pb::String, test_back::String, back_struct, n::Integer = nn, T::DataType = Float64)
+
+Return an ADNLSModel with `back_struct` as an AD backend for `test_back ∈ keys(all_backend_structure)`
+"""
+function set_adnls(
+  pb::String,
+  test_back::String, # backend specified
+  back_struct,
+  n::Integer = nn,
+  T::DataType = Float64,
+)
+  pbs = Meta.parse(pb)
+  backend_structure = Dict{String, Any}()
+  for k in keys(all_backend_structure)
+    if k == test_back
+      push!(backend_structure, k => back_struct)
+    else
+      push!(backend_structure, k => all_backend_structure[k])
+    end
+  end
+  return OptimizationProblems.ADNLPProblems.eval(pbs)(
+    Val(:nls);
+    type = T,
+    n = n,
+    gradient_backend = backend_structure["gradient_backend"],
+    hprod_backend = backend_structure["hprod_backend"],
+    jprod_backend = backend_structure["jprod_backend"],
+    jtprod_backend = backend_structure["jtprod_backend"],
+    jacobian_backend = backend_structure["jacobian_backend"],
+    hessian_backend = backend_structure["hessian_backend"],
+    ghjvprod_backend = backend_structure["ghjvprod_backend"],
+    hprod_residual_backend = backend_structure["hprod_residual_backend"],
+    jprod_residual_backend = backend_structure["jprod_residual_backend"],
+    jtprod_residual_backend = backend_structure["jtprod_residual_backend"],
+    jacobian_residual_backend = backend_structure["jacobian_residual_backend"],
+    hessian_residual_backend = backend_structure["hessian_residual_backend"],
   )
 end
 

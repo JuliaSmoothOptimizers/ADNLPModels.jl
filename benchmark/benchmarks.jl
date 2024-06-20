@@ -13,3 +13,12 @@ include("problems_sets.jl")
 const SUITE = BenchmarkGroup()
 
 include("gradient/benchmarks_gradient.jl")
+
+include("jacobian/benchmarks_coloring.jl")
+include("jacobian/benchmarks_jacobian.jl")
+include("jacobian/benchmarks_jacobian_residual.jl")
+
+include("hessian/benchmarks_coloring.jl")
+include("hessian/benchmarks_hessian.jl")
+include("hessian/benchmarks_hessian_lagrangian.jl")
+# include("hessian/benchmarks_hessian_residual.jl")
