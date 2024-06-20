@@ -13,6 +13,8 @@ include("additional_backends.jl")
 
 data_types = [Float32, Float64]
 
+benchmark_list = [:optimized, :generic]
+
 benchmarked_gradient_backend = Dict(
   "forward" => ADNLPModels.ForwardDiffADGradient,
   "reverse" => ADNLPModels.ReverseDiffADGradient,
@@ -32,25 +34,27 @@ get_backend(::Val{:generic}, b::String) = benchmarked_generic_gradient_backend[b
 problem_sets = Dict("scalable" => scalable_problems)
 nscal = 1000
 
-@info "Initialize grad! benchmark"
-SUITE["grad!"] = BenchmarkGroup()
+name_backend = "gradient_backend"
+fun = grad!
+@info "Initialize $(fun) benchmark"
+SUITE["$(fun)"] = BenchmarkGroup()
 
-for f in [:optimized, :generic]
-  SUITE["grad!"][f] = BenchmarkGroup()
+for f in benchmark_list
+  SUITE["$(fun)"][f] = BenchmarkGroup()
   for T in data_types
-    SUITE["grad!"][f][T] = BenchmarkGroup()
+    SUITE["$(fun)"][f][T] = BenchmarkGroup()
     for s in keys(problem_sets)
-      SUITE["grad!"][f][T][s] = BenchmarkGroup()
+      SUITE["$(fun)"][f][T][s] = BenchmarkGroup()
       for b in get_backend_list(Val(f))
-        SUITE["grad!"][f][T][s][b] = BenchmarkGroup()
+        SUITE["$(fun)"][f][T][s][b] = BenchmarkGroup()
         backend = get_backend(Val(f), b)
         for pb in problem_sets[s]
           n = eval(Meta.parse("OptimizationProblems.get_" * pb * "_nvar(n = $(nscal))"))
           m = eval(Meta.parse("OptimizationProblems.get_" * pb * "_ncon(n = $(nscal))"))
           @info " $(pb): $T with $n vars and $m cons"
           g = zeros(T, n)
-          SUITE["grad!"][f][T][s][b][pb] = @benchmarkable grad!(nlp, get_x0(nlp), $g) setup =
-            (nlp = set_adnlp($pb, "gradient_backend", $(backend), $nscal, $T))
+          SUITE["$(fun)"][f][T][s][b][pb] = @benchmarkable $fun(nlp, get_x0(nlp), $g) setup =
+            (nlp = set_adnlp($pb, $(name_backend), $(backend), $nscal, $T))
         end
       end
     end
