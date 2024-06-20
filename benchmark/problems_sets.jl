@@ -8,7 +8,10 @@ all_problems = meta[meta.nvar .> 5, :name] # all problems with ≥ 5 variables
 all_problems = setdiff(all_problems, scalable_problems) # avoid duplicate problems
 
 # all scalable least squares problems with ≥ 5 variables
-scalable_nls_problems = meta[(meta.variable_nvar .== true) .&& (meta.nvar .> 5) .&& (meta.objtype .== :least_squares), :name]
+scalable_nls_problems = meta[
+  (meta.variable_nvar .== true) .&& (meta.nvar .> 5) .&& (meta.objtype .== :least_squares),
+  :name,
+]
 
 all_cons_problems = meta[(meta.nvar .> 5) .&& (meta.ncon .> 5), :name] # all problems with ≥ 5 variables
 scalable_cons_problems = meta[(meta.variable_nvar .== true) .&& (meta.ncon .> 5), :name] # problems that are scalable

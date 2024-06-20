@@ -9,13 +9,21 @@ using ForwardDiff, SparseConnectivityTracer, SparseMatrixColorings, Symbolics
 
 include("additional_backends.jl")
 
-data_types = [Float64] 
+data_types = [Float64]
 
 benchmark_list = [:optimized]
 
 benchmarked_jac_coloring_backend = Dict(
   "sparse" => ADNLPModels.SparseADJacobian,
-  "sparse_symbolics" => (nvar, f, ncon, c!; kwargs...) -> ADNLPModels.SparseADJacobian(nvar, f, ncon, c!; detector = SymbolicsSparsityDetector(), kwargs...),
+  "sparse_symbolics" =>
+    (nvar, f, ncon, c!; kwargs...) -> ADNLPModels.SparseADJacobian(
+      nvar,
+      f,
+      ncon,
+      c!;
+      detector = SymbolicsSparsityDetector(),
+      kwargs...,
+    ),
   # add ColPack?
 )
 get_backend_list(::Val{:optimized}) = keys(benchmarked_jac_coloring_backend)
@@ -42,7 +50,8 @@ for f in benchmark_list
           n = eval(Meta.parse("OptimizationProblems.get_" * pb * "_nvar(n = $(nscal))"))
           m = eval(Meta.parse("OptimizationProblems.get_" * pb * "_ncon(n = $(nscal))"))
           @info " $(pb): $T with $n vars and $m cons"
-          SUITE["$(fun)"][f][T][s][b][pb] = @benchmarkable set_adnlp($pb, $(name_backend), $backend, $nscal, $T)
+          SUITE["$(fun)"][f][T][s][b][pb] =
+            @benchmarkable set_adnlp($pb, $(name_backend), $backend, $nscal, $T)
         end
       end
     end

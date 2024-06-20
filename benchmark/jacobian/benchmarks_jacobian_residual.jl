@@ -12,9 +12,7 @@ data_types = [Float32, Float64]
 
 benchmark_list = [:optimized]
 
-benchmarked_jacobian_backend = Dict(
-  "sparse" => ADNLPModels.SparseADJacobian,
-)
+benchmarked_jacobian_backend = Dict("sparse" => ADNLPModels.SparseADJacobian)
 get_backend_list(::Val{:optimized}) = keys(benchmarked_jacobian_backend)
 get_backend(::Val{:optimized}, b::String) = benchmarked_jacobian_backend[b]
 
