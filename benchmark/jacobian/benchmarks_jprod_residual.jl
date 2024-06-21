@@ -1,10 +1,11 @@
 #=
 INTRODUCTION OF THIS BENCHMARK:
 
-We test here the function `jac_residual_coord!` for ADNLPModels with different backends:
-  - ADNLPModels.SparseADJacobian
+We test here the function `jprod_residual!` for ADNLPModels with different backends:
+  - ADNLPModels.ForwardDiffADJprod
+  - ADNLPModels.ReverseDiffADJprod
 =#
-using ForwardDiff, SparseConnectivityTracer, SparseMatrixColorings
+using ForwardDiff, ReverseDiff
 
 include("additional_backends.jl")
 
@@ -12,15 +13,16 @@ data_types = [Float32, Float64]
 
 benchmark_list = [:optimized]
 
-benchmarked_jacobian_backend = Dict("sparse" => ADNLPModels.SparseADJacobian)
-get_backend_list(::Val{:optimized}) = keys(benchmarked_jacobian_backend)
-get_backend(::Val{:optimized}, b::String) = benchmarked_jacobian_backend[b]
+benchmarked_jprod_residual_backend =
+  Dict("forward" => ADNLPModels.ForwardDiffADJprod, "reverse" => ADNLPModels.ReverseDiffADJprod)
+get_backend_list(::Val{:optimized}) = keys(benchmarked_jprod_residual_backend)
+get_backend(::Val{:optimized}, b::String) = benchmarked_jprod_residual_backend[b]
 
 problem_sets = Dict("scalable_nls" => scalable_nls_problems)
 nscal = 1000
 
-name_backend = "jacobian_residual_backend"
-fun = jac_coord_residual
+name_backend = "jprod_residual_backend"
+fun = jprod_residual!
 @info "Initialize $(fun) benchmark"
 SUITE["$(fun)"] = BenchmarkGroup()
 
@@ -38,8 +40,10 @@ for f in benchmark_list
           m = eval(Meta.parse("OptimizationProblems.get_" * pb * "_ncon(n = $(nscal))"))
           nequ = eval(Meta.parse("OptimizationProblems.get_" * pb * "_nls_nequ(n = $(nscal))"))
           @info " $(pb): $T with $n vars, $nequ residuals and $m cons"
-          SUITE["$(fun)"][f][T][s][b][pb] = @benchmarkable $fun(nls, get_x0(nls)) setup =
-            (nls = set_adnls($pb, $(name_backend), $backend, $nscal, $T))
+          Jv = Vector{T}(undef, nequ)
+          v = 10 * T[-(-1.0)^i for i = 1:n]
+          SUITE["$(fun)"][f][T][s][b][pb] = @benchmarkable $fun(nlp, get_x0(nlp), $v, $Jv) setup =
+            (nlp = set_adnls($pb, $(name_backend), $backend, $nscal, $T))
         end
       end
     end

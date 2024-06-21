@@ -21,9 +21,13 @@ pre_problem_sets = Dict(
   "all" => all_problems, # all problems with ≥ 5 variables and not scalable
   "scalable" => scalable_problems, # problems that are scalable
   "all_cons" => all_cons_problems, # all problems with ≥ 5 variables anc cons and not scalable
-  "scalable_cons" => scalable_cons_problems, # scalable problems with ≥ 5 variables anc cons
+  "scalable_cons" => scalable_cons_problems, # scalable problems with ≥ 5 variables and cons
   "scalable_nls" => scalable_nls_problems,
 )
+
+for key in keys(pre_problem_sets)
+  @info "Set $key contains $(length(pre_problem_sets[key])) problems"
+end
 
 # keys list all the accepted keywords to define backends
 # values are generic backend to be used by default in this benchmark
