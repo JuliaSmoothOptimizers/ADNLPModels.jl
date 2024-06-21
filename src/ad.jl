@@ -273,7 +273,7 @@ function ADModelNLSBackend(
     hprod_residual_backend = if hprod_residual_backend isa AbstractNLPModel
       hprod_residual_backend
     else
-      HvBLS(nvar, f, nequ, F!; kwargs...)
+      HvBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
     end
   end
   show_time && println("hprod_residual    backend $HvBLS: $b seconds;")
@@ -283,7 +283,7 @@ function ADModelNLSBackend(
     jprod_residual_backend = if jprod_residual_backend isa AbstractNLPModel
       jprod_residual_backend
     else
-      JvBLS(nvar, f, nequ, F!; kwargs...)
+      JvBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
     end
   end
   show_time && println("jprod_residual    backend $JvBLS: $b seconds;")
@@ -293,7 +293,7 @@ function ADModelNLSBackend(
     jtprod_residual_backend = if jtprod_residual_backend isa AbstractNLPModel
       jtprod_residual_backend
     else
-      JtvBLS(nvar, f, nequ, F!; kwargs...)
+      JtvBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
     end
   end
   show_time && println("jtprod_residual   backend $JtvBLS: $b seconds;")
@@ -303,7 +303,7 @@ function ADModelNLSBackend(
     jacobian_residual_backend = if jacobian_residual_backend isa AbstractNLPModel
       jacobian_residual_backend
     else
-      JBLS(nvar, f, nequ, F!; kwargs...)
+      JBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
     end
   end
   show_time && println("jacobian_residual backend $JBLS: $b seconds;")
@@ -313,7 +313,7 @@ function ADModelNLSBackend(
     hessian_residual_backend = if hessian_residual_backend isa AbstractNLPModel
       hessian_residual_backend
     else
-      HBLS(nvar, f, nequ, F!; kwargs...)
+      HBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
     end
   end
   show_time && println("hessian_residual  backend $HBLS: $b seconds. \n")
@@ -439,7 +439,7 @@ function ADModelNLSBackend(
     hprod_residual_backend = if hprod_residual_backend isa AbstractNLPModel
       hprod_residual_backend
     else
-      HvBLS(nvar, f, nequ, F!; kwargs...)
+      HvBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
     end
   end
   show_time && println("hprod_residual    backend $HvBLS: $b seconds;")
@@ -449,7 +449,7 @@ function ADModelNLSBackend(
     jprod_residual_backend = if jprod_residual_backend isa AbstractNLPModel
       jprod_residual_backend
     else
-      JvBLS(nvar, f, nequ, F!; kwargs...)
+      JvBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
     end
   end
   show_time && println("jprod_residual    backend $JvBLS: $b seconds;")
@@ -459,7 +459,7 @@ function ADModelNLSBackend(
     jtprod_residual_backend = if jtprod_residual_backend isa AbstractNLPModel
       jtprod_residual_backend
     else
-      JtvBLS(nvar, f, nequ, F!; kwargs...)
+      JtvBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
     end
   end
   show_time && println("jtprod_residual   backend $JtvBLS: $b seconds;")
@@ -469,7 +469,7 @@ function ADModelNLSBackend(
     jacobian_residual_backend = if jacobian_residual_backend isa AbstractNLPModel
       jacobian_residual_backend
     else
-      JBLS(nvar, f, nequ, F!; kwargs...)
+      JBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
     end
   end
   show_time && println("jacobian_residual backend $JBLS: $b seconds;")
@@ -479,7 +479,7 @@ function ADModelNLSBackend(
     hessian_residual_backend = if hessian_residual_backend isa AbstractNLPModel
       hessian_residual_backend
     else
-      HBLS(nvar, f, nequ, F!; kwargs...)
+      HBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
     end
   end
   show_time && println("hessian_residual  backend $HBLS: $b seconds. \n")
