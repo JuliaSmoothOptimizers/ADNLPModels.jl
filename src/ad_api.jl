@@ -81,20 +81,21 @@ function get_nln_nnzj(nlp::AbstractNLPModel, nvar, ncon)
 end
 
 """
-    get_residual_nnzj(b::ADModelBackend, nvar, nequ)
+    get_residual_nnzj(::ADBackend, nvar, ncon)
+    get_residual_nnzj(b::ADModelBackend, nvar, ncon)
+    get_residual_nnzj(nls::AbstractNLSModel, nvar, ncon)
 
-Return `get_nln_nnzj(b.jacobian_residual_backend, nvar, nequ)`.
+Return number of nonzeros in the residual Jacobian.
 """
 function get_residual_nnzj(b::ADModelBackend, nvar, nequ)
-  get_nln_nnzj(b.jacobian_residual_backend, nvar, nequ)
+  get_residual_nnzj(b.jacobian_residual_backend, nvar, nequ)
 end
 
-function get_residual_nnzj(
-  b::ADModelBackend{GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS},
-  nvar,
-  nequ,
-) where {GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS <: AbstractNLPModel, HBLS}
-  nls = b.jacobian_residual_backend
+function get_residual_nnzj(::ADBackend, nvar, nequ)
+  nvar * ncon
+end
+
+function get_residual_nnzj(nls::AbstractNLSModel, nvar, nequ)
   nls.nls_meta.nnzj
 end
 
