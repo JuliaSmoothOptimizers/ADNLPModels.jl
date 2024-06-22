@@ -180,8 +180,16 @@ function NLPModels.hess_structure!(
   return rows, cols
 end
 
+function NLPModels.hess_structure_residual!(
+  b::Union{SparseADHessian, SparseReverseADHessian},
+  nls::AbstractADNLSModel,
+  rows::AbstractVector{<:Integer},
+  cols::AbstractVector{<:Integer},
+)
+  return hess_structure!(b, nls, rows, cols)
+end
+
 function sparse_hess_coord!(
-  ℓ::Function,
   b::SparseADHessian{Tag, GT, S, T},
   x::AbstractVector,
   obj_weight,
@@ -219,7 +227,6 @@ function sparse_hess_coord!(
 end
 
 function sparse_hess_coord!(
-  ℓ::Function,
   b::SparseReverseADHessian{T, S, Tagf, F, Tagψ, P},
   x::AbstractVector,
   obj_weight,
@@ -265,8 +272,7 @@ function NLPModels.hess_coord!(
   obj_weight::Real,
   vals::AbstractVector,
 )
-  ℓ = get_lag(nlp, b, obj_weight, y)
-  sparse_hess_coord!(ℓ, b, x, obj_weight, y, vals)
+  sparse_hess_coord!(b, x, obj_weight, y, vals)
 end
 
 function NLPModels.hess_coord!(
@@ -277,8 +283,7 @@ function NLPModels.hess_coord!(
   vals::AbstractVector,
 )
   b.y .= 0
-  ℓ = get_lag(nlp, b, obj_weight, b.y)
-  sparse_hess_coord!(ℓ, b, x, obj_weight, b.y, vals)
+  sparse_hess_coord!(b, x, obj_weight, b.y, vals)
 end
 
 function NLPModels.hess_coord!(
@@ -286,13 +291,23 @@ function NLPModels.hess_coord!(
   nlp::ADModel,
   x::AbstractVector,
   j::Integer,
-  vals::AbstractVector{T},
-) where {T}
+  vals::AbstractVector,
+)
   for (w, k) in enumerate(nlp.meta.nln)
     b.y[w] = k == j ? 1 : 0
   end
-  obj_weight = zero(T)
-  ℓ = get_lag(nlp, b, obj_weight, b.y)
-  sparse_hess_coord!(ℓ, b, x, obj_weight, b.y, vals)
+  obj_weight = zero(eltype(x))
+  sparse_hess_coord!(b, x, obj_weight, b.y, vals)
   return vals
+end
+
+function NLPModels.hess_coord_residual!(
+  b::Union{SparseADHessian, SparseReverseADHessian},
+  nls::AbstractADNLSModel,
+  x::AbstractVector,
+  v::AbstractVector,
+  vals::AbstractVector,
+)
+  obj_weight = zero(eltype(x))
+  sparse_hess_coord!(b, x, obj_weight, v, vals)
 end

@@ -3,14 +3,14 @@ default_backend = Dict(
   :hprod_backend => ForwardDiffADHvprod,
   :jprod_backend => ForwardDiffADJprod,
   :jtprod_backend => ForwardDiffADJtprod,
-  :jacobian_backend => SparseADJacobian, # ForwardDiffADJacobian
-  :hessian_backend => SparseADHessian, # ForwardDiffADHessian
+  :jacobian_backend => SparseADJacobian,
+  :hessian_backend => SparseADHessian,
   :ghjvprod_backend => ForwardDiffADGHjvprod,
   :hprod_residual_backend => ForwardDiffADHvprod,
   :jprod_residual_backend => ForwardDiffADJprod,
   :jtprod_residual_backend => ForwardDiffADJtprod,
-  :jacobian_residual_backend => SparseADJacobian, # ForwardDiffADJacobian,
-  :hessian_residual_backend => ForwardDiffADHessian,
+  :jacobian_residual_backend => SparseADJacobian,
+  :hessian_residual_backend => SparseADHessian,
 )
 
 optimized = Dict(
@@ -18,14 +18,14 @@ optimized = Dict(
   :hprod_backend => ReverseDiffADHvprod,
   :jprod_backend => ForwardDiffADJprod,
   :jtprod_backend => ReverseDiffADJtprod,
-  :jacobian_backend => SparseADJacobian, # ForwardDiffADJacobian
-  :hessian_backend => SparseReverseADHessian, # ForwardDiffADHessian,
+  :jacobian_backend => SparseADJacobian,
+  :hessian_backend => SparseReverseADHessian,
   :ghjvprod_backend => ForwardDiffADGHjvprod,
   :hprod_residual_backend => ReverseDiffADHvprod,
   :jprod_residual_backend => ForwardDiffADJprod,
   :jtprod_residual_backend => ReverseDiffADJtprod,
-  :jacobian_residual_backend => SparseADJacobian, # ForwardDiffADJacobian
-  :hessian_residual_backend => ForwardDiffADHessian,
+  :jacobian_residual_backend => SparseADJacobian,
+  :hessian_residual_backend => SparseReverseADHessian,
 )
 
 generic = Dict(

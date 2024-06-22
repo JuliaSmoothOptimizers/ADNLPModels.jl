@@ -1,8 +1,10 @@
 list_sparse_jac_backend = (
-  (ADNLPModels.SparseADJacobian, Dict()), # default
+  (ADNLPModels.SparseADJacobian, Dict()),
   (ADNLPModels.ForwardDiffADJacobian, Dict()),
 )
+
 dt = (Float32, Float64)
+
 @testset "Basic Jacobian of residual derivative with backend=$(backend) and T=$(T)" for T in dt,
   (backend, kw) in list_sparse_jac_backend
 

@@ -82,11 +82,16 @@ end
 
 """
     get_residual_nnzj(b::ADModelBackend, nvar, nequ)
+    get_residual_nnzj(nls::AbstractNLSModel, nvar, nequ)
 
-Return `get_nln_nnzj(b.jacobian_residual_backend, nvar, nequ)`.
+Return the number of nonzeros elements in the residual Jacobians.
 """
 function get_residual_nnzj(b::ADModelBackend, nvar, nequ)
   get_nln_nnzj(b.jacobian_residual_backend, nvar, nequ)
+end
+
+function get_residual_nnzj(nls::AbstractNLSModel, nvar, nequ)
+  nls.nls_meta.nnzj
 end
 
 function get_residual_nnzj(
@@ -116,6 +121,27 @@ end
 
 function get_nln_nnzh(nlp::AbstractNLPModel, nvar)
   nlp.meta.nnzh
+end
+
+"""
+    get_residual_nnzh(b::ADModelBackend, nvar)
+    get_residual_nnzh(nls::AbstractNLSModel, nvar)
+
+Return the number of nonzeros elements in the residual Hessians.
+"""
+function get_residual_nnzh(b::ADModelBackend, nvar)
+  get_nln_nnzh(b.hessian_residual_backend, nvar)
+end
+
+function get_residual_nnzh(nls::AbstractNLSModel, nvar)
+  nls.nls_meta.nnzh
+end
+
+function get_residual_nnzh(
+  b::ADModelBackend{GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS},
+  nvar) where {GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS <: AbstractNLPModel}
+  nls = b.hessian_residual_backend
+  nls.nls_meta.nnzh
 end
 
 throw_error(b) =
@@ -282,6 +308,43 @@ function NLPModels.hess_coord!(
   n = nlp.meta.nvar
   for j = 1:n
     for i = j:n
+      vals[k] = Hx[i, j]
+      k += 1
+    end
+  end
+  return vals
+end
+
+function NLPModels.hess_structure_residual!(
+  b::ADBackend,
+  nls::AbstractADNLSModel,
+  rows::AbstractVector{<:Integer},
+  cols::AbstractVector{<:Integer},
+)
+  n = nls.meta.nvar
+  pos = 0
+  for j = 1:n
+    for i = j:n
+      pos += 1
+      rows[pos] = i
+      cols[pos] = j
+    end
+  end
+  return rows, cols
+end
+
+function NLPModels.hess_coord_residual!(
+  b::ADBackend,
+  nls::AbstractADNLSModel,
+  x::AbstractVector,
+  v::AbstractVector,
+  vals::AbstractVector,
+)
+  F = get_F(nls, b)
+  Hx = hessian(b, x -> dot(F(x), v), x)
+  k = 1
+  for j = 1:(nls.meta.nvar)
+    for i = j:(nls.meta.nvar)
       vals[k] = Hx[i, j]
       k += 1
     end
