@@ -886,13 +886,6 @@ function NLPModels.hess_coord_residual!(
   return hess_coord_residual!(nls.adbackend.hessian_residual_backend, nls, x, v, vals)
 end
 
-function NLPModels.jth_hess_residual(nls::ADNLSModel, x::AbstractVector, i::Int)
-  @lencheck nls.meta.nvar x
-  increment!(nls, :neval_jhess_residual)
-  F = get_F(nls, nls.adbackend.hessian_residual_backend)
-  return Symmetric(hessian(nls.adbackend.hessian_residual_backend, x -> F(x)[i], x), :L)
-end
-
 function NLPModels.hprod_residual!(
   nls::ADNLSModel,
   x::AbstractVector,
