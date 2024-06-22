@@ -1,7 +1,8 @@
-list_sparse_hess_backend =
-  ((ADNLPModels.SparseADHessian, Dict()),
-   (ADNLPModels.SparseReverseADHessian, Dict()),
-   (ADNLPModels.ForwardDiffADHessian, Dict()))
+list_sparse_hess_backend = (
+  (ADNLPModels.SparseADHessian, Dict()),
+  (ADNLPModels.SparseReverseADHessian, Dict()),
+  (ADNLPModels.ForwardDiffADHessian, Dict()),
+)
 
 dt = (Float32, Float64)
 

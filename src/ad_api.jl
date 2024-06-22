@@ -139,7 +139,8 @@ end
 
 function get_residual_nnzh(
   b::ADModelBackend{GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS},
-  nvar) where {GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS <: AbstractNLPModel}
+  nvar,
+) where {GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS <: AbstractNLPModel}
   nls = b.hessian_residual_backend
   nls.nls_meta.nnzh
 end
