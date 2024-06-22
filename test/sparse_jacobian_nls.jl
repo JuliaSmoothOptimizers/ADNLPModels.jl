@@ -1,7 +1,5 @@
-list_sparse_jac_backend = (
-  (ADNLPModels.SparseADJacobian, Dict()),
-  (ADNLPModels.ForwardDiffADJacobian, Dict()),
-)
+list_sparse_jac_backend =
+  ((ADNLPModels.SparseADJacobian, Dict()), (ADNLPModels.ForwardDiffADJacobian, Dict()))
 
 dt = (Float32, Float64)
 
