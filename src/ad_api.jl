@@ -94,6 +94,15 @@ function get_residual_nnzj(nls::AbstractNLSModel, nvar, nequ)
   nls.nls_meta.nnzj
 end
 
+function get_residual_nnzj(
+  b::ADModelBackend{GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS},
+  nvar,
+  nequ,
+) where {GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS <: AbstractNLPModel, HBLS}
+  nls = b.jacobian_residual_backend
+  nls.nls_meta.nnzj
+end
+
 """
     get_nln_nnzh(::ADBackend, nvar)
     get_nln_nnzh(b::ADModelBackend, nvar)
@@ -125,6 +134,13 @@ function get_residual_nnzh(b::ADModelBackend, nvar)
 end
 
 function get_residual_nnzh(nls::AbstractNLSModel, nvar)
+  nls.nls_meta.nnzh
+end
+
+function get_residual_nnzh(
+  b::ADModelBackend{GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS},
+  nvar) where {GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS <: AbstractNLPModel}
+  nls = b.hessian_residual_backend
   nls.nls_meta.nnzh
 end
 
