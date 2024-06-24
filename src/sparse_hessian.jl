@@ -4,6 +4,7 @@ struct SparseADHessian{Tag, GT, S, T} <: ADNLPModels.ADBackend
   colptr::Vector{Int}
   colors::Vector{Int}
   ncolors::Int
+  dcolors::Dict{Int, Vector{UnitRange{Int}}}
   res::S
   lz::Vector{ForwardDiff.Dual{Tag, T, 1}}
   glz::Vector{ForwardDiff.Dual{Tag, T, 1}}
@@ -37,6 +38,13 @@ function SparseADHessian(
   rowval = trilH.rowval
   colptr = trilH.colptr
 
+  # The indices of the nonzero elements in `vals` that will be processed by color `c` are stored in `dcolors[c]`.
+  dcolors = Dict(i => UnitRange{Int}[] for i=1:ncolors)
+  for (i, color) in enumerate(colors)
+    range_vals = colptr[i]:(colptr[i + 1] - 1)
+    push!(dcolors[color], range_vals)
+  end
+
   # prepare directional derivatives
   res = similar(x0)
 
@@ -65,7 +73,7 @@ function SparseADHessian(
   Hvp = fill!(S(undef, ntotal), 0)
   y = fill!(S(undef, ncon), 0)
 
-  return SparseADHessian(d, rowval, colptr, colors, ncolors, res, lz, glz, sol, longv, Hvp, ∇φ!, y)
+  return SparseADHessian(d, rowval, colptr, colors, ncolors, dcolors, res, lz, glz, sol, longv, Hvp, ∇φ!, y)
 end
 
 struct SparseReverseADHessian{T, S, Tagf, F, Tagψ, P} <: ADNLPModels.ADBackend
@@ -74,6 +82,7 @@ struct SparseReverseADHessian{T, S, Tagf, F, Tagψ, P} <: ADNLPModels.ADBackend
   colptr::Vector{Int}
   colors::Vector{Int}
   ncolors::Int
+  dcolors::Dict{Int, Vector{UnitRange{Int}}}
   res::S
   z::Vector{ForwardDiff.Dual{Tagf, T, 1}}
   gz::Vector{ForwardDiff.Dual{Tagf, T, 1}}
@@ -108,6 +117,13 @@ function SparseReverseADHessian(
   trilH = tril(H)
   rowval = trilH.rowval
   colptr = trilH.colptr
+
+  # The indices of the nonzero elements in `vals` that will be processed by color `c` are stored in `dcolors[c]`.
+  dcolors = Dict(i => UnitRange{Int}[] for i=1:ncolors)
+  for (i, color) in enumerate(colors)
+    range_vals = colptr[i]:(colptr[i + 1] - 1)
+    push!(dcolors[color], range_vals)
+  end
 
   # prepare directional derivatives
   res = similar(x0)
@@ -147,6 +163,7 @@ function SparseReverseADHessian(
     colptr,
     colors,
     ncolors,
+    dcolors,
     res,
     z,
     gz,
@@ -213,12 +230,12 @@ function sparse_hess_coord!(
     b.∇φ!(b.glz, b.lz)
     ForwardDiff.extract_derivative!(Tag, b.Hvp, b.glz)
     b.res .= view(b.Hvp, (ncon + 1):(ncon + nvar))
-    for j = 1:nvar
-      if b.colors[j] == icol
-        for k = b.colptr[j]:(b.colptr[j + 1] - 1)
-          i = b.rowval[k]
-          vals[k] = b.res[i]
-        end
+
+    # Store in `vals` the nonzeros of each column of the Hessian computed with color `icol`
+    for range_vals in b.dcolors[icol]
+      for k in range_vals
+        row = b.rowval[k]
+        vals[k] = b.res[row]
       end
     end
   end
@@ -251,12 +268,11 @@ function sparse_hess_coord!(
     ForwardDiff.extract_derivative!(Tagψ, b.Hv_temp, b.gzψ)
     b.res .+= b.Hv_temp
 
-    for j = 1:nvar
-      if b.colors[j] == icol
-        for k = b.colptr[j]:(b.colptr[j + 1] - 1)
-          i = b.rowval[k]
-          vals[k] = b.res[i]
-        end
+    # Store in `vals` the nonzeros of each column of the Hessian computed with color `icol`
+    for range_vals in b.dcolors[icol]
+      for k in range_vals
+        row = b.rowval[k]
+        vals[k] = b.res[row]
       end
     end
   end
