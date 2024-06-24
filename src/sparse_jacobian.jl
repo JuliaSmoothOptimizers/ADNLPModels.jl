@@ -4,7 +4,7 @@ struct SparseADJacobian{T, Tag, S} <: ADBackend
   colptr::Vector{Int}
   colors::Vector{Int}
   ncolors::Int
-  dcolors::Dict{Int, Vector{Int}}
+  dcolors::Dict{Int, Vector{UnitRange{Int}}}
   z::Vector{ForwardDiff.Dual{Tag, T, 1}}
   cz::Vector{ForwardDiff.Dual{Tag, T, 1}}
   res::S
@@ -33,11 +33,10 @@ function SparseADJacobian(
   colptr = J.colptr
 
   # The indices of the nonzero elements in `vals` that will be processed by color `c` are stored in `dcolors[c]`.
-  dcolors = Dict{Int, Vector{Int}}(i => Int[] for i=1:ncolors)
+  dcolors = Dict(i => UnitRange{Int}[] for i=1:ncolors)
   for (i, color) in enumerate(colors)
-    for k = colptr[i]:(colptr[i + 1] - 1)
-      push!(dcolors[color], k)
-    end
+    range_vals = colptr[i]:(colptr[i + 1] - 1)
+    push!(dcolors[color], range_vals)
   end
 
   tag = ForwardDiff.Tag{typeof(c!), T}
@@ -81,11 +80,12 @@ function sparse_jac_coord!(
     ℓ!(b.cz, b.z) # c!(cz, x + ε * v)
     ForwardDiff.extract_derivative!(Tag, b.res, b.cz) # ∇c!(cx, x)ᵀv
 
-    # Update the vector vals
-    index_vals = b.dcolors[icol]
-    for k in index_vals
-      row = b.rowval[k]
-      vals[k] = b.res[row]
+    # Store in `vals` the nonzeros of each column of the Jacobian computed with color `icol`
+    for range_vals in b.dcolors[icol]
+      for k in range_vals
+        row = b.rowval[k]
+        vals[k] = b.res[row]
+      end
     end
   end
   return vals
