@@ -4,6 +4,7 @@ struct SparseADJacobian{T, Tag, S} <: ADBackend
   colptr::Vector{Int}
   colors::Vector{Int}
   ncolors::Int
+  dcolors::Dict{Int, Vector{Int}}
   z::Vector{ForwardDiff.Dual{Tag, T, 1}}
   cz::Vector{ForwardDiff.Dual{Tag, T, 1}}
   res::S
@@ -31,13 +32,21 @@ function SparseADJacobian(
   rowval = J.rowval
   colptr = J.colptr
 
+  # The indices of the nonzero elements in `vals` that will be processed by color `c` are stored in `dcolors[c]`.
+  dcolors = Dict{Int, Vector{Int}}(i => Int[] for i=1:ncolors)
+  for (i, color) in enumerate(colors)
+    for k = colptr[i]:(colptr[i + 1] - 1)
+      push!(dcolors[color], k)
+    end
+  end
+
   tag = ForwardDiff.Tag{typeof(c!), T}
 
   z = Vector{ForwardDiff.Dual{tag, T, 1}}(undef, nvar)
   cz = similar(z, ncon)
   res = similar(x0, ncon)
 
-  SparseADJacobian(d, rowval, colptr, colors, ncolors, z, cz, res)
+  SparseADJacobian(d, rowval, colptr, colors, ncolors, dcolors, z, cz, res)
 end
 
 function get_nln_nnzj(b::SparseADJacobian, nvar, ncon)
@@ -71,13 +80,12 @@ function sparse_jac_coord!(
     map!(ForwardDiff.Dual{Tag}, b.z, x, b.d) # x + ε * v
     ℓ!(b.cz, b.z) # c!(cz, x + ε * v)
     ForwardDiff.extract_derivative!(Tag, b.res, b.cz) # ∇c!(cx, x)ᵀv
-    for j = 1:nvar
-      if b.colors[j] == icol
-        for k = b.colptr[j]:(b.colptr[j + 1] - 1)
-          i = b.rowval[k]
-          vals[k] = b.res[i]
-        end
-      end
+
+    # Update the vector vals
+    index_vals = b.dcolors[icol]
+    for k in index_vals
+      row = b.rowval[k]
+      vals[k] = b.res[row]
     end
   end
   return vals
