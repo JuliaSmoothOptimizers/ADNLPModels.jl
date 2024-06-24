@@ -3,6 +3,7 @@ INTRODUCTION OF THIS BENCHMARK:
 
 We test here the function `hess_coord!` for ADNLPModels with different backends:
   - ADNLPModels.SparseADHessian
+  - ADNLPModels.SparseReverseADHessian
 =#
 using ForwardDiff, SparseConnectivityTracer, SparseMatrixColorings
 
@@ -12,7 +13,10 @@ data_types = [Float32, Float64]
 
 benchmark_list = [:optimized]
 
-benchmarked_hessian_backend = Dict("sparse" => ADNLPModels.SparseADHessian)
+benchmarked_hessian_backend = Dict(
+  "sparse" => ADNLPModels.SparseADHessian,
+  "sparse-reverse" => ADNLPModels.SparseReverseADHessian,
+)
 get_backend_list(::Val{:optimized}) = keys(benchmarked_hessian_backend)
 get_backend(::Val{:optimized}, b::String) = benchmarked_hessian_backend[b]
 
@@ -37,8 +41,8 @@ for f in benchmark_list
           n = eval(Meta.parse("OptimizationProblems.get_" * pb * "_nvar(n = $(nscal))"))
           m = eval(Meta.parse("OptimizationProblems.get_" * pb * "_ncon(n = $(nscal))"))
           @info " $(pb): $T with $n vars and $m cons"
-          y0 = 10 * T[-(-1.0)^i for i = 1:m]
-          SUITE["$(fun)"][f][T][s][b][pb] = @benchmarkable $fun(nlp, get_x0(nlp), $y0) setup =
+          y = 10 * T[-(-1.0)^i for i = 1:m]
+          SUITE["$(fun)"][f][T][s][b][pb] = @benchmarkable $fun(nlp, get_x0(nlp), $y) setup =
             (nlp = set_adnlp($pb, $(name_backend), $backend, $nscal, $T))
         end
       end

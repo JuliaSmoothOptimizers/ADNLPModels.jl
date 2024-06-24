@@ -1,11 +1,11 @@
 #=
 INTRODUCTION OF THIS BENCHMARK:
 
-We test here the function `hess_coord!` for ADNLPModels with different backends:
-  - ADNLPModels.SparseADHessian
-  - ADNLPModels.SparseReverseADHessian
+We test here the function `hprod!` for ADNLPModels with different backends:
+  - ADNLPModels.ForwardDiffADHvprod
+  - ADNLPModels.ReverseDiffADHvprod
 =#
-using ForwardDiff, SparseConnectivityTracer, SparseMatrixColorings
+using ForwardDiff, ReverseDiff
 
 include("additional_backends.jl")
 
@@ -13,18 +13,16 @@ data_types = [Float32, Float64]
 
 benchmark_list = [:optimized]
 
-benchmarked_hessian_backend = Dict(
-  "sparse" => ADNLPModels.SparseADHessian,
-  "sparse-reverse" => ADNLPModels.SparseReverseADHessian,
-)
-get_backend_list(::Val{:optimized}) = keys(benchmarked_hessian_backend)
-get_backend(::Val{:optimized}, b::String) = benchmarked_hessian_backend[b]
+benchmarked_hprod_backend =
+  Dict("forward" => ADNLPModels.ForwardDiffADHvprod, "reverse" => ADNLPModels.ReverseDiffADHvprod)
+get_backend_list(::Val{:optimized}) = keys(benchmarked_hprod_backend)
+get_backend(::Val{:optimized}, b::String) = benchmarked_hprod_backend[b]
 
 problem_sets = Dict("scalable" => scalable_problems)
 nscal = 1000
 
-name_backend = "hessian_backend"
-fun = hess_coord
+name_backend = "hprod_backend"
+fun = hprod!
 @info "Initialize $(fun) benchmark"
 SUITE["$(fun)"] = BenchmarkGroup()
 
@@ -41,7 +39,9 @@ for f in benchmark_list
           n = eval(Meta.parse("OptimizationProblems.get_" * pb * "_nvar(n = $(nscal))"))
           m = eval(Meta.parse("OptimizationProblems.get_" * pb * "_ncon(n = $(nscal))"))
           @info " $(pb): $T with $n vars"
-          SUITE["$(fun)"][f][T][s][b][pb] = @benchmarkable $fun(nlp, get_x0(nlp)) setup =
+          v = [sin(T(i) / 10) for i = 1:n]
+          Hv = Vector{T}(undef, n)
+          SUITE["$(fun)"][f][T][s][b][pb] = @benchmarkable $fun(nlp, get_x0(nlp), $v, $Hv) setup =
             (nlp = set_adnlp($pb, $(name_backend), $backend, $nscal, $T))
         end
       end
