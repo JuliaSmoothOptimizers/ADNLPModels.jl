@@ -8,6 +8,7 @@ using NLPModels, BenchmarkProfiles, OptimizationProblems, SolverBenchmark
 using JuMP, NLPModelsJuMP
 
 include("problems_sets.jl")
+verbose_subbenchmark = false
 
 # Run locally with `tune!(SUITE)` and then `run(SUITE)`
 const SUITE = BenchmarkGroup()

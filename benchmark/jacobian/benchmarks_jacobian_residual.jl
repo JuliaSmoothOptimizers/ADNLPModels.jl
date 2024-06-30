@@ -37,7 +37,7 @@ for f in benchmark_list
           n = eval(Meta.parse("OptimizationProblems.get_" * pb * "_nvar(n = $(nscal))"))
           m = eval(Meta.parse("OptimizationProblems.get_" * pb * "_ncon(n = $(nscal))"))
           nequ = eval(Meta.parse("OptimizationProblems.get_" * pb * "_nls_nequ(n = $(nscal))"))
-          @info " $(pb): $T with $n vars, $nequ residuals and $m cons"
+          verbose_subbenchmark && @info " $(pb): $T with $n vars, $nequ residuals and $m cons"
           SUITE["$(fun)"][f][T][s][b][pb] = @benchmarkable $fun(nls, get_x0(nls)) setup =
             (nls = set_adnls($pb, $(name_backend), $backend, $nscal, $T))
         end

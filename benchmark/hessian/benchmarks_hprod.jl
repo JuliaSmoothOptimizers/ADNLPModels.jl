@@ -38,7 +38,7 @@ for f in benchmark_list
         for pb in problem_sets[s]
           n = eval(Meta.parse("OptimizationProblems.get_" * pb * "_nvar(n = $(nscal))"))
           m = eval(Meta.parse("OptimizationProblems.get_" * pb * "_ncon(n = $(nscal))"))
-          @info " $(pb): $T with $n vars"
+          verbose_subbenchmark && @info " $(pb): $T with $n vars"
           v = [sin(T(i) / 10) for i = 1:n]
           Hv = Vector{T}(undef, n)
           SUITE["$(fun)"][f][T][s][b][pb] = @benchmarkable $fun(nlp, get_x0(nlp), $v, $Hv) setup =
