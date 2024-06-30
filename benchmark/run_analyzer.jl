@@ -1,8 +1,7 @@
 using Pkg
-Pkg.activate("benchmark_analyzer")
+Pkg.activate("benchmark/benchmark_analyzer")
 Pkg.instantiate()
-using BenchmarkTools, Logging, JLD2, Dates
-using StatsPlots
+using BenchmarkTools, Dates, JLD2, JSON, Plots, StatsPlots
 
 # BenchmarkTools.load("$name.json")
 # plots
