@@ -6,10 +6,9 @@ using Logging, JLD2, Dates
 
 path = dirname(@__FILE__)
 skip_tune = true
-skip_analyze = true
 
 @info "INITIALIZE"
-include("benchmark/benchmarks.jl")
+include("benchmarks.jl")
 
 list_of_benchmark = keys(SUITE)
 # gradient: SUITE[@tagged "grad!"]
@@ -45,10 +44,3 @@ end
 name = "$(today())_adnlpmodels_benchmark"
 @save "$name.jld2" result
 BenchmarkTools.save("$name.json", result)
-
-@info "ANALYZE"
-if !skip_analyze
-  include("benchmark/run_analyzer.jl")
-else
-  @info "Skip analyze"
-end
