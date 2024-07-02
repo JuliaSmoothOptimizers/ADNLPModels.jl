@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Home · ADNLPModels.jl</title><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script><link href="assets/style.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href><img src="assets/logo.png" alt="ADNLPModels.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href>ADNLPModels.jl</a></span></div><form class="docs-search" action="search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li class="is-active"><a class="tocitem" href>Home</a><ul class="internal"><li><a class="tocitem" href="#Install"><span>Install</span></a></li><li><a class="tocitem" href="#Complementary-packages"><span>Complementary packages</span></a></li><li><a class="tocitem" href="#Usage"><span>Usage</span></a></li><li><a class="tocitem" href="#License"><span>License</span></a></li><li><a class="tocitem" href="#Bug-reports-and-discussions"><span>Bug reports and discussions</span></a></li><li><a class="tocitem" href="#Contents"><span>Contents</span></a></li></ul></li><li><a class="tocitem" href="tutorial/">Tutorial</a></li><li><a class="tocitem" href="backend/">Backend</a></li><li><a class="tocitem" href="predefined/">Default backends</a></li><li><a class="tocitem" href="mixed/">Build a hybrid NLPModel</a></li><li><a class="tocitem" href="generic/">Support multiple precision</a></li><li><a class="tocitem" href="sparse/">Sparse Jacobian and Hessian</a></li><li><a class="tocitem" href="performance/">Performance tips</a></li><li><a class="tocitem" href="reference/">Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Home</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Home</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl/blob/main/docs/src/index.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="ADNLPModels"><a class="docs-heading-anchor" href="#ADNLPModels">ADNLPModels</a><a id="ADNLPModels-1"></a><a class="docs-heading-anchor-permalink" href="#ADNLPModels" title="Permalink"></a></h1><p>This package provides automatic differentiation (AD)-based model implementations that conform to the <a href="https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl">NLPModels</a> API. The general form of the optimization problem is</p><p class="math-container">\[\begin{aligned}
+\min \quad &amp; f(x) \\
+&amp; c_L \leq c(x) \leq c_U \\
+&amp; \ell \leq x \leq u,
+\end{aligned}\]</p><h2 id="Install"><a class="docs-heading-anchor" href="#Install">Install</a><a id="Install-1"></a><a class="docs-heading-anchor-permalink" href="#Install" title="Permalink"></a></h2><p>ADNLPModels Julia Language package. To install ADNLPModels, please open Julia&#39;s interactive session (known as REPL) and press the <code>]</code> key in the REPL to use the package mode, then type the following command</p><pre><code class="language-julia hljs">pkg&gt; add ADNLPModels</code></pre><h2 id="Complementary-packages"><a class="docs-heading-anchor" href="#Complementary-packages">Complementary packages</a><a id="Complementary-packages-1"></a><a class="docs-heading-anchor-permalink" href="#Complementary-packages" title="Permalink"></a></h2><p>ADNLPModels.jl functionalities are extended by other packages that are not automatically loaded. In other words, you sometimes need to load the desired package separately to access some functionalities.</p><pre><code class="language-julia hljs">using ADNLPModels # load only the default functionalities
+using Zygote # load the Zygote backends</code></pre><p>Versions compatibility for the extensions are available in the file <code>test/Project.toml</code>.</p><pre><code class="language-julia hljs">print(open(io-&gt;read(io, String), &quot;../../test/Project.toml&quot;))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[deps]
+CUDA = &quot;052768ef-5323-5732-b1bb-66c8b64840ba&quot;
+Enzyme = &quot;7da242da-08ed-463a-9acd-ee780be4f1d9&quot;
+ForwardDiff = &quot;f6369f11-7733-5829-9624-2563aa707210&quot;
+LinearAlgebra = &quot;37e2e46d-f89d-539d-b4ee-838fcccc9c8e&quot;
+ManualNLPModels = &quot;30dfa513-9b2f-4fb3-9796-781eabac1617&quot;
+NLPModels = &quot;a4795742-8479-5a88-8948-cc11e1c8c1a6&quot;
+NLPModelsModifiers = &quot;e01155f1-5c6f-4375-a9d8-616dd036575f&quot;
+NLPModelsTest = &quot;7998695d-6960-4d3a-85c4-e1bceb8cd856&quot;
+ReverseDiff = &quot;37e2e3b7-166d-5795-8a7a-e32c996b4267&quot;
+SparseArrays = &quot;2f01184e-e22b-5df5-ae63-d93ebab69eaf&quot;
+Test = &quot;8dfed614-e22c-5e08-85e1-65c5234f0b40&quot;
+Zygote = &quot;e88e6eb3-aa80-5325-afca-941959d7151f&quot;
+
+[compat]
+CUDA = &quot;4, 5&quot;
+Enzyme = &quot;0.10, 0.11, 0.12&quot;
+ForwardDiff = &quot;0.10&quot;
+ManualNLPModels = &quot;0.1&quot;
+NLPModels = &quot;0.21&quot;
+NLPModelsModifiers = &quot;0.7&quot;
+NLPModelsTest = &quot;0.10&quot;
+ReverseDiff = &quot;1&quot;
+Zygote = &quot;0.6&quot;</code></pre><h2 id="Usage"><a class="docs-heading-anchor" href="#Usage">Usage</a><a id="Usage-1"></a><a class="docs-heading-anchor-permalink" href="#Usage" title="Permalink"></a></h2><p>This package defines two models, <a href="#ADNLPModels.ADNLPModel"><code>ADNLPModel</code></a> for general nonlinear optimization, and <a href="#ADNLPModels.ADNLSModel"><code>ADNLSModel</code></a> for nonlinear least-squares problems.</p><article class="docstring"><header><a class="docstring-binding" id="ADNLPModels.ADNLPModel" href="#ADNLPModels.ADNLPModel"><code>ADNLPModels.ADNLPModel</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">ADNLPModel(f, x0)
+ADNLPModel(f, x0, lvar, uvar)
+ADNLPModel(f, x0, clinrows, clincols, clinvals, lcon, ucon)
+ADNLPModel(f, x0, A, lcon, ucon)
+ADNLPModel(f, x0, c, lcon, ucon)
+ADNLPModel(f, x0, clinrows, clincols, clinvals, c, lcon, ucon)
+ADNLPModel(f, x0, A, c, lcon, ucon)
+ADNLPModel(f, x0, lvar, uvar, clinrows, clincols, clinvals, lcon, ucon)
+ADNLPModel(f, x0, lvar, uvar, A, lcon, ucon)
+ADNLPModel(f, x0, lvar, uvar, c, lcon, ucon)
+ADNLPModel(f, x0, lvar, uvar, clinrows, clincols, clinvals, c, lcon, ucon)
+ADNLPModel(f, x0, lvar, uvar, A, c, lcon, ucon)
+ADNLPModel(model::AbstractNLPModel)</code></pre><p>ADNLPModel is an AbstractNLPModel using automatic differentiation to compute the derivatives. The problem is defined as</p><pre><code class="nohighlight hljs"> min  f(x)
+s.to  lcon ≤ (  Ax  ) ≤ ucon
+             ( c(x) )
+      lvar ≤   x  ≤ uvar.</code></pre><p>The following keyword arguments are available to all constructors:</p><ul><li><code>minimize</code>: A boolean indicating whether this is a minimization problem (default: true)</li><li><code>name</code>: The name of the model (default: &quot;Generic&quot;)</li></ul><p>The following keyword arguments are available to the constructors for constrained problems:</p><ul><li><code>y0</code>: An inital estimate to the Lagrangian multipliers (default: zeros)</li></ul><p><code>ADNLPModel</code> uses <code>ForwardDiff</code> and <code>ReverseDiff</code> for the automatic differentiation. One can specify a new backend with the keyword arguments <code>backend::ADNLPModels.ADBackend</code>. There are three pre-coded backends:</p><ul><li>the default <code>ForwardDiffAD</code>.</li><li><code>ReverseDiffAD</code>.</li><li><code>ZygoteDiffAD</code> accessible after loading <code>Zygote.jl</code> in your environment.</li></ul><p>For an advanced usage, one can define its own backend and redefine the API as done in <a href="https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl/blob/main/src/forward.jl">ADNLPModels.jl/src/forward.jl</a>.</p><p><strong>Examples</strong></p><pre><code class="language-julia hljs">using ADNLPModels
+f(x) = sum(x)
+x0 = ones(3)
+nvar = 3
+ADNLPModel(f, x0) # uses the default ForwardDiffAD backend.
+ADNLPModel(f, x0; backend = ADNLPModels.ReverseDiffAD) # uses ReverseDiffAD backend.
+
+using Zygote
+ADNLPModel(f, x0; backend = ADNLPModels.ZygoteAD)</code></pre><pre><code class="language-julia hljs">using ADNLPModels
+f(x) = sum(x)
+x0 = ones(3)
+c(x) = [1x[1] + x[2]; x[2]]
+nvar, ncon = 3, 2
+ADNLPModel(f, x0, c, zeros(ncon), zeros(ncon)) # uses the default ForwardDiffAD backend.
+ADNLPModel(f, x0, c, zeros(ncon), zeros(ncon); backend = ADNLPModels.ReverseDiffAD) # uses ReverseDiffAD backend.
+
+using Zygote
+ADNLPModel(f, x0, c, zeros(ncon), zeros(ncon); backend = ADNLPModels.ZygoteAD)</code></pre><p>For in-place constraints function, use one of the following constructors:</p><pre><code class="nohighlight hljs">ADNLPModel!(f, x0, c!, lcon, ucon)
+ADNLPModel!(f, x0, clinrows, clincols, clinvals, c!, lcon, ucon)
+ADNLPModel!(f, x0, A, c!, lcon, ucon)
+ADNLPModel(f, x0, lvar, uvar, c!, lcon, ucon)
+ADNLPModel(f, x0, lvar, uvar, clinrows, clincols, clinvals, c!, lcon, ucon)
+ADNLPModel(f, x0, lvar, uvar, A, c!, lcon, ucon)
+ADNLSModel!(model::AbstractNLSModel)</code></pre><p>where the constraint function has the signature <code>c!(output, input)</code>.</p><pre><code class="language-julia hljs">using ADNLPModels
+f(x) = sum(x)
+x0 = ones(3)
+function c!(output, x) 
+  output[1] = 1x[1] + x[2]
+  output[2] = x[2]
+end
+nvar, ncon = 3, 2
+nlp = ADNLPModel!(f, x0, c!, zeros(ncon), zeros(ncon)) # uses the default ForwardDiffAD backend.</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl/blob/dd1220565e555f477ee8da5b1ef612a3abb7fa65/src/nlp.jl#L29-L118">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ADNLPModels.ADNLSModel" href="#ADNLPModels.ADNLSModel"><code>ADNLPModels.ADNLSModel</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">ADNLSModel(F, x0, nequ)
+ADNLSModel(F, x0, nequ, lvar, uvar)
+ADNLSModel(F, x0, nequ, clinrows, clincols, clinvals, lcon, ucon)
+ADNLSModel(F, x0, nequ, A, lcon, ucon)
+ADNLSModel(F, x0, nequ, c, lcon, ucon)
+ADNLSModel(F, x0, nequ, clinrows, clincols, clinvals, c, lcon, ucon)
+ADNLSModel(F, x0, nequ, A, c, lcon, ucon)
+ADNLSModel(F, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, lcon, ucon)
+ADNLSModel(F, x0, nequ, lvar, uvar, A, lcon, ucon)
+ADNLSModel(F, x0, nequ, lvar, uvar, c, lcon, ucon)
+ADNLSModel(F, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, c, lcon, ucon)
+ADNLSModel(F, x0, nequ, lvar, uvar, A, c, lcon, ucon)
+ADNLSModel(model::AbstractNLSModel)</code></pre><p>ADNLSModel is an Nonlinear Least Squares model using automatic differentiation to compute the derivatives. The problem is defined as</p><pre><code class="nohighlight hljs"> min  ½‖F(x)‖²
+s.to  lcon ≤ (  Ax  ) ≤ ucon
+             ( c(x) )
+      lvar ≤   x  ≤ uvar</code></pre><p>where <code>nequ</code> is the size of the vector <code>F(x)</code> and the linear constraints come first.</p><p>The following keyword arguments are available to all constructors:</p><ul><li><code>linequ</code>: An array of indexes of the linear equations (default: <code>Int[]</code>)</li><li><code>minimize</code>: A boolean indicating whether this is a minimization problem (default: true)</li><li><code>name</code>: The name of the model (default: &quot;Generic&quot;)</li></ul><p>The following keyword arguments are available to the constructors for constrained problems:</p><ul><li><code>y0</code>: An inital estimate to the Lagrangian multipliers (default: zeros)</li></ul><p><code>ADNLSModel</code> uses <code>ForwardDiff</code> and <code>ReverseDiff</code> for the automatic differentiation. One can specify a new backend with the keyword arguments <code>backend::ADNLPModels.ADBackend</code>. There are three pre-coded backends:</p><ul><li>the default <code>ForwardDiffAD</code>.</li><li><code>ReverseDiffAD</code>.</li><li><code>ZygoteDiffAD</code> accessible after loading <code>Zygote.jl</code> in your environment.</li></ul><p>For an advanced usage, one can define its own backend and redefine the API as done in <a href="https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl/blob/main/src/forward.jl">ADNLPModels.jl/src/forward.jl</a>.</p><p><strong>Examples</strong></p><pre><code class="language-julia hljs">using ADNLPModels
+F(x) = [x[2]; x[1]]
+nequ = 2
+x0 = ones(3)
+nvar = 3
+ADNLSModel(F, x0, nequ) # uses the default ForwardDiffAD backend.
+ADNLSModel(F, x0, nequ; backend = ADNLPModels.ReverseDiffAD) # uses ReverseDiffAD backend.
+
+using Zygote
+ADNLSModel(F, x0, nequ; backend = ADNLPModels.ZygoteAD)</code></pre><pre><code class="language-julia hljs">using ADNLPModels
+F(x) = [x[2]; x[1]]
+nequ = 2
+x0 = ones(3)
+c(x) = [1x[1] + x[2]; x[2]]
+nvar, ncon = 3, 2
+ADNLSModel(F, x0, nequ, c, zeros(ncon), zeros(ncon)) # uses the default ForwardDiffAD backend.
+ADNLSModel(F, x0, nequ, c, zeros(ncon), zeros(ncon); backend = ADNLPModels.ReverseDiffAD) # uses ReverseDiffAD backend.
+
+using Zygote
+ADNLSModel(F, x0, nequ, c, zeros(ncon), zeros(ncon); backend = ADNLPModels.ZygoteAD)</code></pre><p>For in-place constraints and residual function, use one of the following constructors:</p><pre><code class="nohighlight hljs">ADNLSModel!(F!, x0, nequ)
+ADNLSModel!(F!, x0, nequ, lvar, uvar)
+ADNLSModel!(F!, x0, nequ, c!, lcon, ucon)
+ADNLSModel!(F!, x0, nequ, clinrows, clincols, clinvals, c!, lcon, ucon)
+ADNLSModel!(F!, x0, nequ, clinrows, clincols, clinvals, lcon, ucon)
+ADNLSModel!(F!, x0, nequ, A, c!, lcon, ucon)
+ADNLSModel!(F!, x0, nequ, A, lcon, ucon)
+ADNLSModel!(F!, x0, nequ, lvar, uvar, c!, lcon, ucon)
+ADNLSModel!(F!, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, c!, lcon, ucon)
+ADNLSModel!(F!, x0, nequ, lvar, uvar, clinrows, clincols, clinvals, lcon, ucon)
+ADNLSModel!(F!, x0, nequ, lvar, uvar, A, c!, lcon, ucon)
+ADNLSModel!(F!, x0, nequ, lvar, uvar, A, clcon, ucon)
+ADNLSModel!(model::AbstractNLSModel)</code></pre><p>where the constraint function has the signature <code>c!(output, input)</code>.</p><pre><code class="language-julia hljs">using ADNLPModels
+function F!(output, x)
+  output[1] = x[2]
+  output[2] = x[1]
+end
+nequ = 2
+x0 = ones(3)
+function c!(output, x) 
+  output[1] = 1x[1] + x[2]
+  output[2] = x[2]
+end
+nvar, ncon = 3, 2
+nls = ADNLSModel!(F!, x0, nequ, c!, zeros(ncon), zeros(ncon))</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl/blob/dd1220565e555f477ee8da5b1ef612a3abb7fa65/src/nls.jl#L33-L138">source</a></section></article><p>Check the <a href="tutorial/#Tutorial">Tutorial</a> for more details on the usage.</p><h2 id="License"><a class="docs-heading-anchor" href="#License">License</a><a id="License-1"></a><a class="docs-heading-anchor-permalink" href="#License" title="Permalink"></a></h2><p>This content is released under the <a href="https://www.mozilla.org/en-US/MPL/2.0/">MPL2.0</a> License.</p><h2 id="Bug-reports-and-discussions"><a class="docs-heading-anchor" href="#Bug-reports-and-discussions">Bug reports and discussions</a><a id="Bug-reports-and-discussions-1"></a><a class="docs-heading-anchor-permalink" href="#Bug-reports-and-discussions" title="Permalink"></a></h2><p>If you think you found a bug, feel free to open an <a href="https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl/issues">issue</a>. Focused suggestions and requests can also be opened as issues. Before opening a pull request, start an issue or a discussion on the topic, please.</p><p>If you want to ask a question not suited for a bug report, feel free to start a discussion <a href="https://github.com/JuliaSmoothOptimizers/Organization/discussions">here</a>. This forum is for general discussion about this repository and the <a href="https://github.com/JuliaSmoothOptimizers">JuliaSmoothOptimizers</a>, so questions about any of our packages are welcome.</p><h2 id="Contents"><a class="docs-heading-anchor" href="#Contents">Contents</a><a id="Contents-1"></a><a class="docs-heading-anchor-permalink" href="#Contents" title="Permalink"></a></h2><ul><li><a href="backend/#How-to-switch-backend-in-ADNLPModels">How to switch backend in ADNLPModels</a></li><li class="no-marker"><ul><li><a href="backend/#Examples">Examples</a></li></ul></li><li><a href="generic/#Creating-an-ADNLPModels-backend-that-supports-multiple-precisions">Creating an ADNLPModels backend that supports multiple precisions</a></li><li><a href="#ADNLPModels">ADNLPModels</a></li><li class="no-marker"><ul><li><a href="#Install">Install</a></li><li><a href="#Complementary-packages">Complementary packages</a></li><li><a href="#Usage">Usage</a></li><li><a href="#License">License</a></li><li><a href="#Bug-reports-and-discussions">Bug reports and discussions</a></li><li><a href="#Contents">Contents</a></li></ul></li><li><a href="mixed/#Build-a-hybrid-NLPModel">Build a hybrid NLPModel</a></li><li><a href="performance/#Performance-tips">Performance tips</a></li><li class="no-marker"><ul><li><a href="performance/#Use-in-place-constructor">Use in-place constructor</a></li><li><a href="performance/#Use-only-the-needed-operations">Use only the needed operations</a></li><li><a href="performance/#Benchmarks">Benchmarks</a></li></ul></li><li><a href="predefined/#Default-backend-and-performance-in-ADNLPModels">Default backend and performance in ADNLPModels</a></li><li class="no-marker"><ul><li><a href="predefined/#Predefined-backends">Predefined backends</a></li></ul></li><li><a href="reference/#Reference">Reference</a></li><li class="no-marker"><ul><li><a href="reference/#Contents">Contents</a></li><li><a href="reference/#Index">Index</a></li></ul></li><li><a href="sparse/#Sparse-Hessian-and-Jacobian-computations">Sparse Hessian and Jacobian computations</a></li><li><a href="tutorial/#Tutorial">Tutorial</a></li></ul></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="tutorial/">Tutorial »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Tuesday 2 July 2024 22:28">Tuesday 2 July 2024</span>. Using Julia version 1.10.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
