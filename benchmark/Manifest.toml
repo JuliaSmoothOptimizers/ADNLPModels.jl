@@ -2,11 +2,11 @@
 
 julia_version = "1.9.1"
 manifest_format = "2.0"
-project_hash = "14fe4b55e0aa680d5c90f646c1a87c8fc8737479"
+project_hash = "0cb0756144aac73ae8e2d06d9a0f6567a7a2f964"
 
 [[deps.ADNLPModels]]
 deps = ["ADTypes", "ForwardDiff", "LinearAlgebra", "NLPModels", "Requires", "ReverseDiff", "SparseArrays", "SparseConnectivityTracer", "SparseMatrixColorings"]
-git-tree-sha1 = "ad4682ad3f6da4246a5a5408593e5824d949e5a0"
+git-tree-sha1 = "2b582670fb51216d8d000c6de72934d1f68c4e7c"
 repo-rev = "main"
 repo-url = "https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl"
 uuid = "54578032-b7ea-4c30-94aa-7cbd1cce6c9a"

@@ -1,0 +1,9 @@
+[deps]
+BenchmarkProfiles = "ecbce9bc-3e5e-569d-9e29-55181f61f8d0"
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+SolverBenchmark = "581a75fa-a23a-52d0-a590-d6201de2218a"
+StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
