@@ -4,11 +4,11 @@ on:
   pull_request:
     types: [labeled, opened, synchronize, reopened]
 
-# Only trigger the benchmark job when you add `run gradient benchmark` label to the PR
+# Only trigger the benchmark job when you add `run Jacobian benchmark` label to the PR
 jobs:
   Benchmark:
     runs-on: ubuntu-latest
-    if: contains(github.event.pull_request.labels.*.name, 'run gradient benchmark')
+    if: contains(github.event.pull_request.labels.*.name, 'run Jacobian benchmark')
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
@@ -18,7 +18,7 @@ jobs:
       - name: Install dependencies
         run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI@0.1"'
       - name: Run benchmarks
-        run: julia -e 'using BenchmarkCI; BenchmarkCI.judge(;baseline = "origin/main", script = joinpath(pwd(), "benchmark", "benchmarks_grad.jl"))'
+        run: julia -e 'using BenchmarkCI; BenchmarkCI.judge(;baseline = "origin/main", script = joinpath(pwd(), "benchmark", "benchmarks_Jacobian.jl"))'
       - name: Post results
         run: julia -e 'using BenchmarkCI; BenchmarkCI.postjudge()'
         env:
