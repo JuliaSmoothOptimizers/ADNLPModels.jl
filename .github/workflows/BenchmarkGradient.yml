@@ -23,8 +23,3 @@ jobs:
         run: julia -e 'using BenchmarkCI; BenchmarkCI.postjudge()'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Push results
-        run: julia -e "using BenchmarkCI; BenchmarkCI.pushresult(;branch = "benchmark-gradients-results")"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SSH_KEY: ${{ secrets.DOCUMENTER_KEY }}
