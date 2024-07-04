@@ -1,4 +1,4 @@
-name: Run gradient benchmarks
+name: Run Jacobian-vector products benchmarks
 
 on:
   pull_request:

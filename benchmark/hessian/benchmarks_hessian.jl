@@ -15,7 +15,7 @@ benchmark_list = [:optimized]
 
 benchmarked_hessian_backend = Dict(
   "sparse" => ADNLPModels.SparseADHessian,
-  "sparse-reverse" => ADNLPModels.SparseReverseADHessian,
+  #"sparse-reverse" => ADNLPModels.SparseReverseADHessian, #failed
 )
 get_backend_list(::Val{:optimized}) = keys(benchmarked_hessian_backend)
 get_backend(::Val{:optimized}, b::String) = benchmarked_hessian_backend[b]
