@@ -13,10 +13,8 @@ data_types = [Float32, Float64]
 
 benchmark_list = [:optimized]
 
-benchmarked_hprod_backend = Dict(
-    "forward" => ADNLPModels.ForwardDiffADHvprod,
-    "reverse" => ADNLPModels.ReverseDiffADHvprod,
-)
+benchmarked_hprod_backend =
+  Dict("forward" => ADNLPModels.ForwardDiffADHvprod, "reverse" => ADNLPModels.ReverseDiffADHvprod)
 get_backend_list(::Val{:optimized}) = keys(benchmarked_hprod_backend)
 get_backend(::Val{:optimized}, b::String) = benchmarked_hprod_backend[b]
 
