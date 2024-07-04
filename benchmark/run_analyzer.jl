@@ -44,7 +44,7 @@ function bg_to_df(bench::BenchmarkGroup)
         [median(bench[solver][pb]).time for pb in problems],
         [median(bench[solver][pb]).memory for pb in problems],
       ],
-    [:median_time, :median_memory]
+      [:median_time, :median_memory],
     )
   end
   return dfT
@@ -53,10 +53,7 @@ end
 using SolverBenchmark, BenchmarkProfiles
 
 # b::BenchmarkProfiles.AbstractBackend = PlotsBackend()
-costs =[
-  df -> df.median_time,
-  df -> df.median_memory,
-]
+costs = [df -> df.median_time, df -> df.median_memory]
 costnames = ["median time", "median memory"]
 for key_benchmark in keys(df_results)
   stats = df_results[key_benchmark]
