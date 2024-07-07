@@ -1,6 +1,6 @@
 # Benchmarks for ADNLPModels
 
-The problem sets are defined in `problems_sets.jl` and mainly are used scalable problems from [OptimizationProblems.jl](https://github.com/JuliaSmoothOptimizers/OptimizationProblems.jl) with approx. 1000 variables.
+The problem sets are defined in problems_sets.jl and mainly use scalable problems from [OptimizationProblems.jl](https://github.com/JuliaSmoothOptimizers/OptimizationProblems.jl), typically involving approximately 1000 variables.
 
 ## Pkg benchmark
 
