@@ -9,7 +9,7 @@ using ForwardDiff, SparseConnectivityTracer, SparseMatrixColorings
 
 include("additional_backends.jl")
 
-data_types = [Float32, Float64]
+data_types = [Float64]
 
 benchmark_list = [:optimized]
 
