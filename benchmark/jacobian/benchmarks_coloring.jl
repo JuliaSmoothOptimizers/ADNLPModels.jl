@@ -49,6 +49,9 @@ for f in benchmark_list
         for pb in problem_sets[s]
           n = eval(Meta.parse("OptimizationProblems.get_" * pb * "_nvar(n = $(nscal))"))
           m = eval(Meta.parse("OptimizationProblems.get_" * pb * "_ncon(n = $(nscal))"))
+          if m > 5 * nscal
+            continue
+          end
           verbose_subbenchmark && @info " $(pb): $T with $n vars and $m cons"
           SUITE["$(fun)"][f][T][s][b][pb] =
             @benchmarkable set_adnlp($pb, $(name_backend), $backend, $nscal, $T)

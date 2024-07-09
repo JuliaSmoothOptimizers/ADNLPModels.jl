@@ -40,6 +40,9 @@ for f in benchmark_list
         for pb in problem_sets[s]
           n = eval(Meta.parse("OptimizationProblems.get_" * pb * "_nvar(n = $(nscal))"))
           m = eval(Meta.parse("OptimizationProblems.get_" * pb * "_ncon(n = $(nscal))"))
+          if m > 5 * nscal
+            continue
+          end
           verbose_subbenchmark && @info " $(pb): $T with $n vars"
           y = 10 * T[-(-1.0)^i for i = 1:m]
           v = [sin(T(i) / 10) for i = 1:n]
