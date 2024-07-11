@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Default backends · ADNLPModels.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script><link href="../assets/style.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../"><img src="../assets/logo.png" alt="ADNLPModels.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../">ADNLPModels.jl</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../tutorial/">Tutorial</a></li><li><a class="tocitem" href="../backend/">Backend</a></li><li class="is-active"><a class="tocitem" href>Default backends</a><ul class="internal"><li><a class="tocitem" href="#Predefined-backends"><span>Predefined backends</span></a></li></ul></li><li><a class="tocitem" href="../mixed/">Build a hybrid NLPModel</a></li><li><a class="tocitem" href="../generic/">Support multiple precision</a></li><li><a class="tocitem" href="../sparse/">Sparse Jacobian and Hessian</a></li><li><a class="tocitem" href="../performance/">Performance tips</a></li><li><a class="tocitem" href="../reference/">Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Default backends</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Default backends</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl/blob/main/docs/src/predefined.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Default-backend-and-performance-in-ADNLPModels"><a class="docs-heading-anchor" href="#Default-backend-and-performance-in-ADNLPModels">Default backend and performance in ADNLPModels</a><a id="Default-backend-and-performance-in-ADNLPModels-1"></a><a class="docs-heading-anchor-permalink" href="#Default-backend-and-performance-in-ADNLPModels" title="Permalink"></a></h1><p>As illustrated in the tutorial on backends, <code>ADNLPModels.jl</code> use different backend for each method from the <code>NLPModel API</code> that are implemented. By default, it uses the following:</p><pre><code class="language-julia hljs">using ADNLPModels, NLPModels
+
+f(x) = 100 * (x[2] - x[1]^2)^2 + (x[1] - 1)^2
+T = Float64
+x0 = T[-1.2; 1.0]
+lvar, uvar = zeros(T, 2), ones(T, 2) # must be of same type than `x0`
+lcon, ucon = -T[0.5], T[0.5]
+c!(cx, x) = begin
+  cx[1] = x[1] + x[2]
+  return cx
+end
+nlp = ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon)
+get_adbackend(nlp)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ADModelBackend{
+  ForwardDiffADGradient,
+  ForwardDiffADHvprod,
+  ForwardDiffADJprod,
+  ForwardDiffADJtprod,
+  SparseADJacobian,
+  SparseADHessian,
+  ForwardDiffADGHjvprod,
+}</code></pre><p>Note that <code>ForwardDiff.jl</code> is mainly used as it is efficient and stable.</p><h2 id="Predefined-backends"><a class="docs-heading-anchor" href="#Predefined-backends">Predefined backends</a><a id="Predefined-backends-1"></a><a class="docs-heading-anchor-permalink" href="#Predefined-backends" title="Permalink"></a></h2><p>Another way to know the default backends used is to check the constant <code>ADNLPModels.default_backend</code>.</p><pre><code class="language-julia hljs">ADNLPModels.default_backend</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{Symbol, Type} with 12 entries:
+  :hprod_residual_backend    =&gt; ForwardDiffADHvprod
+  :jprod_backend             =&gt; ForwardDiffADJprod
+  :jtprod_backend            =&gt; ForwardDiffADJtprod
+  :gradient_backend          =&gt; ForwardDiffADGradient
+  :hprod_backend             =&gt; ForwardDiffADHvprod
+  :hessian_residual_backend  =&gt; SparseADHessian
+  :ghjvprod_backend          =&gt; ForwardDiffADGHjvprod
+  :hessian_backend           =&gt; SparseADHessian
+  :jprod_residual_backend    =&gt; ForwardDiffADJprod
+  :jtprod_residual_backend   =&gt; ForwardDiffADJtprod
+  :jacobian_residual_backend =&gt; SparseADJacobian
+  :jacobian_backend          =&gt; SparseADJacobian</code></pre><p>More generally, the package anticipates more uses</p><pre><code class="language-julia hljs">ADNLPModels.predefined_backend</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{Symbol, Dict{Symbol}} with 3 entries:
+  :default   =&gt; Dict{Symbol, Type}(:hprod_residual_backend=&gt;ForwardDiffADHvprod…
+  :generic   =&gt; Dict{Symbol, DataType}(:hprod_residual_backend=&gt;GenericForwardD…
+  :optimized =&gt; Dict{Symbol, Type}(:hprod_residual_backend=&gt;ReverseDiffADHvprod…</code></pre><p>The backend <code>:optimized</code> will mainly focus on the most efficient approaches, for instance using <code>ReverseDiff</code> to compute the gradient instead of <code>ForwardDiff</code>.</p><pre><code class="language-julia hljs">ADNLPModels.predefined_backend[:optimized]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{Symbol, Type} with 12 entries:
+  :hprod_residual_backend    =&gt; ReverseDiffADHvprod
+  :jprod_backend             =&gt; ForwardDiffADJprod
+  :jtprod_backend            =&gt; ReverseDiffADJtprod
+  :gradient_backend          =&gt; ReverseDiffADGradient
+  :hprod_backend             =&gt; ReverseDiffADHvprod
+  :hessian_residual_backend  =&gt; SparseReverseADHessian
+  :ghjvprod_backend          =&gt; ForwardDiffADGHjvprod
+  :hessian_backend           =&gt; SparseReverseADHessian
+  :jprod_residual_backend    =&gt; ForwardDiffADJprod
+  :jtprod_residual_backend   =&gt; ReverseDiffADJtprod
+  :jacobian_residual_backend =&gt; SparseADJacobian
+  :jacobian_backend          =&gt; SparseADJacobian</code></pre><p>The backend <code>:generic</code> focuses on backend that make no assumptions on the element type, see <a href="https://jso.dev/tutorials/generic-adnlpmodels/">Creating an ADNLPModels backend that supports multiple precisions</a>.</p><p>It is possible to use these pre-defined backends using the keyword argument <code>backend</code> when instantiating the model.</p><pre><code class="language-julia hljs">nlp = ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon, backend = :optimized)
+get_adbackend(nlp)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ADModelBackend{
+  ReverseDiffADGradient,
+  ReverseDiffADHvprod,
+  ForwardDiffADJprod,
+  ReverseDiffADJtprod,
+  SparseADJacobian,
+  SparseReverseADHessian,
+  ForwardDiffADGHjvprod,
+}</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../backend/">« Backend</a><a class="docs-footer-nextpage" href="../mixed/">Build a hybrid NLPModel »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Thursday 11 July 2024 20:07">Thursday 11 July 2024</span>. Using Julia version 1.10.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
