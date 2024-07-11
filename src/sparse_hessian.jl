@@ -39,7 +39,7 @@ function SparseADHessian(
   colptr = trilH.colptr
 
   # The indices of the nonzero elements in `vals` that will be processed by color `c` are stored in `dcolors[c]`.
-  dcolors = Dict(i => UnitRange{Int}[] for i=1:ncolors)
+  dcolors = Dict(i => UnitRange{Int}[] for i = 1:ncolors)
   for (i, color) in enumerate(colors)
     range_vals = colptr[i]:(colptr[i + 1] - 1)
     push!(dcolors[color], range_vals)
@@ -73,7 +73,22 @@ function SparseADHessian(
   Hvp = fill!(S(undef, ntotal), 0)
   y = fill!(S(undef, ncon), 0)
 
-  return SparseADHessian(d, rowval, colptr, colors, ncolors, dcolors, res, lz, glz, sol, longv, Hvp, ∇φ!, y)
+  return SparseADHessian(
+    d,
+    rowval,
+    colptr,
+    colors,
+    ncolors,
+    dcolors,
+    res,
+    lz,
+    glz,
+    sol,
+    longv,
+    Hvp,
+    ∇φ!,
+    y,
+  )
 end
 
 struct SparseReverseADHessian{T, S, Tagf, F, Tagψ, P} <: ADNLPModels.ADBackend
@@ -119,7 +134,7 @@ function SparseReverseADHessian(
   colptr = trilH.colptr
 
   # The indices of the nonzero elements in `vals` that will be processed by color `c` are stored in `dcolors[c]`.
-  dcolors = Dict(i => UnitRange{Int}[] for i=1:ncolors)
+  dcolors = Dict(i => UnitRange{Int}[] for i = 1:ncolors)
   for (i, color) in enumerate(colors)
     range_vals = colptr[i]:(colptr[i + 1] - 1)
     push!(dcolors[color], range_vals)

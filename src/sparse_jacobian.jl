@@ -33,7 +33,7 @@ function SparseADJacobian(
   colptr = J.colptr
 
   # The indices of the nonzero elements in `vals` that will be processed by color `c` are stored in `dcolors[c]`.
-  dcolors = Dict(i => UnitRange{Int}[] for i=1:ncolors)
+  dcolors = Dict(i => UnitRange{Int}[] for i = 1:ncolors)
   for (i, color) in enumerate(colors)
     range_vals = colptr[i]:(colptr[i + 1] - 1)
     push!(dcolors[color], range_vals)
