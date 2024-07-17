@@ -5,6 +5,7 @@ struct SparseADHessian{Tag, GT, S, T} <: ADNLPModels.ADBackend
   colors::Vector{Int}
   ncolors::Int
   dcolors::Dict{Int, Vector{Tuple{Int,Int}}}
+  star_set::SparseMatrixColorings.StarSet
   res::S
   lz::Vector{ForwardDiff.Dual{Tag, T, 1}}
   glz::Vector{ForwardDiff.Dual{Tag, T, 1}}
@@ -28,7 +29,7 @@ function SparseADHessian(
   T = eltype(S)
   H = compute_hessian_sparsity(f, nvar, c!, ncon, detector = detector)
 
-  colors = ADTypes.symmetric_coloring(H, coloring)
+  colors, star_set = SparseMatrixColorings.symmetric_coloring_detailed(H, coloring)
   ncolors = maximum(colors)
 
   d = BitVector(undef, nvar)
@@ -75,6 +76,7 @@ function SparseADHessian(
     colors,
     ncolors,
     dcolors,
+    star_set,
     res,
     lz,
     glz,
@@ -93,6 +95,7 @@ struct SparseReverseADHessian{T, S, Tagf, F, Tagψ, P} <: ADNLPModels.ADBackend
   colors::Vector{Int}
   ncolors::Int
   dcolors::Dict{Int, Vector{Tuple{Int,Int}}}
+  star_set::SparseMatrixColorings.StarSet
   res::S
   z::Vector{ForwardDiff.Dual{Tagf, T, 1}}
   gz::Vector{ForwardDiff.Dual{Tagf, T, 1}}
@@ -118,7 +121,7 @@ function SparseReverseADHessian(
 ) where {T}
   H = compute_hessian_sparsity(f, nvar, c!, ncon, detector = detector)
 
-  colors = ADTypes.symmetric_coloring(H, coloring)
+  colors, star_set = SparseMatrixColorings.symmetric_coloring_detailed(H, coloring)
   ncolors = maximum(colors)
 
   d = BitVector(undef, nvar)
@@ -169,6 +172,7 @@ function SparseReverseADHessian(
     colors,
     ncolors,
     dcolors,
+    star_set,
     res,
     z,
     gz,
