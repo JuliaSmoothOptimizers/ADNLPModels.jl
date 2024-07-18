@@ -72,11 +72,11 @@ function nnz_colors(trilH, star_set, colors, ncolors)
   # We want to determine the coefficients in `trilH` that will be computed by a given color.
   # Because we exploit the symmetry, we also need to store the row index for a given coefficient
   # in the "compressed column".
-  dcolors = Dict(i => Tuple{Int,Int}[] for i=1:ncolors)
+  dcolors = Dict(i => Tuple{Int, Int}[] for i = 1:ncolors)
 
   n = LinearAlgebra.checksquare(trilH)
-  for j in 1:n
-    for k in trilH.colptr[j]:trilH.colptr[j+1]-1
+  for j = 1:n
+    for k = trilH.colptr[j]:(trilH.colptr[j + 1] - 1)
       i = trilH.rowval[k]
       l, c = symmetric_coefficient(i, j, colors, star_set)
       push!(dcolors[c], (l, k))
