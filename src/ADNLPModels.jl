@@ -6,7 +6,7 @@ using LinearAlgebra, SparseArrays
 # external
 using ADTypes: ADTypes, AbstractColoringAlgorithm, AbstractSparsityDetector
 using SparseConnectivityTracer: TracerSparsityDetector
-using SparseMatrixColorings: GreedyColoringAlgorithm
+using SparseMatrixColorings: GreedyColoringAlgorithm, symmetric_coloring_detailed
 using ForwardDiff, ReverseDiff
 
 # JSO

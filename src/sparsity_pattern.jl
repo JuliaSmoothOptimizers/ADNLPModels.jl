@@ -81,8 +81,12 @@ function nnz_colors(trilH, star_set, colors, ncolors)
     for k in trilH.colptr[j]:trilH.colptr[j+1]-1
       i = trilH.rowval[k]
 
-      star_id = star[(i, j)]
-      h = hub[star_id]
+      if i == j
+        h = i
+      else
+        star_id = star[(j, i)]
+        h = hub[star_id]
+      end
 
       # pick arbitrary hub
       (h == 0) && (h = i)
