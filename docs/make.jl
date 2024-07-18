@@ -6,7 +6,8 @@ makedocs(
   linkcheck = false,
   format = Documenter.HTML(assets = ["assets/style.css"],
                            ansicolor = true,
-                           prettyurls = get(ENV, "CI", nothing) == "true"),
+                           prettyurls = get(ENV, "CI", nothing) == "true",
+                           size_threshold_ignore = ["index.md", "performance.md"]),
   sitename = "ADNLPModels.jl",
   pages = [
     "Home" => "index.md",
