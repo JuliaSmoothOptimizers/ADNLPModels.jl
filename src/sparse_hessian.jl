@@ -28,7 +28,7 @@ function SparseADHessian(
   T = eltype(S)
   H = compute_hessian_sparsity(f, nvar, c!, ncon, detector = detector)
 
-  colors, star_set = SparseMatrixColorings.symmetric_coloring_detailed(H, coloring)
+  colors, star_set = symmetric_coloring_detailed(H, coloring)
   ncolors = maximum(colors)
 
   d = BitVector(undef, nvar)
@@ -118,7 +118,7 @@ function SparseReverseADHessian(
 ) where {T}
   H = compute_hessian_sparsity(f, nvar, c!, ncon, detector = detector)
 
-  colors, star_set = SparseMatrixColorings.symmetric_coloring_detailed(H, coloring)
+  colors, star_set = symmetric_coloring_detailed(H, coloring)
   ncolors = maximum(colors)
 
   d = BitVector(undef, nvar)
