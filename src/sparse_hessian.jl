@@ -4,7 +4,7 @@ struct SparseADHessian{Tag, GT, S, T} <: ADNLPModels.ADBackend
   colptr::Vector{Int}
   colors::Vector{Int}
   ncolors::Int
-  dcolors::Dict{Int, Vector{Tuple{Int,Int}}}
+  dcolors::Dict{Int, Vector{Tuple{Int, Int}}}
   res::S
   lz::Vector{ForwardDiff.Dual{Tag, T, 1}}
   glz::Vector{ForwardDiff.Dual{Tag, T, 1}}
@@ -92,7 +92,7 @@ struct SparseReverseADHessian{T, S, Tagf, F, Tagψ, P} <: ADNLPModels.ADBackend
   colptr::Vector{Int}
   colors::Vector{Int}
   ncolors::Int
-  dcolors::Dict{Int, Vector{Tuple{Int,Int}}}
+  dcolors::Dict{Int, Vector{Tuple{Int, Int}}}
   res::S
   z::Vector{ForwardDiff.Dual{Tagf, T, 1}}
   gz::Vector{ForwardDiff.Dual{Tagf, T, 1}}
