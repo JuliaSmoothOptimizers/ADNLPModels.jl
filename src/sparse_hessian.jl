@@ -5,7 +5,6 @@ struct SparseADHessian{Tag, GT, S, T} <: ADNLPModels.ADBackend
   colors::Vector{Int}
   ncolors::Int
   dcolors::Dict{Int, Vector{Tuple{Int,Int}}}
-  star_set::SparseMatrixColorings.StarSet
   res::S
   lz::Vector{ForwardDiff.Dual{Tag, T, 1}}
   glz::Vector{ForwardDiff.Dual{Tag, T, 1}}
@@ -39,7 +38,7 @@ function SparseADHessian(
   colptr = trilH.colptr
 
   # The indices of the nonzero elements in `vals` that will be processed by color `c` are stored in `dcolors[c]`.
-  dcolors = nnz_colors(H, trilH, colors, ncolors)
+  dcolors = nnz_colors(trilH, star_set, colors, ncolors)
 
   # prepare directional derivatives
   res = similar(x0)
@@ -76,7 +75,6 @@ function SparseADHessian(
     colors,
     ncolors,
     dcolors,
-    star_set,
     res,
     lz,
     glz,
@@ -95,7 +93,6 @@ struct SparseReverseADHessian{T, S, Tagf, F, Tagψ, P} <: ADNLPModels.ADBackend
   colors::Vector{Int}
   ncolors::Int
   dcolors::Dict{Int, Vector{Tuple{Int,Int}}}
-  star_set::SparseMatrixColorings.StarSet
   res::S
   z::Vector{ForwardDiff.Dual{Tagf, T, 1}}
   gz::Vector{ForwardDiff.Dual{Tagf, T, 1}}
@@ -131,7 +128,7 @@ function SparseReverseADHessian(
   colptr = trilH.colptr
 
   # The indices of the nonzero elements in `vals` that will be processed by color `c` are stored in `dcolors[c]`.
-  dcolors = nnz_colors(H, trilH, colors, ncolors)
+  dcolors = nnz_colors(trilH, star_set, colors, ncolors)
 
   # prepare directional derivatives
   res = similar(x0)
@@ -172,7 +169,6 @@ function SparseReverseADHessian(
     colors,
     ncolors,
     dcolors,
-    star_set,
     res,
     z,
     gz,
