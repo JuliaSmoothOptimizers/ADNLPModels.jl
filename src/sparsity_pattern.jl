@@ -78,7 +78,7 @@ function nnz_colors(trilH, star_set, colors, ncolors)
   for j in 1:n
     for k in trilH.colptr[j]:trilH.colptr[j+1]-1
       i = trilH.rowval[k]
-      l, c = symmetric_coefficient(i, j, color, star_set)
+      l, c = symmetric_coefficient(i, j, colors, star_set)
       push!(dcolors[c], (l, k))
     end
   end
