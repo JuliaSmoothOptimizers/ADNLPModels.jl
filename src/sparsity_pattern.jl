@@ -73,28 +73,13 @@ function nnz_colors(trilH, star_set, colors, ncolors)
   # Because we exploit the symmetry, we also need to store the row index for a given coefficient
   # in the "compressed column".
   dcolors = Dict(i => Tuple{Int,Int}[] for i=1:ncolors)
-  star = star_set.star
-  hub = star_set.hub
 
   n = LinearAlgebra.checksquare(trilH)
   for j in 1:n
     for k in trilH.colptr[j]:trilH.colptr[j+1]-1
       i = trilH.rowval[k]
-
-      if i == j
-        h = i
-      else
-        star_id = star[(j, i)]
-        h = hub[star_id]
-      end
-
-      # pick arbitrary hub
-      (h == 0) && (h = i)
-      c = colors[h]
-      # i is the spoke
-      (h == j) && push!(dcolors[c], (i,k))
-      # j is the spoke
-      (h == i) && push!(dcolors[c], (j,k))
+      l, c = symmetric_coefficient(i, j, color, star_set)
+      push!(dcolors[c], (l, k))
     end
   end
 
