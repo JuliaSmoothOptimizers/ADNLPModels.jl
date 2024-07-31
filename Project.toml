@@ -1,6 +1,6 @@
 name = "ADNLPModels"
 uuid = "54578032-b7ea-4c30-94aa-7cbd1cce6c9a"
-version = "0.8.3"
+version = "0.8.4"
 
 [deps]
 ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
@@ -19,6 +19,6 @@ ForwardDiff = "0.9.0, 0.10.0"
 NLPModels = "0.18, 0.19, 0.20, 0.21"
 Requires = "1"
 ReverseDiff = "1"
-SparseConnectivityTracer = "0.5"
+SparseConnectivityTracer = "0.6"
 SparseMatrixColorings = "0.3.5"
 julia = "^1.6"
