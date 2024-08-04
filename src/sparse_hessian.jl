@@ -20,7 +20,7 @@ function SparseADHessian(
   f,
   ncon,
   c!;
-  x0::S = rand(nvar),
+  x0::AbstractVector = rand(nvar),
   coloring::AbstractColoringAlgorithm = GreedyColoringAlgorithm(),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
   kwargs...,
@@ -124,7 +124,7 @@ function SparseReverseADHessian(
   f,
   ncon,
   c!;
-  x0::AbstractVector{T} = rand(nvar),
+  x0::AbstractVector = rand(nvar),
   coloring::AbstractColoringAlgorithm = GreedyColoringAlgorithm(),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
   kwargs...,
