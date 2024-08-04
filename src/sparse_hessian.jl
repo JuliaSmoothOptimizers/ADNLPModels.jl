@@ -25,8 +25,21 @@ function SparseADHessian(
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
   kwargs...,
 ) where {S}
-  T = eltype(S)
   H = compute_hessian_sparsity(f, nvar, c!, ncon, detector = detector)
+  SparseADHessian(nvar, f, ncon, c!, H; x0, coloring, kwargs...)
+end
+
+function SparseADHessian(
+  nvar,
+  f,
+  ncon,
+  c!,
+  H::SparseMatrixCSC{Bool,Int64};
+  x0::S = rand(nvar),
+  coloring::AbstractColoringAlgorithm = GreedyColoringAlgorithm(),
+  kwargs...,
+) where {S}
+  T = eltype(S)
 
   colors, star_set = symmetric_coloring_detailed(H, coloring)
   ncolors = maximum(colors)
@@ -117,6 +130,19 @@ function SparseReverseADHessian(
   kwargs...,
 ) where {T}
   H = compute_hessian_sparsity(f, nvar, c!, ncon, detector = detector)
+  SparseReverseADHessian(nvar, f, ncon, c!, H; x0, coloring, kwargs...)
+end
+
+function SparseReverseADHessian(
+  nvar,
+  f,
+  ncon,
+  c!,
+  H::SparseMatrixCSC{Bool,Int64};
+  x0::AbstractVector{T} = rand(nvar),
+  coloring::AbstractColoringAlgorithm = GreedyColoringAlgorithm(),
+  kwargs...,
+) where {T}
 
   colors, star_set = symmetric_coloring_detailed(H, coloring)
   ncolors = maximum(colors)
