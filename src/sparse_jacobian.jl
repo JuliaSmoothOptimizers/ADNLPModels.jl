@@ -19,7 +19,7 @@ function SparseADJacobian(
   coloring::AbstractColoringAlgorithm = GreedyColoringAlgorithm(),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
   kwargs...,
-) where {T}
+)
   output = similar(x0, ncon)
   J = compute_jacobian_sparsity(c!, output, x0, detector = detector)
   SparseADJacobian(nvar, f, ncon, c!, J; x0, coloring, kwargs...)
