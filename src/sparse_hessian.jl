@@ -24,7 +24,7 @@ function SparseADHessian(
   coloring::AbstractColoringAlgorithm = GreedyColoringAlgorithm(),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
   kwargs...,
-) where {S}
+)
   H = compute_hessian_sparsity(f, nvar, c!, ncon, detector = detector)
   SparseADHessian(nvar, f, ncon, c!, H; x0, coloring, kwargs...)
 end
@@ -128,7 +128,7 @@ function SparseReverseADHessian(
   coloring::AbstractColoringAlgorithm = GreedyColoringAlgorithm(),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
   kwargs...,
-) where {T}
+)
   H = compute_hessian_sparsity(f, nvar, c!, ncon, detector = detector)
   SparseReverseADHessian(nvar, f, ncon, c!, H; x0, coloring, kwargs...)
 end
