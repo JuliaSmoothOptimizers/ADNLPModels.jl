@@ -15,7 +15,7 @@ function SparseADJacobian(
   f,
   ncon,
   c!;
-  x0::AbstractVector{T} = rand(nvar),
+  x0::AbstractVector = rand(nvar),
   coloring::AbstractColoringAlgorithm = GreedyColoringAlgorithm(),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
   kwargs...,
