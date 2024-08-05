@@ -40,6 +40,62 @@ Prior to version 0.8.0, the default detector was `SymbolicSparsityDetector()` fr
 - **Coloring**: A `coloring` must be of type `ADTypes.AbstractColoringAlgorithm`.
 The default algorithm is `GreedyColoringAlgorithm()` from the package `SparseMatrixColorings.jl`.
 
+If the sparsity pattern of the Jacobian of the constraint or the Hessian of the Lagrangian is available, you can directly provide them.
+```@example ex2
+using SparseArrays, ADNLPModels, NLPModels
+
+nvar = 10
+ncon = 5
+
+f(x) = sum((x[i] - i)^2 for i = 1:nvar) + x[nvar] * sum(x[j] for j = 1:nvar-1)
+
+H = SparseMatrixCSC{Bool, Int64}(
+[ 1  0  0  0  0  0  0  0  0  1 ;
+  0  1  0  0  0  0  0  0  0  1 ;
+  0  0  1  0  0  0  0  0  0  1 ;
+  0  0  0  1  0  0  0  0  0  1 ;
+  0  0  0  0  1  0  0  0  0  1 ;
+  0  0  0  0  0  1  0  0  0  1 ;
+  0  0  0  0  0  0  1  0  0  1 ;
+  0  0  0  0  0  0  0  1  0  1 ;
+  0  0  0  0  0  0  0  0  1  1 ;
+  1  1  1  1  1  1  1  1  1  1 ]
+)
+
+function c!(cx, x)
+  cx[1] = x[1] + x[2]
+  cx[2] = x[1] + x[2] + x[3]
+  cx[3] = x[2] + x[3] + x[4]
+  cx[4] = x[3] + x[4] + x[5]
+  cx[5] = x[4] + x[5]
+  return cx
+end
+
+J = SparseMatrixCSC{Bool, Int64}(
+[ 1  1  0  0  0 ;
+  1  1  1  0  0 ;
+  0  1  1  1  0 ;
+  0  0  1  1  1 ;
+  0  0  0  1  1 ]
+)
+
+T = Float64
+x0 = -ones(T, nvar)
+lvar = zeros(T, nvar)
+uvar = 2 * ones(T, nvar)
+lcon = -0.5 * ones(T, ncon)
+ucon = 0.5 * ones(T, ncon)
+
+J_backend = ADNLPModels.SparseADJacobian(nvar, f, ncon, c!, J)
+H_backend = ADNLPModels.SparseADHessian(nvar, f, ncon, c!, H)
+
+nlp = ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon, jacobian_backend=ADNLPModels.EmptyADbackend, hessian_backend=ADNLPModels.EmptyADbackend)
+# nlp = ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon, matrix_free=true)  # Equivalent to the previous line
+
+set_adbackend!(nlp, jacobian_backend=J_backend)
+set_adbackend!(nlp, hessian_backend=H_backend)
+```
+
 The package [`SparseConnectivityTracer.jl`](https://github.com/adrhill/SparseConnectivityTracer.jl) is used to compute the sparsity pattern of Jacobians and Hessians.
 The evaluation of the number of directional derivatives and the seeds required to compute compressed Jacobians and Hessians is performed using [`SparseMatrixColorings.jl`](https://github.com/gdalle/SparseMatrixColorings.jl).
 As of release v0.8.1, it has replaced [`ColPack.jl`](https://github.com/exanauts/ColPack.jl).
