@@ -34,7 +34,7 @@ function SparseADHessian(
   f,
   ncon,
   c!,
-  H::SparseMatrixCSC{Bool,Int64};
+  H::SparseMatrixCSC{Bool, Int64};
   x0::S = rand(nvar),
   coloring::AbstractColoringAlgorithm = GreedyColoringAlgorithm(),
   kwargs...,
@@ -138,12 +138,11 @@ function SparseReverseADHessian(
   f,
   ncon,
   c!,
-  H::SparseMatrixCSC{Bool,Int64};
+  H::SparseMatrixCSC{Bool, Int64};
   x0::AbstractVector{T} = rand(nvar),
   coloring::AbstractColoringAlgorithm = GreedyColoringAlgorithm(),
   kwargs...,
 ) where {T}
-
   colors, star_set = symmetric_coloring_detailed(H, coloring)
   ncolors = maximum(colors)
 
