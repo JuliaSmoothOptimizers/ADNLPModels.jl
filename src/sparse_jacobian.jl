@@ -30,7 +30,7 @@ function SparseADJacobian(
   f,
   ncon,
   c!,
-  J::SparseMatrixCSC{Bool,Int64};
+  J::SparseMatrixCSC{Bool, Int64};
   x0::AbstractVector{T} = rand(nvar),
   coloring::AbstractColoringAlgorithm = GreedyColoringAlgorithm(),
   kwargs...,
