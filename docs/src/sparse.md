@@ -89,11 +89,7 @@ ucon = 0.5 * ones(T, ncon)
 J_backend = ADNLPModels.SparseADJacobian(nvar, f, ncon, c!, J)
 H_backend = ADNLPModels.SparseADHessian(nvar, f, ncon, c!, H)
 
-nlp = ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon, jacobian_backend=ADNLPModels.EmptyADbackend, hessian_backend=ADNLPModels.EmptyADbackend)
-# nlp = ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon, matrix_free=true)  # Equivalent to the previous line
-
-set_adbackend!(nlp, jacobian_backend=J_backend)
-set_adbackend!(nlp, hessian_backend=H_backend)
+nlp = ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon, jacobian_backend=J_backend, hessian_backend=H_backend)
 ```
 
 The package [`SparseConnectivityTracer.jl`](https://github.com/adrhill/SparseConnectivityTracer.jl) is used to compute the sparsity pattern of Jacobians and Hessians.
