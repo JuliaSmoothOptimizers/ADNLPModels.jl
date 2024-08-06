@@ -1,27 +1,27 @@
-function test_nlp_consistency(nlp, model)
+function test_nlp_consistency(nlp, model; counters = true)
   nvar, ncon = model.meta.nvar, model.meta.ncon
   x = ones(nvar)
   v = 2 * ones(nvar)
   y = ones(ncon)
 
   @test grad(nlp, x) == grad(model, x)
-  @test neval_grad(model) == 2
+  @test !counters || (neval_grad(model) == 2)
   @test hess_coord(nlp, x) == hess_coord(model, x)
-  @test neval_hess(model) == 2
+  @test !counters || (neval_hess(model) == 2)
   @test hprod(nlp, x, v) == hprod(model, x, v)
-  @test neval_hprod(model) == 2
+  @test !counters || (neval_hprod(model) == 2)
   if model.meta.nnln > 0
     @test jac(nlp, x) == jac(model, x)
-    @test neval_jac_nln(model) == 2
+    @test !counters || (neval_jac_nln(model) == 2)
     @test jprod(nlp, x, v) == jprod(model, x, v)
-    @test neval_jprod_nln(model) == 2
+    @test !counters || (neval_jprod_nln(model) == 2)
     @test jtprod(nlp, x, y) == jtprod(model, x, y)
     @test hess_coord(nlp, x, y) == hess_coord(model, x, y)
-    @test neval_hess(model) == 4
+    @test !counters || (neval_hess(model) == 4)
     @test hprod(nlp, x, y, v) == hprod(model, x, y, v)
-    @test neval_hprod(model) == 4
+    @test !counters || (neval_hprod(model) == 4)
     @test ghjvprod(nlp, x, x, v) == ghjvprod(model, x, x, v)
-    @test neval_hprod(model) == 6
+    @test !counters || (neval_hprod(model) == 6)
     for j in model.meta.nln
       @test jth_hess(nlp, x, j) == jth_hess(model, x, j)
       @test jth_hprod(nlp, x, v, j) == jth_hprod(model, x, v, j)
@@ -163,6 +163,29 @@ end
   test_nlp_consistency(nlp, model)
 end
 
+@testset "Test predefined backends" begin
+  f(x) = sum(x)
+  function c!(cx, x)
+    cx[1] = one(eltype(x))
+    return cx
+  end
+  nvar, ncon = 2, 1
+  x0 = zeros(nvar)
+  lcon = ucon = zeros(1)
+  adbackend = ADNLPModels.ADModelBackend(nvar, f, ncon, c!)
+  nlp = ADNLPModel!(
+    f, x0, c!, lcon, ucon,
+    gradient_backend = adbackend.gradient_backend,
+    hprod_backend = adbackend.hprod_backend,
+    hessian_backend = adbackend.hessian_backend,
+    jprod_backend = adbackend.jprod_backend,
+    jtprod_backend = adbackend.jtprod_backend,
+    jacobian_backend = adbackend.jacobian_backend,
+    ghjvprod_backend = adbackend.ghjvprod_backend,
+  )
+  test_nlp_consistency(nlp, nlp; counters = false)
+end
+
 @testset "Test mixed NLS-models with $problem" for problem in NLPModelsTest.nls_problems
   model = eval(Meta.parse(problem))()
   nlp = ADNLSModel!(
@@ -199,4 +222,37 @@ end
     hessian_residual_backend = model,
   )
   test_nlp_consistency(nlp, model)
+end
+
+@testset "Test predefined backends in NLS-models" begin
+  f(x) = sum(x)
+  function c!(cx, x)
+    cx[1] = one(eltype(x))
+    return cx
+  end
+  nvar, ncon, nequ = 2, 1, 2
+  function F!(Fx, x)
+    Fx[1] = x[1]
+    Fx[2] = x[2]
+    return Fx
+  end
+  lcon = ucon = zeros(1)
+  x0 = zeros(nvar)
+  adbackend = ADNLPModels.ADModelNLSBackend(nvar, F!, nequ, ncon, c!)
+  nlp = ADNLSModel!(
+    F!, x0, nequ, c!, lcon, ucon,
+    gradient_backend = adbackend.gradient_backend,
+    hprod_backend = adbackend.hprod_backend,
+    hessian_backend = adbackend.hessian_backend,
+    jprod_backend = adbackend.jprod_backend,
+    jtprod_backend = adbackend.jtprod_backend,
+    jacobian_backend = adbackend.jacobian_backend,
+    ghjvprod_backend = adbackend.ghjvprod_backend,
+    hprod_residual_backend = adbackend.hprod_residual_backend,
+    jprod_residual_backend = adbackend.jprod_residual_backend,
+    jtprod_residual_backend = adbackend.jtprod_residual_backend,
+    jacobian_residual_backend = adbackend.jacobian_residual_backend,
+    hessian_residual_backend = adbackend.hessian_residual_backend,
+  )
+  test_nlp_consistency(nlp, nlp; counters = false)
 end
