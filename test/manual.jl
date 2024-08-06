@@ -174,7 +174,11 @@ end
   lcon = ucon = zeros(1)
   adbackend = ADNLPModels.ADModelBackend(nvar, f, ncon, c!)
   nlp = ADNLPModel!(
-    f, x0, c!, lcon, ucon,
+    f,
+    x0,
+    c!,
+    lcon,
+    ucon,
     gradient_backend = adbackend.gradient_backend,
     hprod_backend = adbackend.hprod_backend,
     hessian_backend = adbackend.hessian_backend,
@@ -240,7 +244,12 @@ end
   x0 = zeros(nvar)
   adbackend = ADNLPModels.ADModelNLSBackend(nvar, F!, nequ, ncon, c!)
   nlp = ADNLSModel!(
-    F!, x0, nequ, c!, lcon, ucon,
+    F!,
+    x0,
+    nequ,
+    c!,
+    lcon,
+    ucon,
     gradient_backend = adbackend.gradient_backend,
     hprod_backend = adbackend.hprod_backend,
     hessian_backend = adbackend.hessian_backend,

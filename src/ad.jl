@@ -300,11 +300,12 @@ function ADModelNLSBackend(
 
   JBLS = jacobian_residual_backend
   b = @elapsed begin
-    jacobian_residual_backend = if jacobian_residual_backend isa Union{AbstractNLPModel, ADBackend}
-      jacobian_residual_backend
-    else
-      JBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
-    end
+    jacobian_residual_backend =
+      if jacobian_residual_backend isa Union{AbstractNLPModel, ADBackend}
+        jacobian_residual_backend
+      else
+        JBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
+      end
   end
   show_time && println("jacobian_residual backend $JBLS: $b seconds;")
 
@@ -466,11 +467,12 @@ function ADModelNLSBackend(
 
   JBLS = jacobian_residual_backend
   b = @elapsed begin
-    jacobian_residual_backend = if jacobian_residual_backend isa Union{AbstractNLPModel, ADBackend}
-      jacobian_residual_backend
-    else
-      JBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
-    end
+    jacobian_residual_backend =
+      if jacobian_residual_backend isa Union{AbstractNLPModel, ADBackend}
+        jacobian_residual_backend
+      else
+        JBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
+      end
   end
   show_time && println("jacobian_residual backend $JBLS: $b seconds;")
 
