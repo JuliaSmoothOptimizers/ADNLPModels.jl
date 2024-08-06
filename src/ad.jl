@@ -64,7 +64,7 @@ function ADModelBackend(
 
   GB = gradient_backend
   b = @elapsed begin
-    gradient_backend = if gradient_backend isa AbstractNLPModel
+    gradient_backend = if gradient_backend isa Union{AbstractNLPModel, ADBackend}
       gradient_backend
     else
       GB(nvar, f, ncon, c!; kwargs...)
@@ -74,7 +74,7 @@ function ADModelBackend(
 
   HvB = hprod_backend
   b = @elapsed begin
-    hprod_backend = if hprod_backend isa AbstractNLPModel
+    hprod_backend = if hprod_backend isa Union{AbstractNLPModel, ADBackend}
       hprod_backend
     else
       HvB(nvar, f, ncon, c!; kwargs...)
@@ -84,7 +84,7 @@ function ADModelBackend(
 
   HB = hessian_backend
   b = @elapsed begin
-    hessian_backend = if hessian_backend isa AbstractNLPModel
+    hessian_backend = if hessian_backend isa Union{AbstractNLPModel, ADBackend}
       hessian_backend
     else
       HB(nvar, f, ncon, c!; kwargs...)
@@ -127,7 +127,7 @@ function ADModelBackend(
 )
   GB = gradient_backend
   b = @elapsed begin
-    gradient_backend = if gradient_backend isa AbstractNLPModel
+    gradient_backend = if gradient_backend isa Union{AbstractNLPModel, ADBackend}
       gradient_backend
     else
       GB(nvar, f, ncon, c!; kwargs...)
@@ -137,7 +137,7 @@ function ADModelBackend(
 
   HvB = hprod_backend
   b = @elapsed begin
-    hprod_backend = if hprod_backend isa AbstractNLPModel
+    hprod_backend = if hprod_backend isa Union{AbstractNLPModel, ADBackend}
       hprod_backend
     else
       HvB(nvar, f, ncon, c!; kwargs...)
@@ -147,7 +147,7 @@ function ADModelBackend(
 
   JvB = jprod_backend
   b = @elapsed begin
-    jprod_backend = if jprod_backend isa AbstractNLPModel
+    jprod_backend = if jprod_backend isa Union{AbstractNLPModel, ADBackend}
       jprod_backend
     else
       JvB(nvar, f, ncon, c!; kwargs...)
@@ -157,7 +157,7 @@ function ADModelBackend(
 
   JtvB = jtprod_backend
   b = @elapsed begin
-    jtprod_backend = if jtprod_backend isa AbstractNLPModel
+    jtprod_backend = if jtprod_backend isa Union{AbstractNLPModel, ADBackend}
       jtprod_backend
     else
       JtvB(nvar, f, ncon, c!; kwargs...)
@@ -167,7 +167,7 @@ function ADModelBackend(
 
   JB = jacobian_backend
   b = @elapsed begin
-    jacobian_backend = if jacobian_backend isa AbstractNLPModel
+    jacobian_backend = if jacobian_backend isa Union{AbstractNLPModel, ADBackend}
       jacobian_backend
     else
       JB(nvar, f, ncon, c!; kwargs...)
@@ -177,7 +177,7 @@ function ADModelBackend(
 
   HB = hessian_backend
   b = @elapsed begin
-    hessian_backend = if hessian_backend isa AbstractNLPModel
+    hessian_backend = if hessian_backend isa Union{AbstractNLPModel, ADBackend}
       hessian_backend
     else
       HB(nvar, f, ncon, c!; kwargs...)
@@ -187,7 +187,7 @@ function ADModelBackend(
 
   GHJ = ghjvprod_backend
   b = @elapsed begin
-    ghjvprod_backend = if ghjvprod_backend isa AbstractNLPModel
+    ghjvprod_backend = if ghjvprod_backend isa Union{AbstractNLPModel, ADBackend}
       ghjvprod_backend
     else
       GHJ(nvar, f, ncon, c!; kwargs...)
@@ -240,7 +240,7 @@ function ADModelNLSBackend(
 
   GB = gradient_backend
   b = @elapsed begin
-    gradient_backend = if gradient_backend isa AbstractNLPModel
+    gradient_backend = if gradient_backend isa Union{AbstractNLPModel, ADBackend}
       gradient_backend
     else
       GB(nvar, f, ncon, c!; kwargs...)
@@ -250,7 +250,7 @@ function ADModelNLSBackend(
 
   HvB = hprod_backend
   b = @elapsed begin
-    hprod_backend = if hprod_backend isa AbstractNLPModel
+    hprod_backend = if hprod_backend isa Union{AbstractNLPModel, ADBackend}
       hprod_backend
     else
       HvB(nvar, f, ncon, c!; kwargs...)
@@ -260,7 +260,7 @@ function ADModelNLSBackend(
 
   HB = hessian_backend
   b = @elapsed begin
-    hessian_backend = if hessian_backend isa AbstractNLPModel
+    hessian_backend = if hessian_backend isa Union{AbstractNLPModel, ADBackend}
       hessian_backend
     else
       HB(nvar, f, ncon, c!; kwargs...)
@@ -270,7 +270,7 @@ function ADModelNLSBackend(
 
   HvBLS = hprod_residual_backend
   b = @elapsed begin
-    hprod_residual_backend = if hprod_residual_backend isa AbstractNLPModel
+    hprod_residual_backend = if hprod_residual_backend isa Union{AbstractNLPModel, ADBackend}
       hprod_residual_backend
     else
       HvBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
@@ -280,7 +280,7 @@ function ADModelNLSBackend(
 
   JvBLS = jprod_residual_backend
   b = @elapsed begin
-    jprod_residual_backend = if jprod_residual_backend isa AbstractNLPModel
+    jprod_residual_backend = if jprod_residual_backend isa Union{AbstractNLPModel, ADBackend}
       jprod_residual_backend
     else
       JvBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
@@ -290,7 +290,7 @@ function ADModelNLSBackend(
 
   JtvBLS = jtprod_residual_backend
   b = @elapsed begin
-    jtprod_residual_backend = if jtprod_residual_backend isa AbstractNLPModel
+    jtprod_residual_backend = if jtprod_residual_backend isa Union{AbstractNLPModel, ADBackend}
       jtprod_residual_backend
     else
       JtvBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
@@ -300,7 +300,7 @@ function ADModelNLSBackend(
 
   JBLS = jacobian_residual_backend
   b = @elapsed begin
-    jacobian_residual_backend = if jacobian_residual_backend isa AbstractNLPModel
+    jacobian_residual_backend = if jacobian_residual_backend isa Union{AbstractNLPModel, ADBackend}
       jacobian_residual_backend
     else
       JBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
@@ -310,7 +310,7 @@ function ADModelNLSBackend(
 
   HBLS = hessian_residual_backend
   b = @elapsed begin
-    hessian_residual_backend = if hessian_residual_backend isa AbstractNLPModel
+    hessian_residual_backend = if hessian_residual_backend isa Union{AbstractNLPModel, ADBackend}
       hessian_residual_backend
     else
       HBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
@@ -366,7 +366,7 @@ function ADModelNLSBackend(
 
   GB = gradient_backend
   b = @elapsed begin
-    gradient_backend = if gradient_backend isa AbstractNLPModel
+    gradient_backend = if gradient_backend isa Union{AbstractNLPModel, ADBackend}
       gradient_backend
     else
       GB(nvar, f, ncon, c!; kwargs...)
@@ -376,7 +376,7 @@ function ADModelNLSBackend(
 
   HvB = hprod_backend
   b = @elapsed begin
-    hprod_backend = if hprod_backend isa AbstractNLPModel
+    hprod_backend = if hprod_backend isa Union{AbstractNLPModel, ADBackend}
       hprod_backend
     else
       HvB(nvar, f, ncon, c!; kwargs...)
@@ -386,7 +386,7 @@ function ADModelNLSBackend(
 
   JvB = jprod_backend
   b = @elapsed begin
-    jprod_backend = if jprod_backend isa AbstractNLPModel
+    jprod_backend = if jprod_backend isa Union{AbstractNLPModel, ADBackend}
       jprod_backend
     else
       JvB(nvar, f, ncon, c!; kwargs...)
@@ -396,7 +396,7 @@ function ADModelNLSBackend(
 
   JtvB = jtprod_backend
   b = @elapsed begin
-    jtprod_backend = if jtprod_backend isa AbstractNLPModel
+    jtprod_backend = if jtprod_backend isa Union{AbstractNLPModel, ADBackend}
       jtprod_backend
     else
       JtvB(nvar, f, ncon, c!; kwargs...)
@@ -406,7 +406,7 @@ function ADModelNLSBackend(
 
   JB = jacobian_backend
   b = @elapsed begin
-    jacobian_backend = if jacobian_backend isa AbstractNLPModel
+    jacobian_backend = if jacobian_backend isa Union{AbstractNLPModel, ADBackend}
       jacobian_backend
     else
       JB(nvar, f, ncon, c!; kwargs...)
@@ -416,7 +416,7 @@ function ADModelNLSBackend(
 
   HB = hessian_backend
   b = @elapsed begin
-    hessian_backend = if hessian_backend isa AbstractNLPModel
+    hessian_backend = if hessian_backend isa Union{AbstractNLPModel, ADBackend}
       hessian_backend
     else
       HB(nvar, f, ncon, c!; kwargs...)
@@ -426,7 +426,7 @@ function ADModelNLSBackend(
 
   GHJ = ghjvprod_backend
   b = @elapsed begin
-    ghjvprod_backend = if ghjvprod_backend isa AbstractNLPModel
+    ghjvprod_backend = if ghjvprod_backend isa Union{AbstractNLPModel, ADBackend}
       ghjvprod_backend
     else
       GHJ(nvar, f, ncon, c!; kwargs...)
@@ -436,7 +436,7 @@ function ADModelNLSBackend(
 
   HvBLS = hprod_residual_backend
   b = @elapsed begin
-    hprod_residual_backend = if hprod_residual_backend isa AbstractNLPModel
+    hprod_residual_backend = if hprod_residual_backend isa Union{AbstractNLPModel, ADBackend}
       hprod_residual_backend
     else
       HvBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
@@ -446,7 +446,7 @@ function ADModelNLSBackend(
 
   JvBLS = jprod_residual_backend
   b = @elapsed begin
-    jprod_residual_backend = if jprod_residual_backend isa AbstractNLPModel
+    jprod_residual_backend = if jprod_residual_backend isa Union{AbstractNLPModel, ADBackend}
       jprod_residual_backend
     else
       JvBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
@@ -456,7 +456,7 @@ function ADModelNLSBackend(
 
   JtvBLS = jtprod_residual_backend
   b = @elapsed begin
-    jtprod_residual_backend = if jtprod_residual_backend isa AbstractNLPModel
+    jtprod_residual_backend = if jtprod_residual_backend isa Union{AbstractNLPModel, ADBackend}
       jtprod_residual_backend
     else
       JtvBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
@@ -466,7 +466,7 @@ function ADModelNLSBackend(
 
   JBLS = jacobian_residual_backend
   b = @elapsed begin
-    jacobian_residual_backend = if jacobian_residual_backend isa AbstractNLPModel
+    jacobian_residual_backend = if jacobian_residual_backend isa Union{AbstractNLPModel, ADBackend}
       jacobian_residual_backend
     else
       JBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
@@ -476,7 +476,7 @@ function ADModelNLSBackend(
 
   HBLS = hessian_residual_backend
   b = @elapsed begin
-    hessian_residual_backend = if hessian_residual_backend isa AbstractNLPModel
+    hessian_residual_backend = if hessian_residual_backend isa Union{AbstractNLPModel, ADBackend}
       hessian_residual_backend
     else
       HBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
