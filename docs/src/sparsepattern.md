@@ -19,7 +19,7 @@ using ADNLPModels
 using SparseArrays
 
 T = Float64
-n = 1000000
+n = 100000
 N = div(n, 2)
 h = 1 // N
 x0 = 1
@@ -66,7 +66,7 @@ using ADNLPModels
 using SparseArrays
 
 T = Float64
-n = 1000000
+n = 100000
 N = div(n, 2)
 h = 1 // N
 x0 = 1
