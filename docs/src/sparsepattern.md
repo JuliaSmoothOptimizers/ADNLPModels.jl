@@ -1,6 +1,6 @@
 # Improve sparse derivatives
 
-In this tutorial, we show a simple trick to potentially improve the computation of sparse Jacobian and Hessian matrices.
+In this tutorial, we show a feature of ADNLPModels.jl to potentially improve the computation of sparse Jacobian and Hessian.
 
 Our test problem is an academic investment control problem:
 
@@ -46,7 +46,7 @@ end
 
 ```
 
-`ADNLPModel` will automatically try to prepare AD-backend to compute sparse Jacobian and Hessian.
+`ADNLPModel` will automatically prepare an AD backend for computing sparse Jacobian and Hessian.
 We disabled the Hessian computation here to focus the measurement on the Jacobian computation.
 The keyword argument `show_time = true` can also be passed to the problem's constructor to get more detailed information about the time used to prepare the AD backend.
 
@@ -56,8 +56,8 @@ x = sqrt(2) * ones(n)
 jac_nln(nlp, x)
 ```
 
-However, it can be rather costly to determine for a given function the sparsity pattern of the Jacobian and the Lagrangian Hessian matrices.
-The good news is that it can be quite easy to have a good approximation of this pattern dealing with problems like our optimal control investment problem, and problem with differential equations in the constraints in general.
+However, it can be rather costly to determine for a given function the sparsity pattern of the Jacobian and the Hessian of the Lagrangian.
+The good news is that determining this pattern a priori can be relatively straightforward, especially for problems like our optimal control investment problem and other problems with differential equations in the constraints.
 
 The following example instantiates the Jacobian backend while manually providing the sparsity pattern.
 
@@ -100,7 +100,7 @@ lcon = ucon = vcat(one(T), zeros(T, N - 1))
 end
 ```
 
-A similar Jacobian matrix is obtained potentially at a lower price.
+We recover the same Jacobian.
 
 ```@example ex2
 using NLPModels
@@ -108,4 +108,4 @@ x = sqrt(2) * ones(n)
 jac_nln(nlp, x)
 ```
 
-The same can be done for the Lagrangian Hessian.
+The same can be done for the Hessian of the Lagrangian.
