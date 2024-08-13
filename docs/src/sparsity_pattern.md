@@ -88,13 +88,15 @@ xi = vcat(ones(T, N), zeros(T, N))
 lcon = ucon = vcat(one(T), zeros(T, N - 1))
 
 @elapsed begin
-  J = spzeros(Bool, N - 1, n)
-  for i =1:(N - 1)
-    J[i, i] = true
-    J[i, i + 1] = true
-    J[i, N + i] = true
-    J[i, N + i + 1] = true
+  Is = Vector{Int}(undef, 4 * (N - 1))
+  Js = Vector{Int}(undef, 4 * (N - 1))
+  Vs = ones(Bool, 4 * (N - 1))
+  for i = 1:(N - 1)
+    Is[((i - 1) * 4 + 1):(i * 4)] = [i; i; i; i]
+    Js[((i - 1) * 4 + 1):(i * 4)] = [i; i + 1; N + i; N + i + 1]
   end
+  J = sparse(Is, Js, Vs, N - 1, n)
+
   jac_back = ADNLPModels.SparseADJacobian(n, f, N - 1, c!, J)
   nlp = ADNLPModel!(f, xi, lvar, uvar, [1], [1], T[1], c!, lcon, ucon; hessian_backend = ADNLPModels.EmptyADbackend, jacobian_backend = jac_back)
 end
