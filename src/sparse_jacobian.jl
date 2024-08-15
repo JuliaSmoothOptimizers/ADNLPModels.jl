@@ -17,13 +17,13 @@ function SparseADJacobian(
   ncon,
   c!;
   x0::AbstractVector = rand(nvar),
-  coloring_options::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
+  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
   kwargs...,
 )
   output = similar(x0, ncon)
   J = compute_jacobian_sparsity(c!, output, x0, detector = detector)
-  SparseADJacobian(nvar, f, ncon, c!, J; x0, coloring_options, kwargs...)
+  SparseADJacobian(nvar, f, ncon, c!, J; x0, coloring_algorithm, kwargs...)
 end
 
 function SparseADJacobian(
@@ -33,12 +33,12 @@ function SparseADJacobian(
   c!,
   J::SparseMatrixCSC{Bool, Int};
   x0::AbstractVector{T} = rand(nvar),
-  coloring_options::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
+  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
   kwargs...,
 ) where {T}
   # We should support :row and :bidirectional in the future
   problem = ColoringProblem{:nonsymmetric, :column}()
-  result_coloring = coloring(J, problem, coloring_options, decompression_eltype=T)
+  result_coloring = coloring(J, problem, coloring_algorithm, decompression_eltype=T)
 
   rowval = J.rowval
   colptr = J.colptr

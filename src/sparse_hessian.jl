@@ -21,12 +21,12 @@ function SparseADHessian(
   ncon,
   c!;
   x0::AbstractVector = rand(nvar),
-  coloring_options::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
+  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
   kwargs...,
 )
   H = compute_hessian_sparsity(f, nvar, c!, ncon, detector = detector)
-  SparseADHessian(nvar, f, ncon, c!, H; x0, coloring_options, kwargs...)
+  SparseADHessian(nvar, f, ncon, c!, H; x0, coloring_algorithm, kwargs...)
 end
 
 function SparseADHessian(
@@ -36,13 +36,13 @@ function SparseADHessian(
   c!,
   H::SparseMatrixCSC{Bool, Int64};
   x0::S = rand(nvar),
-  coloring_options::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
+  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
   kwargs...,
 ) where {S}
   T = eltype(S)
 
   problem = ColoringProblem{:symmetric, :column}()
-  result_coloring = coloring(H, problem, coloring_options, decompression_eltype=T)
+  result_coloring = coloring(H, problem, coloring_algorithm, decompression_eltype=T)
 
   trilH = tril(H)
   rowval = trilH.rowval
@@ -120,12 +120,12 @@ function SparseReverseADHessian(
   ncon,
   c!;
   x0::AbstractVector = rand(nvar),
-  coloring_options::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
+  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
   kwargs...,
 )
   H = compute_hessian_sparsity(f, nvar, c!, ncon, detector = detector)
-  SparseReverseADHessian(nvar, f, ncon, c!, H; x0, coloring_options, kwargs...)
+  SparseReverseADHessian(nvar, f, ncon, c!, H; x0, coloring_algorithm, kwargs...)
 end
 
 function SparseReverseADHessian(
@@ -135,11 +135,11 @@ function SparseReverseADHessian(
   c!,
   H::SparseMatrixCSC{Bool, Int};
   x0::AbstractVector{T} = rand(nvar),
-  coloring_options::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
+  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
   kwargs...,
 ) where {T}
   problem = ColoringProblem{:symmetric, :column}()
-  result_coloring = coloring(H, problem, coloring_options, decompression_eltype=T)
+  result_coloring = coloring(H, problem, coloring_algorithm, decompression_eltype=T)
 
   trilH = tril(H)
   rowval = trilH.rowval
