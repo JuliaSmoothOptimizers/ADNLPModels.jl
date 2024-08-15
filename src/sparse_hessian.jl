@@ -259,7 +259,7 @@ function sparse_hess_coord!(
     ForwardDiff.extract_derivative!(Tag, b.Hvp, b.glz)
     b.compressed_hessian .= view(b.Hvp, (ncon + 1):(ncon + b.nvar))
 
-    # Update the coefficient lower triangular part of the Hessian that are related to the color `icol`
+    # Update the coefficients of the lower triangular part of the Hessian that are related to the color `icol`
     decompress_single_color!(A, b.compressed_hessian, icol, b.result_coloring, :L)
   end
   vals .= b.nzval
@@ -297,7 +297,7 @@ function sparse_hess_coord!(
     ForwardDiff.extract_derivative!(Tagψ, b.Hv_temp, b.gzψ)
     b.compressed_hessian .+= b.Hv_temp
 
-    # Update the coefficient lower triangular part of the Hessian that are related to the color `icol`
+    # Update the coefficients of the lower triangular part of the Hessian that are related to the color `icol`
     decompress_single_color!(A, b.compressed_hessian, icol, b.result_coloring, :L)
     vals .= b.nzval
   end
