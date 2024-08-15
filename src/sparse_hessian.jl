@@ -1,11 +1,11 @@
-struct SparseADHessian{Tag, GT, S, T} <: ADNLPModels.ADBackend
-  d::BitVector
+struct SparseADHessian{Tag, R, T, C, S, GT} <: ADNLPModels.ADBackend
+  nvar::Int
   rowval::Vector{Int}
   colptr::Vector{Int}
-  colors::Vector{Int}
-  ncolors::Int
-  dcolors::Dict{Int, Vector{Tuple{Int, Int}}}
-  res::S
+  nzval::Vector{R}
+  result_coloring::C
+  compressed_hessian::S
+  seed::BitVector
   lz::Vector{ForwardDiff.Dual{Tag, T, 1}}
   glz::Vector{ForwardDiff.Dual{Tag, T, 1}}
   sol::S
@@ -21,12 +21,12 @@ function SparseADHessian(
   ncon,
   c!;
   x0::AbstractVector = rand(nvar),
-  coloring::AbstractColoringAlgorithm = GreedyColoringAlgorithm(),
+  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
   kwargs...,
 )
   H = compute_hessian_sparsity(f, nvar, c!, ncon, detector = detector)
-  SparseADHessian(nvar, f, ncon, c!, H; x0, coloring, kwargs...)
+  SparseADHessian(nvar, f, ncon, c!, H; x0, coloring_algorithm, kwargs...)
 end
 
 function SparseADHessian(
@@ -36,25 +36,20 @@ function SparseADHessian(
   c!,
   H::SparseMatrixCSC{Bool, Int64};
   x0::S = rand(nvar),
-  coloring::AbstractColoringAlgorithm = GreedyColoringAlgorithm(),
+  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
   kwargs...,
 ) where {S}
   T = eltype(S)
 
-  colors, star_set = symmetric_coloring_detailed(H, coloring)
-  ncolors = maximum(colors)
-
-  d = BitVector(undef, nvar)
+  problem = ColoringProblem{:symmetric, :column}()
+  result_coloring = coloring(H, problem, coloring_algorithm, decompression_eltype=T)
 
   trilH = tril(H)
   rowval = trilH.rowval
   colptr = trilH.colptr
-
-  # The indices of the nonzero elements in `vals` that will be processed by color `c` are stored in `dcolors[c]`.
-  dcolors = nnz_colors(trilH, star_set, colors, ncolors)
-
-  # prepare directional derivatives
-  res = similar(x0)
+  nzval = T.(trilH.nzval)
+  compressed_hessian = similar(x0)
+  seed = BitVector(undef, nvar)
 
   function lag(z; nvar = nvar, ncon = ncon, f = f, c! = c!)
     cx, x, y, ob = view(z, 1:ncon),
@@ -82,13 +77,13 @@ function SparseADHessian(
   y = fill!(S(undef, ncon), 0)
 
   return SparseADHessian(
-    d,
+    nvar,
     rowval,
     colptr,
-    colors,
-    ncolors,
-    dcolors,
-    res,
+    nzval,
+    result_coloring,
+    compressed_hessian,
+    seed,
     lz,
     glz,
     sol,
@@ -99,14 +94,14 @@ function SparseADHessian(
   )
 end
 
-struct SparseReverseADHessian{T, S, Tagf, F, Tagψ, P} <: ADNLPModels.ADBackend
-  d::BitVector
+struct SparseReverseADHessian{Tagf, Tagψ, R, T, C, S, F, P} <: ADNLPModels.ADBackend
+  nvar::Int
   rowval::Vector{Int}
   colptr::Vector{Int}
-  colors::Vector{Int}
-  ncolors::Int
-  dcolors::Dict{Int, Vector{Tuple{Int, Int}}}
-  res::S
+  nzval::Vector{R}
+  result_coloring::C
+  compressed_hessian::S
+  seed::BitVector
   z::Vector{ForwardDiff.Dual{Tagf, T, 1}}
   gz::Vector{ForwardDiff.Dual{Tagf, T, 1}}
   ∇f!::F
@@ -125,12 +120,12 @@ function SparseReverseADHessian(
   ncon,
   c!;
   x0::AbstractVector = rand(nvar),
-  coloring::AbstractColoringAlgorithm = GreedyColoringAlgorithm(),
+  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
   kwargs...,
 )
   H = compute_hessian_sparsity(f, nvar, c!, ncon, detector = detector)
-  SparseReverseADHessian(nvar, f, ncon, c!, H; x0, coloring, kwargs...)
+  SparseReverseADHessian(nvar, f, ncon, c!, H; x0, coloring_algorithm, kwargs...)
 end
 
 function SparseReverseADHessian(
@@ -138,25 +133,20 @@ function SparseReverseADHessian(
   f,
   ncon,
   c!,
-  H::SparseMatrixCSC{Bool, Int64};
+  H::SparseMatrixCSC{Bool, Int};
   x0::AbstractVector{T} = rand(nvar),
-  coloring::AbstractColoringAlgorithm = GreedyColoringAlgorithm(),
+  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
   kwargs...,
 ) where {T}
-  colors, star_set = symmetric_coloring_detailed(H, coloring)
-  ncolors = maximum(colors)
-
-  d = BitVector(undef, nvar)
+  problem = ColoringProblem{:symmetric, :column}()
+  result_coloring = coloring(H, problem, coloring_algorithm, decompression_eltype=T)
 
   trilH = tril(H)
   rowval = trilH.rowval
   colptr = trilH.colptr
-
-  # The indices of the nonzero elements in `vals` that will be processed by color `c` are stored in `dcolors[c]`.
-  dcolors = nnz_colors(trilH, star_set, colors, ncolors)
-
-  # prepare directional derivatives
-  res = similar(x0)
+  nzval = T.(trilH.nzval)
+  compressed_hessian = similar(x0)
+  seed = BitVector(undef, nvar)
 
   # unconstrained Hessian
   tagf = ForwardDiff.Tag{typeof(f), T}
@@ -188,13 +178,13 @@ function SparseReverseADHessian(
 
   y = similar(x0, ncon)
   return SparseReverseADHessian(
-    d,
+    nvar,
     rowval,
     colptr,
-    colors,
-    ncolors,
-    dcolors,
-    res,
+    nzval,
+    result_coloring,
+    compressed_hessian,
+    seed,
     z,
     gz,
     ∇f!,
@@ -237,76 +227,80 @@ function NLPModels.hess_structure_residual!(
 end
 
 function sparse_hess_coord!(
-  b::SparseADHessian{Tag, GT, S, T},
+  b::SparseADHessian{Tag},
   x::AbstractVector,
   obj_weight,
   y::AbstractVector,
   vals::AbstractVector,
-) where {Tag, GT, S, T}
-  nvar = length(x)
+) where {Tag}
   ncon = length(y)
-
-  b.sol[1:ncon] .= zero(T) # cx
-  b.sol[(ncon + 1):(ncon + nvar)] .= x
-  b.sol[(ncon + nvar + 1):(2 * ncon + nvar)] .= y
+  T = eltype(x)
+  b.sol[1:ncon] .= zero(T)  # cx
+  b.sol[(ncon + 1):(ncon + b.nvar)] .= x
+  b.sol[(ncon + b.nvar + 1):(2 * ncon + b.nvar)] .= y
   b.sol[end] = obj_weight
 
   b.longv .= 0
 
-  for icol = 1:(b.ncolors)
-    dcolor_icol = b.dcolors[icol]
-    if !isempty(dcolor_icol)
-      b.d .= (b.colors .== icol)
-      b.longv[(ncon + 1):(ncon + nvar)] .= b.d
-      map!(ForwardDiff.Dual{Tag}, b.lz, b.sol, b.longv)
-      b.∇φ!(b.glz, b.lz)
-      ForwardDiff.extract_derivative!(Tag, b.Hvp, b.glz)
-      b.res .= view(b.Hvp, (ncon + 1):(ncon + nvar))
+  # SparseMatrixColorings.jl requires a SparseMatrixCSC for the decompression
+  A = SparseMatrixCSC(b.nvar, b.nvar, b.colptr, b.rowval, b.nzval)
 
-      # Store in `vals` the nonzeros of each column of the Hessian computed with color `icol`
-      for (row, k) in dcolor_icol
-        vals[k] = b.res[row]
-      end
+  groups = column_groups(b.result_coloring)
+  for (icol, cols) in enumerate(groups)
+    # Update the seed
+    b.seed .= false
+    for col in cols
+      b.seed[col] = true
     end
-  end
 
+    b.longv[(ncon + 1):(ncon + b.nvar)] .= b.seed
+    map!(ForwardDiff.Dual{Tag}, b.lz, b.sol, b.longv)
+    b.∇φ!(b.glz, b.lz)
+    ForwardDiff.extract_derivative!(Tag, b.Hvp, b.glz)
+    b.compressed_hessian .= view(b.Hvp, (ncon + 1):(ncon + b.nvar))
+
+    # Update the coefficients of the lower triangular part of the Hessian that are related to the color `icol`
+    decompress_single_color!(A, b.compressed_hessian, icol, b.result_coloring, :L)
+  end
+  vals .= b.nzval
   return vals
 end
 
 function sparse_hess_coord!(
-  b::SparseReverseADHessian{T, S, Tagf, F, Tagψ, P},
+  b::SparseReverseADHessian{Tagf, Tagψ},
   x::AbstractVector,
   obj_weight,
   y::AbstractVector,
   vals::AbstractVector,
-) where {T, S, Tagf, F, Tagψ, P}
-  nvar = length(x)
+) where {Tagf, Tagψ}
+  # SparseMatrixColorings.jl requires a SparseMatrixCSC for the decompression
+  A = SparseMatrixCSC(b.nvar, b.nvar, b.colptr, b.rowval, b.nzval)
 
-  for icol = 1:(b.ncolors)
-    dcolor_icol = b.dcolors[icol]
-    if !isempty(dcolor_icol)
-      b.d .= (b.colors .== icol)
-
-      # objective
-      map!(ForwardDiff.Dual{Tagf}, b.z, x, b.d) # x + ε * v
-      b.∇f!(b.gz, b.z)
-      ForwardDiff.extract_derivative!(Tagf, b.res, b.gz)
-      b.res .*= obj_weight
-
-      # constraints
-      map!(ForwardDiff.Dual{Tagψ}, b.zψ, x, b.d)
-      b.yψ .= y
-      b.∇l!(b.gzψ, b.gyψ, b.zψ, b.yψ)
-      ForwardDiff.extract_derivative!(Tagψ, b.Hv_temp, b.gzψ)
-      b.res .+= b.Hv_temp
-
-      # Store in `vals` the nonzeros of each column of the Hessian computed with color `icol`
-      for (row, k) in dcolor_icol
-        vals[k] = b.res[row]
-      end
+  groups = column_groups(b.result_coloring)
+  for (icol, cols) in enumerate(groups)
+    # Update the seed
+    b.seed .= false
+    for col in cols
+      b.seed[col] = true
     end
-  end
 
+    # objective
+    map!(ForwardDiff.Dual{Tagf}, b.z, x, b.seed)  # x + ε * v
+    b.∇f!(b.gz, b.z)
+    ForwardDiff.extract_derivative!(Tagf, b.compressed_hessian, b.gz)
+    b.compressed_hessian .*= obj_weight
+
+    # constraints
+    map!(ForwardDiff.Dual{Tagψ}, b.zψ, x, b.seed)
+    b.yψ .= y
+    b.∇l!(b.gzψ, b.gyψ, b.zψ, b.yψ)
+    ForwardDiff.extract_derivative!(Tagψ, b.Hv_temp, b.gzψ)
+    b.compressed_hessian .+= b.Hv_temp
+
+    # Update the coefficients of the lower triangular part of the Hessian that are related to the color `icol`
+    decompress_single_color!(A, b.compressed_hessian, icol, b.result_coloring, :L)
+    vals .= b.nzval
+  end
   return vals
 end
 

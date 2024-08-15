@@ -31,14 +31,14 @@ x = rand(T, 2)
 H = hess(nlp, x)
 ```
 
-The available backends for sparse derivatives (`SparseADJacobian`, `SparseADHessian` and `SparseReverseADHessian`) have keyword arguments `detector` and `coloring` to specify the sparsity pattern detector and the coloring algorithm, respectively.
+The available backends for sparse derivatives (`SparseADJacobian`, `SparseADHessian` and `SparseReverseADHessian`) have keyword arguments `detector` and `coloring_algorithm` to specify the sparsity pattern detector and the coloring algorithm, respectively.
 
-- **Detector**: A `detector` must be of type `ADTypes.AbstractSparsityDetector`.
+- A **`detector`** must be of type `ADTypes.AbstractSparsityDetector`.
 The default detector is `TracerSparsityDetector()` from the package `SparseConnectivityTracer.jl`.
 Prior to version 0.8.0, the default detector was `SymbolicSparsityDetector()` from `Symbolics.jl`.
 
-- **Coloring**: A `coloring` must be of type `ADTypes.AbstractColoringAlgorithm`.
-The default algorithm is `GreedyColoringAlgorithm()` from the package `SparseMatrixColorings.jl`.
+- A **`coloring_algorithm`** must be of type `SparseMatrixColorings.GreedyColoringAlgorithm`.
+The default algorithm is `GreedyColoringAlgorithm{:direct}()` from the package `SparseMatrixColorings.jl`.
 
 If the sparsity pattern of the Jacobian of the constraint or the Hessian of the Lagrangian is available, you can directly provide them.
 ```@example ex2
@@ -95,4 +95,4 @@ nlp = ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon, jacobian_backend=J_backend,
 The package [`SparseConnectivityTracer.jl`](https://github.com/adrhill/SparseConnectivityTracer.jl) is used to compute the sparsity pattern of Jacobians and Hessians.
 The evaluation of the number of directional derivatives and the seeds required to compute compressed Jacobians and Hessians is performed using [`SparseMatrixColorings.jl`](https://github.com/gdalle/SparseMatrixColorings.jl).
 As of release v0.8.1, it has replaced [`ColPack.jl`](https://github.com/exanauts/ColPack.jl).
-We acknowledge Guillaume Dalle (@gdalle), Adrian Hill (@adrhill), and Michel Schanen (@michel2323) for the development of these packages.
+We acknowledge Guillaume Dalle (@gdalle), Adrian Hill (@adrhill), Alexis Montoison (@amontoison), and Michel Schanen (@michel2323) for the development of these packages.
