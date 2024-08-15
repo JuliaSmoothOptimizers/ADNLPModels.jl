@@ -38,7 +38,7 @@ function SparseADJacobian(
 ) where {T}
   # We should support :row and :bidirectional in the future
   problem = ColoringProblem{:nonsymmetric, :column}()
-  result_coloring = coloring(J, problem, coloring_algorithm, decompression_eltype=T)
+  result_coloring = coloring(J, problem, coloring_algorithm, decompression_eltype = T)
 
   rowval = J.rowval
   colptr = J.colptr
@@ -50,7 +50,18 @@ function SparseADJacobian(
   z = Vector{ForwardDiff.Dual{tag, T, 1}}(undef, nvar)
   cz = similar(z, ncon)
 
-  SparseADJacobian(nvar, ncon, rowval, colptr, nzval, result_coloring, compressed_jacobian, seed, z, cz)
+  SparseADJacobian(
+    nvar,
+    ncon,
+    rowval,
+    colptr,
+    nzval,
+    result_coloring,
+    compressed_jacobian,
+    seed,
+    z,
+    cz,
+  )
 end
 
 function get_nln_nnzj(b::SparseADJacobian, nvar, ncon)
