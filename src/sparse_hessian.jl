@@ -42,7 +42,7 @@ function SparseADHessian(
   T = eltype(S)
 
   problem = ColoringProblem{:symmetric, :column}()
-  result_coloring = coloring(H, problem, coloring_algorithm, decompression_eltype=T)
+  result_coloring = coloring(H, problem, coloring_algorithm, decompression_eltype = T)
 
   trilH = tril(H)
   rowval = trilH.rowval
@@ -139,7 +139,7 @@ function SparseReverseADHessian(
   kwargs...,
 ) where {T}
   problem = ColoringProblem{:symmetric, :column}()
-  result_coloring = coloring(H, problem, coloring_algorithm, decompression_eltype=T)
+  result_coloring = coloring(H, problem, coloring_algorithm, decompression_eltype = T)
 
   trilH = tril(H)
   rowval = trilH.rowval
