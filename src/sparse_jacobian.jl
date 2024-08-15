@@ -1,13 +1,14 @@
-struct SparseADJacobian{T, Tag, S} <: ADBackend
-  d::BitVector
+struct SparseADJacobian{Tag, R, T, C, S} <: ADBackend
+  nvar::Int
+  ncon::Int
   rowval::Vector{Int}
   colptr::Vector{Int}
-  colors::Vector{Int}
-  ncolors::Int
-  dcolors::Dict{Int, Vector{UnitRange{Int}}}
+  nzval::Vector{R}
+  result_coloring::C
+  compressed_jacobian::S
+  seed::BitVector
   z::Vector{ForwardDiff.Dual{Tag, T, 1}}
   cz::Vector{ForwardDiff.Dual{Tag, T, 1}}
-  res::S
 end
 
 function SparseADJacobian(
@@ -16,13 +17,13 @@ function SparseADJacobian(
   ncon,
   c!;
   x0::AbstractVector = rand(nvar),
-  coloring::AbstractColoringAlgorithm = GreedyColoringAlgorithm(),
+  coloring_options::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
   kwargs...,
 )
   output = similar(x0, ncon)
   J = compute_jacobian_sparsity(c!, output, x0, detector = detector)
-  SparseADJacobian(nvar, f, ncon, c!, J; x0, coloring, kwargs...)
+  SparseADJacobian(nvar, f, ncon, c!, J; x0, coloring_options, kwargs...)
 end
 
 function SparseADJacobian(
@@ -30,34 +31,26 @@ function SparseADJacobian(
   f,
   ncon,
   c!,
-  J::SparseMatrixCSC{Bool, Int64};
+  J::SparseMatrixCSC{Bool, Int};
   x0::AbstractVector{T} = rand(nvar),
-  coloring::AbstractColoringAlgorithm = GreedyColoringAlgorithm(),
+  coloring_options::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
   kwargs...,
 ) where {T}
-  # TODO: use ADTypes.row_coloring instead if you have the right decompression and some heuristic recommends it
-  colors = ADTypes.column_coloring(J, coloring)
-  ncolors = maximum(colors)
-
-  d = BitVector(undef, nvar)
+  # We should support :row and :bidirectional in the future
+  problem = ColoringProblem{:nonsymmetric, :column}()
+  result_coloring = coloring(J, problem, coloring_options, decompression_eltype=T)
 
   rowval = J.rowval
   colptr = J.colptr
-
-  # The indices of the nonzero elements in `vals` that will be processed by color `c` are stored in `dcolors[c]`.
-  dcolors = Dict(i => UnitRange{Int}[] for i = 1:ncolors)
-  for (i, color) in enumerate(colors)
-    range_vals = colptr[i]:(colptr[i + 1] - 1)
-    push!(dcolors[color], range_vals)
-  end
+  nzval = T.(J.nzval)
+  compressed_jacobian = similar(x0, ncon)
+  seed = BitVector(undef, nvar)
 
   tag = ForwardDiff.Tag{typeof(c!), T}
-
   z = Vector{ForwardDiff.Dual{tag, T, 1}}(undef, nvar)
   cz = similar(z, ncon)
-  res = similar(x0, ncon)
 
-  SparseADJacobian(d, rowval, colptr, colors, ncolors, dcolors, z, cz, res)
+  SparseADJacobian(nvar, ncon, rowval, colptr, nzval, result_coloring, compressed_jacobian, seed, z, cz)
 end
 
 function get_nln_nnzj(b::SparseADJacobian, nvar, ncon)
@@ -81,25 +74,29 @@ end
 
 function sparse_jac_coord!(
   ℓ!::Function,
-  b::SparseADJacobian{T, Tag},
+  b::SparseADJacobian{Tag},
   x::AbstractVector,
   vals::AbstractVector,
-) where {T, Tag}
-  nvar = length(x)
-  for icol = 1:(b.ncolors)
-    b.d .= (b.colors .== icol)
-    map!(ForwardDiff.Dual{Tag}, b.z, x, b.d) # x + ε * v
-    ℓ!(b.cz, b.z) # c!(cz, x + ε * v)
-    ForwardDiff.extract_derivative!(Tag, b.res, b.cz) # ∇c!(cx, x)ᵀv
+) where {Tag}
+  # SparseMatrixColorings.jl requires a SparseMatrixCSC for the decompression
+  A = SparseMatrixCSC(b.ncon, b.nvar, b.colptr, b.rowval, b.nzval)
 
-    # Store in `vals` the nonzeros of each column of the Jacobian computed with color `icol`
-    for range_vals in b.dcolors[icol]
-      for k in range_vals
-        row = b.rowval[k]
-        vals[k] = b.res[row]
-      end
+  groups = column_groups(b.result_coloring)
+  for (icol, cols) in enumerate(groups)
+    # Update the seed
+    b.seed .= false
+    for col in cols
+      b.seed[col] = true
     end
+
+    map!(ForwardDiff.Dual{Tag}, b.z, x, b.seed)  # x + ε * v
+    ℓ!(b.cz, b.z)  # c!(cz, x + ε * v)
+    ForwardDiff.extract_derivative!(Tag, b.compressed_jacobian, b.cz)  # ∇c!(cx, x)ᵀv
+
+    # Update the columns of the Jacobian that have the color `icol`
+    decompress_single_color!(A, b.compressed_jacobian, icol, b.result_coloring)
   end
+  vals .= b.nzval
   return vals
 end
 

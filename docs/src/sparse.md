@@ -31,14 +31,14 @@ x = rand(T, 2)
 H = hess(nlp, x)
 ```
 
-The available backends for sparse derivatives (`SparseADJacobian`, `SparseADHessian` and `SparseReverseADHessian`) have keyword arguments `detector` and `coloring` to specify the sparsity pattern detector and the coloring algorithm, respectively.
+The available backends for sparse derivatives (`SparseADJacobian`, `SparseADHessian` and `SparseReverseADHessian`) have keyword arguments `detector` and `coloring_options` to specify the sparsity pattern detector and the coloring options, respectively.
 
 - **Detector**: A `detector` must be of type `ADTypes.AbstractSparsityDetector`.
 The default detector is `TracerSparsityDetector()` from the package `SparseConnectivityTracer.jl`.
 Prior to version 0.8.0, the default detector was `SymbolicSparsityDetector()` from `Symbolics.jl`.
 
-- **Coloring**: A `coloring` must be of type `ADTypes.AbstractColoringAlgorithm`.
-The default algorithm is `GreedyColoringAlgorithm()` from the package `SparseMatrixColorings.jl`.
+- **Coloring**: A `coloring_options` must be of type `ADTypes.AbstractColoringAlgorithm`.
+The default algorithm is `GreedyColoringAlgorithm{:direct}()` from the package `SparseMatrixColorings.jl`.
 
 If the sparsity pattern of the Jacobian of the constraint or the Hessian of the Lagrangian is available, you can directly provide them.
 ```@example ex2
