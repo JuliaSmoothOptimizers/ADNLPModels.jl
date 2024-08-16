@@ -38,7 +38,6 @@ for f in benchmark_list
         SUITE["$(fun)"][f][T][s][b] = BenchmarkGroup()
         backend = get_backend(Val(f), b)
         for pb in problem_sets[s]
-          (pb == "elec") && continue
           n = eval(Meta.parse("OptimizationProblems.get_" * pb * "_nvar(n = $(nscal))"))
           m = eval(Meta.parse("OptimizationProblems.get_" * pb * "_ncon(n = $(nscal))"))
           if m > 5 * nscal
