@@ -1,19 +1,11 @@
-<<<<<<< HEAD
-struct SparseADHessian{Tag, R, T, C, S, GT} <: ADNLPModels.ADBackend
-=======
 struct SparseADHessian{Tag, R, T, C, H, S, GT} <: ADNLPModels.ADBackend
->>>>>>> f83a183 (Support acyclic coloring)
   nvar::Int
   rowval::Vector{Int}
   colptr::Vector{Int}
   nzval::Vector{R}
   result_coloring::C
-<<<<<<< HEAD
-  compressed_hessian::S
-=======
   coloring_mode::Symbol
   compressed_hessian::H
->>>>>>> f83a183 (Support acyclic coloring)
   seed::BitVector
   lz::Vector{ForwardDiff.Dual{Tag, T, 1}}
   glz::Vector{ForwardDiff.Dual{Tag, T, 1}}
