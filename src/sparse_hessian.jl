@@ -274,7 +274,8 @@ function sparse_hess_coord!(
     end
 
     # column icol of the compressed hessian
-    compressed_hessian_icol = (b.coloring_mode == :direct) ? b.compressed_hessian : view(b.compressed_hessian,:,icol)
+    compressed_hessian_icol =
+      (b.coloring_mode == :direct) ? b.compressed_hessian : view(b.compressed_hessian, :, icol)
 
     b.longv[(ncon + 1):(ncon + b.nvar)] .= b.seed
     map!(ForwardDiff.Dual{Tag}, b.lz, b.sol, b.longv)
@@ -312,7 +313,8 @@ function sparse_hess_coord!(
     end
 
     # column icol of the compressed hessian
-    compressed_hessian_icol = (b.coloring_mode == :direct) ? b.compressed_hessian : view(b.compressed_hessian,:,icol)
+    compressed_hessian_icol =
+      (b.coloring_mode == :direct) ? b.compressed_hessian : view(b.compressed_hessian, :, icol)
 
     # objective
     map!(ForwardDiff.Dual{Tagf}, b.z, x, b.seed)  # x + ε * v

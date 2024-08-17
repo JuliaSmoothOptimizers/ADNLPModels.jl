@@ -1,8 +1,17 @@
 list_sparse_hess_backend = (
   (ADNLPModels.SparseADHessian, Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}())),
-  (ADNLPModels.SparseADHessian, Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}())),
-  (ADNLPModels.SparseReverseADHessian, Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}())),
-  (ADNLPModels.SparseReverseADHessian, Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}())),
+  (
+    ADNLPModels.SparseADHessian,
+    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}()),
+  ),
+  (
+    ADNLPModels.SparseReverseADHessian,
+    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}()),
+  ),
+  (
+    ADNLPModels.SparseReverseADHessian,
+    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}()),
+  ),
   (ADNLPModels.ForwardDiffADHessian, Dict()),
 )
 
