@@ -38,7 +38,16 @@ The default detector is `TracerSparsityDetector()` from the package `SparseConne
 Prior to version 0.8.0, the default detector was `SymbolicSparsityDetector()` from `Symbolics.jl`.
 
 - A **`coloring_algorithm`** must be of type `SparseMatrixColorings.GreedyColoringAlgorithm`.
-The default algorithm is `GreedyColoringAlgorithm{:direct}()` from the package `SparseMatrixColorings.jl`.
+The default algorithm is `GreedyColoringAlgorithm{:direct}()` for `SparseADJacobian` and `SparseADHessian`, while it is `GreedyColoringAlgorithm{:substitution}()` for `SparseReverseADHessian`.
+These algorithms are available in the package `SparseMatrixColorings.jl`.
+
+The `GreedyColoringAlgorithm{:direct}()` performs column coloring for Jacobians and star coloring for Hessians.
+In contrast, `GreedyColoringAlgorithm{:substitution}()` applies acyclic coloring for Hessians.
+Substitution coloring results in fewer colors and thus requires fewer directional derivatives to recover all non-zeros of the sparse Hessian.
+However, it necessitates storing the entire compressed sparse Hessian.
+On the other hand, direct coloring only requires storing one column of the compressed Hessian at a time.
+
+If the Hessian is highly ill-conditioned, direct coloring can be preferable because it avoids the need for triangular solves to recover the non-zeros from the compressed Hessian.
 
 If the sparsity pattern of the Jacobian of the constraint or the Hessian of the Lagrangian is available, you can directly provide them.
 ```@example ex2
