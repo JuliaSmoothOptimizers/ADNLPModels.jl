@@ -43,11 +43,10 @@ These algorithms are available in the package `SparseMatrixColorings.jl`.
 
 The `GreedyColoringAlgorithm{:direct}()` performs column coloring for Jacobians and star coloring for Hessians.
 In contrast, `GreedyColoringAlgorithm{:substitution}()` applies acyclic coloring for Hessians.
-Substitution coloring results in fewer colors and thus requires fewer directional derivatives to recover all non-zeros of the sparse Hessian.
-However, it necessitates storing the entire compressed sparse Hessian.
-On the other hand, direct coloring only requires storing one column of the compressed Hessian at a time.
+The `:substitution` coloring mode usually finds fewer colors than the `:direct` mode and thus fewer directional derivatives are needed to recover all non-zeros of the sparse Hessian.
+However, it requires storing the compressed sparse Hessian, while `:direct` coloring only stores one column of the compressed Hessian.
 
-If the Hessian is highly ill-conditioned, direct coloring can be preferable because it avoids the need for triangular solves to recover the non-zeros from the compressed Hessian.
+The `:direct` coloring mode is numerically more stable and may be preferable for highly ill-conditioned Hessian as it doesn't require solving triangular systems to compute the non-zeros from the compressed Hessian.
 
 If the sparsity pattern of the Jacobian of the constraint or the Hessian of the Lagrangian is available, you can directly provide them.
 ```@example ex2
