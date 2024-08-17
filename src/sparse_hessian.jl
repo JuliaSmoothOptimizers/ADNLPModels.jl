@@ -1,10 +1,11 @@
-struct SparseADHessian{Tag, R, T, C, S, GT} <: ADNLPModels.ADBackend
+struct SparseADHessian{Tag, R, T, C, H, S, GT} <: ADNLPModels.ADBackend
   nvar::Int
   rowval::Vector{Int}
   colptr::Vector{Int}
   nzval::Vector{R}
   result_coloring::C
-  compressed_hessian::S
+  coloring_mode::Symbol
+  compressed_hessian::H
   seed::BitVector
   lz::Vector{ForwardDiff.Dual{Tag, T, 1}}
   glz::Vector{ForwardDiff.Dual{Tag, T, 1}}
@@ -48,7 +49,15 @@ function SparseADHessian(
   rowval = trilH.rowval
   colptr = trilH.colptr
   nzval = T.(trilH.nzval)
-  compressed_hessian = similar(x0)
+  if coloring_algorithm isa GreedyColoringAlgorithm{:direct}
+    coloring_mode = :direct
+    compressed_hessian = similar(x0)
+  else
+    coloring_mode = :substitution
+    group = column_groups(result_coloring)
+    ncolors = length(group)
+    compressed_hessian = similar(x0, (nvar, ncolors))
+  end
   seed = BitVector(undef, nvar)
 
   function lag(z; nvar = nvar, ncon = ncon, f = f, c! = c!)
@@ -82,6 +91,7 @@ function SparseADHessian(
     colptr,
     nzval,
     result_coloring,
+    coloring_mode,
     compressed_hessian,
     seed,
     lz,
@@ -94,13 +104,14 @@ function SparseADHessian(
   )
 end
 
-struct SparseReverseADHessian{Tagf, Tagψ, R, T, C, S, F, P} <: ADNLPModels.ADBackend
+struct SparseReverseADHessian{Tagf, Tagψ, R, T, C, H, S, F, P} <: ADNLPModels.ADBackend
   nvar::Int
   rowval::Vector{Int}
   colptr::Vector{Int}
   nzval::Vector{R}
   result_coloring::C
-  compressed_hessian::S
+  coloring_mode::Symbol
+  compressed_hessian::H
   seed::BitVector
   z::Vector{ForwardDiff.Dual{Tagf, T, 1}}
   gz::Vector{ForwardDiff.Dual{Tagf, T, 1}}
@@ -145,7 +156,15 @@ function SparseReverseADHessian(
   rowval = trilH.rowval
   colptr = trilH.colptr
   nzval = T.(trilH.nzval)
-  compressed_hessian = similar(x0)
+  if coloring_algorithm isa GreedyColoringAlgorithm{:direct}
+    coloring_mode = :direct
+    compressed_hessian = similar(x0)
+  else
+    coloring_mode = :substitution
+    group = column_groups(result_coloring)
+    ncolors = length(group)
+    compressed_hessian = similar(x0, (nvar, ncolors))
+  end
   seed = BitVector(undef, nvar)
 
   # unconstrained Hessian
@@ -183,6 +202,7 @@ function SparseReverseADHessian(
     colptr,
     nzval,
     result_coloring,
+    coloring_mode,
     compressed_hessian,
     seed,
     z,
@@ -253,14 +273,21 @@ function sparse_hess_coord!(
       b.seed[col] = true
     end
 
+    # column icol of the compressed hessian
+    compressed_hessian_icol = (b.coloring_mode == :direct) ? b.compressed_hessian : view(b.compressed_hessian,:,icol)
+
     b.longv[(ncon + 1):(ncon + b.nvar)] .= b.seed
     map!(ForwardDiff.Dual{Tag}, b.lz, b.sol, b.longv)
     b.∇φ!(b.glz, b.lz)
     ForwardDiff.extract_derivative!(Tag, b.Hvp, b.glz)
-    b.compressed_hessian .= view(b.Hvp, (ncon + 1):(ncon + b.nvar))
-
-    # Update the coefficients of the lower triangular part of the Hessian that are related to the color `icol`
-    decompress_single_color!(A, b.compressed_hessian, icol, b.result_coloring, :L)
+    compressed_hessian_icol .= view(b.Hvp, (ncon + 1):(ncon + b.nvar))
+    if b.coloring_mode == :direct
+      # Update the coefficients of the lower triangular part of the Hessian that are related to the color `icol`
+      decompress_single_color!(A, compressed_hessian_icol, icol, b.result_coloring, :L)
+    end
+  end
+  if b.coloring_mode == :substitution
+    decompress!(A, b.compressed_hessian, b.result_coloring, :L)
   end
   vals .= b.nzval
   return vals
@@ -284,23 +311,31 @@ function sparse_hess_coord!(
       b.seed[col] = true
     end
 
+    # column icol of the compressed hessian
+    compressed_hessian_icol = (b.coloring_mode == :direct) ? b.compressed_hessian : view(b.compressed_hessian,:,icol)
+
     # objective
     map!(ForwardDiff.Dual{Tagf}, b.z, x, b.seed)  # x + ε * v
     b.∇f!(b.gz, b.z)
-    ForwardDiff.extract_derivative!(Tagf, b.compressed_hessian, b.gz)
-    b.compressed_hessian .*= obj_weight
+    ForwardDiff.extract_derivative!(Tagf, compressed_hessian_icol, b.gz)
+    compressed_hessian_icol .*= obj_weight
 
     # constraints
     map!(ForwardDiff.Dual{Tagψ}, b.zψ, x, b.seed)
     b.yψ .= y
     b.∇l!(b.gzψ, b.gyψ, b.zψ, b.yψ)
     ForwardDiff.extract_derivative!(Tagψ, b.Hv_temp, b.gzψ)
-    b.compressed_hessian .+= b.Hv_temp
+    compressed_hessian_icol .+= b.Hv_temp
 
-    # Update the coefficients of the lower triangular part of the Hessian that are related to the color `icol`
-    decompress_single_color!(A, b.compressed_hessian, icol, b.result_coloring, :L)
-    vals .= b.nzval
+    if b.coloring_mode == :direct
+      # Update the coefficients of the lower triangular part of the Hessian that are related to the color `icol`
+      decompress_single_color!(A, compressed_hessian_icol, icol, b.result_coloring, :L)
+    end
   end
+  if b.coloring_mode == :substitution
+    decompress!(A, b.compressed_hessian, b.result_coloring, :L)
+  end
+  vals .= b.nzval
   return vals
 end
 
