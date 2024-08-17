@@ -131,7 +131,7 @@ function SparseReverseADHessian(
   ncon,
   c!;
   x0::AbstractVector = rand(nvar),
-  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
+  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:substitution}(),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
   kwargs...,
 )
@@ -146,7 +146,7 @@ function SparseReverseADHessian(
   c!,
   H::SparseMatrixCSC{Bool, Int};
   x0::AbstractVector{T} = rand(nvar),
-  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
+  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:substitution}(),
   kwargs...,
 ) where {T}
   problem = ColoringProblem{:symmetric, :column}()
