@@ -35,7 +35,7 @@ jobs:
         with:
           version: 1
           arch: x64
-      - uses: actions/cache@v1
+      - uses: actions/cache@v4
         env:
           cache-name: cache-artifacts
         with:
@@ -89,7 +89,7 @@ jobs:
               end;
             end'
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: pr
           path: pr/
@@ -98,9 +98,9 @@ jobs:
     needs: break
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: pr
           path: pr/
@@ -131,7 +131,7 @@ jobs:
             fi
           done >> MSG
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: pr
           path: pr/
