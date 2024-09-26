@@ -1,4 +1,5 @@
 using OptimizationProblems
+using NLPModels
 
 ADNLPModels.EmptyADbackend(args...; kwargs...) = ADNLPModels.EmptyADbackend()
 
