@@ -4,14 +4,16 @@ module ADNLPModels
 using LinearAlgebra, SparseArrays
 
 # external
-using ADTypes: ADTypes, AbstractColoringAlgorithm, AbstractSparsityDetector
+import DifferentiationInterface
+using ADTypes: ADTypes, AbstractADType, AbstractColoringAlgorithm, AbstractSparsityDetector, AutoEnzyme, AutoZygote
+using ADTypes: AutoForwardDiff, AutoReverseDiff, AutoMooncake, AutoDiffractor, AutoTracker, AutoSymbolics
+using ADTypes: AutoChainRules, AutoFastDifferentiation, AutoFiniteDiff, AutoFiniteDifferences, AutoPolyesterForwardDiff
 using SparseConnectivityTracer: TracerSparsityDetector
 using SparseMatrixColorings
 using ForwardDiff, ReverseDiff
 
 # JSO
 using NLPModels
-using Requires
 
 abstract type AbstractADNLPModel{T, S} <: AbstractNLPModel{T, S} end
 abstract type AbstractADNLSModel{T, S} <: AbstractNLSModel{T, S} end
@@ -27,8 +29,7 @@ include("sparse_hessian.jl")
 
 include("forward.jl")
 include("reverse.jl")
-include("enzyme.jl")
-include("zygote.jl")
+include("di.jl")
 include("predefined_backend.jl")
 include("nlp.jl")
 

@@ -1,23 +1,25 @@
 # How to switch backend in ADNLPModels
 
 `ADNLPModels` allows the use of different backends to compute the derivatives required within NLPModel API.
-It uses `ForwardDiff.jl`, `ReverseDiff.jl`, and more via optional depencies.
+It uses `ForwardDiff.jl`, `ReverseDiff.jl`, and more via optional dependencies.
 
 The backend information is in a structure [`ADNLPModels.ADModelBackend`](@ref) in the attribute `adbackend` of a `ADNLPModel`, it can also be accessed with [`get_adbackend`](@ref).
 
 The functions used internally to define the NLPModel API and the possible backends are defined in the following table:
 
-| Functions | FowardDiff backends | ReverseDiff backends | Zygote backends | Enzyme backend | Sparse backend |
-| --------- | ------------------- | -------------------- | --------------- | -------------- | -------------- |
-| `gradient` and `gradient!` | `ForwardDiffADGradient`/`GenericForwardDiffADGradient` | `ReverseDiffADGradient`/`GenericReverseDiffADGradient` | `ZygoteADGradient` | `EnzymeADGradient` | -- |
-| `jacobian` | `ForwardDiffADJacobian` | `ReverseDiffADJacobian` | `ZygoteADJacobian` | -- | `SparseADJacobian` |
-| `hessian` | `ForwardDiffADHessian` | `ReverseDiffADHessian` | `ZygoteADHessian` | -- | `SparseADHessian`/`SparseReverseADHessian` |
-| `Jprod` | `ForwardDiffADJprod`/`GenericForwardDiffADJprod` | `ReverseDiffADJprod`/`GenericReverseDiffADJprod` | `ZygoteADJprod` | -- | -- |
-| `Jtprod` | `ForwardDiffADJtprod`/`GenericForwardDiffADJtprod` | `ReverseDiffADJtprod`/`GenericReverseDiffADJtprod` | `ZygoteADJtprod` | -- | -- |
-| `Hvprod` | `ForwardDiffADHvprod`/`GenericForwardDiffADHvprod` | `ReverseDiffADHvprod`/`GenericReverseDiffADHvprod` | -- | -- | -- |
-| `directional_second_derivative` | `ForwardDiffADGHjvprod` | -- | -- | -- | -- |
+| package | ForwardDiff.jl | ReverseDiff.jl | Enzyme.jl | Zygote.jl | Mooncake.jl | Diffractor.jl | Tracker.jl | Symbolics.jl | ChainRules.jl | FastDifferentiation.jl | FiniteDiff.jl | FiniteDifferences.jl | PolyesterForwardDiff.jl |
+|--------|----------------|----------------|-----------|-----------|-------------|---------------|------------|--------------|----------------------|------------------------|---------------|----------------------|-------------------------|
+| $\nabla f(x)$               | `ForwardDiffADGradient`   | `ReverseDiffADGradient`     | `EnzymeADGradient`    | `ZygoteADGradient`    | `MooncakeADGradient`    | `DiffractorADGradient`    | `TrackerADGradient`    | `SymbolicsADGradient`    | `ChainRulesADGradient`           | `FastDifferentiationADGradient`   | `FiniteDiffADGradient`    | `FiniteDifferencesADGradient`   | `PolyesterForwardDiffADGradient`  |
+| $J_c(x)*v$                  | `ForwardDiffADJprod`      | `ReverseDiffADJprod`        | `EnzymeADJprod`       | `ZygoteADJprod`       | `MooncakeADJprod`       | `DiffractorADJprod`       | `TrackerADJprod`       | `SymbolicsADJprod`       | `ChainRulesADJprod`              | `FastDifferentiationADJprod`      | `FiniteDiffADJprod`       | `FiniteDifferencesADJprod`      | `PolyesterForwardDiffADJprod`     |
+| $J^T_c(x)*v$                | `ForwardDiffADJtprod`     | `ReverseDiffADJtprod`       | `EnzymeADJtprod`      | `ZygoteADJtprod`      | `MooncakeADJtprod`      | `DiffractorADJtprod`      | `TrackerADJtprod`      | `SymbolicsADJtprod`      | `ChainRulesADJtprod`             | `FastDifferentiationADJtprod`     | `FiniteDiffADJtprod`      | `FiniteDifferencesADJtprod`     | `PolyesterForwardDiffADJtprod`    |
+| $J_c(x)$                    | `ForwardDiffADJacobian`   | `ReverseDiffADJacobian`     | `EnzymeADJacobian`    | `ZygoteADJacobian`    | `MooncakeADJacobian`    | `DiffractorADJacobian`    | `TrackerADJacobian`    | `SymbolicsADJacobian`    | `ChainRulesADJacobian`           | `FastDifferentiationADJacobian`   | `FiniteDiffADJacobian`    | `FiniteDifferencesADJacobian`   | `PolyesterForwardDiffADJacobian`  |
+| $\nabla^2 \mathcal{L}(x)*v$ | `ForwardDiffADHvprod`     | `ReverseDiffADHvprod`       | `EnzymeADHvprod`      | `ZygoteADHvprod`      | `MooncakeADHvprod`      | `DiffractorADHvprod`      | `TrackerADHvprod`      | `SymbolicsADHvprod`      | `ChainRulesADHvprod`             | `FastDifferentiationADHvprod`     | `FiniteDiffADHvprod`       | `FiniteDifferencesADHvprod`     | `PolyesterForwardDiffADHvprod`    |
+| $\nabla^2 \mathcal{L}(x)$   | `ForwardDiffADHessian`    | `ReverseDiffADHessian`      | `EnzymeADHessian`     | `ZygoteADHessian`     | `MooncakeADHessian`     | `DiffractorADHessian`     | `TrackerADHessian`     | `SymbolicsADHessian`     | `ChainRulesADHessian`            | `FastDifferentiationADHessian`    | `FiniteDiffADHessian`      | `FiniteDifferencesADHessian`    | `PolyesterForwardDiffADHessian`   |
 
-The functions `hess_structure!`, `hess_coord!`, `jac_structure!` and `jac_coord!` defined in `ad.jl` are generic to all the backends for now.
+$\mathcal{L}(x)$ denotes the Lagrangian $f(x) + \lambda^T c(x)$.
+Except for the backends based on `ForwardDiff.jl` and `ReverseDiff.jl`, all other backends require the associated AD package to be manually installed by the user to work.
+Note that the Jacobians and Hessians computed by the backends above are dense.
+The backends `SparseADJacobian`, `SparseADHessian`, and `SparseReverseADHessian` should be used instead if sparse Jacobians and Hessians are required.
 
 ```@example ex1
 using ADNLPModels

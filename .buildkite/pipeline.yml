@@ -8,5 +8,225 @@ steps:
       cuda: "*"
     command: |
       julia --color=yes --project -e 'using Pkg; Pkg.add("CUDA"); Pkg.add("NLPModels"); Pkg.add("NLPModelsTest"); Pkg.instantiate()'
-      julia --color=yes --project -e 'include("test/gpu.jl")'
+      julia --color=yes --project -e 'include("test/gpu/nvidia.jl")'
     timeout_in_minutes: 30
+
+  - label: "CPUs -- ForwardDiff.jl"
+    plugins:
+      - JuliaCI/julia#v1:
+          version: "1.10"
+    agents:
+      queue: "juliaecosystem"
+      os: "linux"
+      arch: "x86_64"
+    command: |
+      julia --color=yes --project -e '
+        using Pkg
+        Pkg.add("OptimizationProblems")
+        Pkg.add("ForwardDiff")
+        Pkg.instantiate()
+        include("test/backend/ForwardDiff.jl")'
+    timeout_in_minutes: 30
+
+  - label: "CPUs -- ReverseDiff.jl"
+    plugins:
+      - JuliaCI/julia#v1:
+          version: "1.10"
+    agents:
+      queue: "juliaecosystem"
+      os: "linux"
+      arch: "x86_64"
+    command: |
+      julia --color=yes --project -e '
+        using Pkg
+        Pkg.add("OptimizationProblems")
+        Pkg.add("ReverseDiff")
+        Pkg.instantiate()
+        include("test/backend/ReverseDiff.jl")'
+    timeout_in_minutes: 30
+
+  - label: "CPUs -- Enzyme.jl"
+    plugins:
+      - JuliaCI/julia#v1:
+          version: "1.10"
+    agents:
+      queue: "juliaecosystem"
+      os: "linux"
+      arch: "x86_64"
+    command: |
+      julia --color=yes --project -e '
+        using Pkg
+        Pkg.add("OptimizationProblems")
+        Pkg.add("Enzyme")
+        Pkg.instantiate()
+        include("test/backend/Enzyme.jl")'
+    timeout_in_minutes: 30
+
+  - label: "CPUs -- Zygote.jl"
+    plugins:
+      - JuliaCI/julia#v1:
+          version: "1.10"
+    agents:
+      queue: "juliaecosystem"
+      os: "linux"
+      arch: "x86_64"
+    command: |
+      julia --color=yes --project -e '
+        using Pkg
+        Pkg.add("OptimizationProblems")
+        Pkg.add("Zygote")
+        Pkg.instantiate()
+        include("test/backend/Zygote.jl")'
+    timeout_in_minutes: 30
+
+  - label: "CPUs -- Mooncake.jl"
+    plugins:
+      - JuliaCI/julia#v1:
+          version: "1.10"
+    agents:
+      queue: "juliaecosystem"
+      os: "linux"
+      arch: "x86_64"
+    command: |
+      julia --color=yes --project -e '
+        using Pkg
+        Pkg.add("OptimizationProblems")
+        Pkg.add("Mooncake")
+        Pkg.instantiate()
+        include("test/backend/Mooncake.jl")'
+    timeout_in_minutes: 30
+
+  - label: "CPUs -- Diffractor.jl"
+    plugins:
+      - JuliaCI/julia#v1:
+          version: "1.10"
+    agents:
+      queue: "juliaecosystem"
+      os: "linux"
+      arch: "x86_64"
+    command: |
+      julia --color=yes --project -e '
+        using Pkg
+        Pkg.add("OptimizationProblems")
+        Pkg.add("Diffractor")
+        Pkg.instantiate()
+        include("test/backend/Diffractor.jl")'
+    timeout_in_minutes: 30
+
+  - label: "CPUs -- Tracker.jl"
+    plugins:
+      - JuliaCI/julia#v1:
+          version: "1.10"
+    agents:
+      queue: "juliaecosystem"
+      os: "linux"
+      arch: "x86_64"
+    command: |
+      julia --color=yes --project -e '
+        using Pkg
+        Pkg.add("OptimizationProblems")
+        Pkg.add("Tracker")
+        Pkg.instantiate()
+        include("test/backend/Tracker.jl")'
+    timeout_in_minutes: 30
+
+  - label: "CPUs -- Symbolics.jl"
+    plugins:
+      - JuliaCI/julia#v1:
+          version: "1.10"
+    agents:
+      queue: "juliaecosystem"
+      os: "linux"
+      arch: "x86_64"
+    command: |
+      julia --color=yes --project -e '
+        using Pkg
+        Pkg.add("OptimizationProblems")
+        Pkg.add("Symbolics")
+        Pkg.instantiate()
+        include("test/backend/Symbolics.jl")'
+    timeout_in_minutes: 30
+
+  - label: "CPUs -- ChainRules.jl"
+    plugins:
+      - JuliaCI/julia#v1:
+          version: "1.10"
+    agents:
+      queue: "juliaecosystem"
+      os: "linux"
+      arch: "x86_64"
+    command: |
+      julia --color=yes --project -e '
+        using Pkg
+        Pkg.add("OptimizationProblems")
+        Pkg.add("ChainRules")
+        Pkg.instantiate()
+        include("test/backend/ChainRules.jl")'
+    timeout_in_minutes: 30
+
+  - label: "CPUs -- FastDifferentiation.jl"
+    plugins:
+      - JuliaCI/julia#v1:
+          version: "1.10"
+    agents:
+      queue: "juliaecosystem"
+      os: "linux"
+      arch: "x86_64"
+    command: |
+      julia --color=yes --project -e '
+        using Pkg
+        Pkg.add("OptimizationProblems")
+        Pkg.add("FastDifferentiation")
+        Pkg.instantiate()
+        include("test/backend/FastDifferentiation.jl")'
+    timeout_in_minutes: 30
+
+  - label: "CPUs -- FiniteDiff.jl"
+    plugins:
+      - JuliaCI/julia#v1:
+          version: "1.10"
+    agents:
+      queue: "juliaecosystem"
+      os: "linux"
+      arch: "x86_64"
+    command: |
+      julia --color=yes --project -e '
+        using Pkg
+        Pkg.add("OptimizationProblems")
+        Pkg.add("FiniteDiff")
+        Pkg.instantiate()
+        include("test/backend/FiniteDiff.jl")'
+    timeout_in_minutes: 30
+
+  - label: "CPUs -- FiniteDifferences.jl"
+    plugins:
+      - JuliaCI/julia#v1:
+          version: "1.10"
+    agents:
+      queue: "juliaecosystem"
+      os: "linux"
+      arch: "x86_64"
+    command: |
+      julia --color=yes --project -e '
+        using Pkg
+        Pkg.add("OptimizationProblems")
+        Pkg.add("FiniteDifferences")
+        Pkg.instantiate()
+        include("test/backend/FiniteDifferences.jl")'
+    timeout_in_minutes: 30
+
+  - label: "CPUs -- PolyesterForwardDiff.jl"
+    plugins:
+      - JuliaCI/julia#v1:
+          version: "1.10"
+    agents:
+      queue: "juliaecosystem"
+      os: "linux"
+      arch: "x86_64"
+    command: |
+      julia --color=yes --project -e '
+        using Pkg
+        Pkg.add("OptimizationProblems")
+        Pkg.add("PolyesterForwardDiff")
+        Pkg.instantiate()
+        include("test/backend/PolyesterForwardDiff.jl")'
