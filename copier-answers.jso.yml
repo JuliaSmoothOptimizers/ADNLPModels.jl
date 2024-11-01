@@ -1,0 +1,8 @@
+PackageName: "ADNLPModels"
+PackageOwner: "JuliaSmoothOptimizers"
+PackageUUID: "54578032-b7ea-4c30-94aa-7cbd1cce6c9a"
+_src_path: "https://github.com/JuliaSmoothOptimizers/JSOBestieTemplate.jl"
+_commit: "v0.13.0"
+AddBreakage: true
+AddBenchmark: false
+AddBenchmarkCI: true
