@@ -50,11 +50,7 @@ The `:direct` coloring mode is numerically more stable and may be preferable for
 
 ## Extracting sparsity patterns
 
-`ADNLPModels.jl` provides the function `get_sparsity_pattern` to retrieve the sparsity patterns of the Jacobian or Hessian from a model.
-
-```@docs
-get_sparsity_pattern
-```
+`ADNLPModels.jl` provides the function [`get_sparsity_pattern`](@ref) to retrieve the sparsity patterns of the Jacobian or Hessian from a model.
 
 ```@example ex3
 using SparseArrays, ADNLPModels, NLPModels
@@ -100,7 +96,7 @@ ncon = 5
 
 f(x) = sum((x[i] - i)^2 for i = 1:nvar) + x[nvar] * sum(x[j] for j = 1:nvar-1)
 
-H = SparseMatrixCSC{Bool,Int}(
+H = SparseMatrixCSC{Bool, Int}(
   [ 1  0  0  0  0  0  0  0  0  1 ;
     0  1  0  0  0  0  0  0  0  1 ;
     0  0  1  0  0  0  0  0  0  1 ;
@@ -122,7 +118,7 @@ function c!(cx, x)
   return cx
 end
 
-J = SparseMatrixCSC{Bool,Int}(
+J = SparseMatrixCSC{Bool, Int}(
   [ 1  1  0  0  0  0  0  0  0  0 ;
     1  1  1  0  0  0  0  0  0  0 ;
     0  1  1  1  0  0  0  0  0  0 ;
@@ -144,7 +140,6 @@ nlp = ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon, jacobian_backend=J_backend,
 ```
 
 The section ["providing the sparsity pattern for sparse derivatives"](@ref sparsity-pattern) illustrates this feature with a more advanced application.
-
 
 ### Acknowledgements
 
