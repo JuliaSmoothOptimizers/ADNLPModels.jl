@@ -55,7 +55,7 @@ function compute_hessian_sparsity(
 end
 
 """
-    S = get_sparsity_pattern(model::ADModel, derivate::Symbol)
+    S = get_sparsity_pattern(model::ADModel, derivative::Symbol)
 
 Retrieve the sparsity pattern of a Jacobian or Hessian from an `ADModel`.
 For the Hessian, only the lower triangular part of its sparsity pattern is returned.
@@ -67,27 +67,24 @@ Supported backends include `SparseADJacobian`, `SparseADHessian`, and `SparseRev
 #### Input arguments
 
 * `model`: An automatic differentiation model (either `AbstractADNLPModel` or `AbstractADNLSModel`).
-* `derivate`: The type of derivative for which the sparsity pattern is needed. The supported values are `:jacobian`, `:hessian`, `:jacobian_residual` and `:hessian_residual`.
+* `derivative`: The type of derivative for which the sparsity pattern is needed. The supported values are `:jacobian`, `:hessian`, `:jacobian_residual` and `:hessian_residual`.
 
 #### Output argument
 
 * `S`: A sparse matrix of type `SparseMatrixCSC{Bool,Int}` indicating the sparsity pattern of the requested derivative.
 """
-function get_sparsity_pattern(model::ADModel, derivate::Symbol)
-  if (derivate != :jacobian) && (derivate != :hessian)
+function get_sparsity_pattern(model::ADModel, derivative::Symbol)
+  if (derivative != :jacobian) && (derivative != :hessian)
     if model isa AbstractADNLPModel
-      error("The only supported sparse derivates for an AbstractADNLPModel are `:jacobian` and `:hessian`.")
-    elseif  (model isa AbstractADNLSModel) && (derivate != :jacobian_residual) && (derivate != :hessian_resiual)
-    # ...
-    else
-    # ERROR
-      error("The only supported sparse derivates for an AbstractADNLSModel are `:jacobian`, `:jacobian_residual`, `:hessian` and `:hessian_resiual`.")
+      error("The only supported sparse derivatives for an AbstractADNLPModel are `:jacobian` and `:hessian`.")
+    elseif (model isa AbstractADNLSModel) && (derivative != :jacobian_residual) && (derivative != :hessian_resiual)
+      error("The only supported sparse derivatives for an AbstractADNLSModel are `:jacobian`, `:jacobian_residual`, `:hessian` and `:hessian_resiual`.")
     end
   end
-  if (derivate == :jacobian) || (derivate == :jacobian_residual)
-    backend = derivate == :jacobian ? model.adbackend.jacobian_backend : model.adbackend.jacobian_residual_backend
+  if (derivative == :jacobian) || (derivative == :jacobian_residual)
+    backend = derivative == :jacobian ? model.adbackend.jacobian_backend : model.adbackend.jacobian_residual_backend
     if backend isa SparseADJacobian
-      m = derivate == :jacobian ? model.meta.ncon : model.nls_meta.nequ
+      m = derivative == :jacobian ? model.meta.ncon : model.nls_meta.nequ
       n = model.meta.nvar
       colptr = backend.colptr
       rowval = backend.rowval
@@ -100,8 +97,8 @@ function get_sparsity_pattern(model::ADModel, derivate::Symbol)
       error("The current backend ($B) doesn't compute a sparse Jacobian.")
     end
   end
-  if (derivate == :hessian) || (derivate == :hessian_residual)
-    backend = derivate == :hessian ? model.adbackend.hessian_backend : model.adbackend.hessian_residual_backend
+  if (derivative == :hessian) || (derivative == :hessian_residual)
+    backend = derivative == :hessian ? model.adbackend.hessian_backend : model.adbackend.hessian_residual_backend
     if (backend isa SparseADHessian) || (backend isa SparseReverseADHessian)
       n = model.meta.nvar
       colptr = backend.colptr
