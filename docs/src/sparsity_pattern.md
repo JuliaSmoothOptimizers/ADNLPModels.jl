@@ -1,4 +1,4 @@
-# Improve sparse derivatives
+# [Improve sparse derivatives](@id sparsity-pattern)
 
 In this tutorial, we show a feature of ADNLPModels.jl to potentially improve the computation of sparse Jacobian and Hessian.
 
