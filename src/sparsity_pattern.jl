@@ -77,7 +77,10 @@ function get_sparsity_pattern(model::ADModel, derivate::Symbol)
   if (derivate != :jacobian) && (derivate != :hessian)
     if model isa AbstractADNLPModel
       error("The only supported sparse derivates for an AbstractADNLPModel are `:jacobian` and `:hessian`.")
-    elseif (derivate != :jacobian_residual) && (derivate != :hessian_resiual)
+    elseif  (model isa AbstractADNLSModel) && (derivate != :jacobian_residual) && (derivate != :hessian_resiual)
+    # ...
+    else
+    # ERROR
       error("The only supported sparse derivates for an AbstractADNLSModel are `:jacobian`, `:jacobian_residual`, `:hessian` and `:hessian_resiual`.")
     end
   end
