@@ -84,8 +84,8 @@ function get_sparsity_pattern(model::ADModel, derivate::Symbol)
   if (derivate == :jacobian) || (derivate == :jacobian_residual)
     backend = derivate == :jacobian ? model.adbackend.jacobian_backend : model.adbackend.jacobian_residual_backend
     if backend isa SparseADJacobian
-      m = model.meta.nvar
-      n = derivate == :jacobian ? model.meta.ncon : model.nls_meta.nequ
+      m = derivate == :jacobian ? model.meta.ncon : model.nls_meta.nequ
+      n = model.meta.nvar
       colptr = backend.colptr
       rowval = backend.rowval
       nnzJ = length(rowval)
