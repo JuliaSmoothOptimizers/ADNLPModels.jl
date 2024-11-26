@@ -55,7 +55,8 @@ end
 test_autodiff_backend_error()
 
 # Additional backends used for tests
-push!(ADNLPModels.predefined_backend,
+push!(
+  ADNLPModels.predefined_backend,
   :zygote_backend => Dict(
     :gradient_backend => ADNLPModels.ZygoteADGradient,
     :jprod_backend => ADNLPModels.ZygoteADJprod,
