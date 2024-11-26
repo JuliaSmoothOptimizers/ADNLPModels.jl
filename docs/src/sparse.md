@@ -77,8 +77,11 @@ lcon = -0.5 * ones(T, ncon)
 ucon = 0.5 * ones(T, ncon)
 
 nlp = ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon)
-
+```
+```@example
 J = get_sparsity_pattern(nlp, :jacobian)
+```
+```@example
 H = get_sparsity_pattern(nlp, :hessian)
 ```
 

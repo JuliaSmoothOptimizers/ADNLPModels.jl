@@ -45,7 +45,7 @@ dt = (Float32, Float64)
 
   if backend == ADNLPModels.SparseADJacobian
     J_sp = get_sparsity_pattern(nls, :jacobian_residual)
-    @test J_sp == SparseMatrixCSC{Bool,Int}(
+    @test J_sp == SparseMatrixCSC{Bool, Int}(
       [ 1 0 ;
         1 1 ;
         0 1 ]
