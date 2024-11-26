@@ -14,6 +14,12 @@ function EnzymeReverseADGradient(
   return EnzymeReverseADGradient()
 end
 
+function ADNLPModels.gradient(::EnzymeReverseADGradient, f, x)
+  g = similar(x)
+  Enzyme.autodiff(Enzyme.Reverse, f, Enzyme.Duplicated(x, g)) # gradient!(Reverse, g, f, x)
+  return g
+end
+
 function ADNLPModels.gradient!(::EnzymeReverseADGradient, g, f, x)
   Enzyme.autodiff(Enzyme.Reverse, f, Enzyme.Duplicated(x, g)) # gradient!(Reverse, g, f, x)
   return g
@@ -47,11 +53,13 @@ end
 function hessian(::EnzymeReverseADHessian, f, x)
   seed = similar(x)
   hess = zeros(eltype(x), length(x), length(x))
-  fill!(seed, zero(x))
+  fill!(seed, zero(eltype(x)))
+  tmp = similar(x)
   for i in 1:length(x)
-    seed[i] = one(x)
-    Enzyme.hvp!(view(hess, i, :), f, x, seed)
-    seed[i] = zero(x)
+    seed[i] = one(eltype(seed))
+    Enzyme.hvp!(tmp, f, x, seed)
+    hess[:, i] .= tmp
+    seed[i] = zero(eltype(seed))
   end
   return hess
 end
@@ -72,7 +80,9 @@ function EnzymeReverseADJprod(
 end
 
 function Jprod!(b::EnzymeReverseADJprod, Jv, c!, x, v, ::Val)
-  Enzyme.autodiff(Enzyme.Forward, c!, Duplicated(b.x, Jv), Enzyme.Duplicated(x, v))
+  @show c!(x)
+  @show Enzyme.autodiff(Enzyme.Forward, Const(c!), Duplicated(x, v))
+  error("This is BAD")
   return Jv
 end
 
@@ -91,7 +101,7 @@ function EnzymeReverseADJtprod(
   return EnzymeReverseADJtprod(x)
 end
 
-function Jtvprod!(b::EnzymeReverseADJtprod, Jtv, c!, x, v, ::Val)
+function Jtprod!(b::EnzymeReverseADJtprod, Jtv, c!, x, v, ::Val)
   Enzyme.autodiff(Enzyme.Reverse, c!, Duplicated(b.x, Jtv), Enzyme.Duplicated(x, v))
   return Jtv
 end

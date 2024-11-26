@@ -10,8 +10,70 @@ for problem in NLPModelsTest.nls_problems
   include("nls/problems/$(lowercase(problem)).jl")
 end
 
+EnzymeReverseAD() = ADNLPModels.ADModelBackend(
+  ADNLPModels.EnzymeReverseADGradient(),
+  ADNLPModels.EnzymeReverseADHvprod(zeros(1)),
+  ADNLPModels.EnzymeReverseADJprod(zeros(1)),
+  ADNLPModels.EnzymeReverseADJtprod(zeros(1)),
+  ADNLPModels.EnzymeReverseADJacobian(),
+  ADNLPModels.EnzymeReverseADHessian(),
+  ADNLPModels.EnzymeReverseADHvprod(zeros(1)),
+  ADNLPModels.EmptyADbackend(),
+  ADNLPModels.EmptyADbackend(),
+  ADNLPModels.EmptyADbackend(),
+  ADNLPModels.EmptyADbackend(),
+  ADNLPModels.EmptyADbackend(),
+)
+
+function test_autodiff_backend_error()
+  @testset "Error without loading package - $backend" for backend in [:EnzymeReverseAD]
+    adbackend = eval(backend)()
+    # @test_throws ArgumentError gradient(adbackend.gradient_backend, sum, [1.0])
+    # @test_throws ArgumentError gradient!(adbackend.gradient_backend, [1.0], sum, [1.0])
+    # @test_throws ArgumentError jacobian(adbackend.jacobian_backend, identity, [1.0])
+    # @test_throws ArgumentError hessian(adbackend.hessian_backend, sum, [1.0])
+    # @test_throws ArgumentError Jprod!(
+    #   adbackend.jprod_backend,
+    #   [1.0],
+    #   [1.0],
+    #   identity,
+    #   [1.0],
+    #   Val(:c),
+    # )
+    # @test_throws ArgumentError Jtprod!(
+    #   adbackend.jtprod_backend,
+    #   [1.0],
+    #   [1.0],
+    #   identity,
+    #   [1.0],
+    #   Val(:c),
+    # )
+    gradient(adbackend.gradient_backend, sum, [1.0])
+    gradient!(adbackend.gradient_backend, [1.0], sum, [1.0])
+    jacobian(adbackend.jacobian_backend, identity, [1.0])
+    hessian(adbackend.hessian_backend, sum, [1.0])
+    Jprod!(
+      adbackend.jprod_backend,
+      [1.0],
+      identity,
+      [1.0],
+      [1.0],
+      Val(:c),
+    )
+    # Jtprod!(
+    #   adbackend.jtprod_backend,
+    #   [1.0],
+    #   identity,
+    #   [1.0],
+    #   [1.0],
+    #   Val(:c),
+    # )
+  end
+end
+
+test_autodiff_backend_error()
 #=
-ADNLPModels.EmptyADbackend(args...; kwargs...) = ADNLPModels.EmptyADbackend()
+# ADNLPModels.EmptyADbackend(args...; kwargs...) = ADNLPModels.EmptyADbackend()
 
 names = OptimizationProblems.meta[!, :name]
 list_excluded_enzyme = [
