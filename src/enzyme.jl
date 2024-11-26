@@ -56,7 +56,7 @@ function hessian(::EnzymeReverseADHessian, f, x)
   return hess
 end
 
-struct EnzymeReverseADJprod <: InPlaceADBackend
+struct EnzymeReverseADJprod <: InPlaceADbackend
   x::Vector{Float64}
 end
 
@@ -76,7 +76,7 @@ function Jprod!(b::EnzymeReverseADJprod, Jv, c!, x, v, ::Val)
   return Jv
 end
 
-struct EnzymeReverseADJtprod <: InPlaceADBackend
+struct EnzymeReverseADJtprod <: InPlaceADbackend
   x::Vector{Float64}
 end
 
@@ -96,7 +96,7 @@ function Jtvprod!(b::EnzymeReverseADJtprod, Jtv, c!, x, v, ::Val)
   return Jtv
 end
 
-struct EnzymeReverseADHprod <: InPlaceADBackend
+struct EnzymeReverseADHvprod <: InPlaceADbackend
   grad::Vector{Float64}
 end
 
@@ -109,7 +109,7 @@ function EnzymeReverseADHvprod(
   kwargs...,
 ) where {T}
   grad = zeros(nvar)
-  return EnzymeReverseADHprod(grad)
+  return EnzymeReverseADHvprod(grad)
 end
 
 function Hvprod!(b::EnzymeReverseADHvprod, Hv, x, v, f, args...)
@@ -128,12 +128,12 @@ end
 function Hvprod!(
   b::EnzymeReverseADHvprod,
   Hv,
-  x::AbstractVector{T},
+  x,
   v,
   ℓ,
   ::Val{:lag},
   y,
-  obj_weight::Real = one(T),
+  obj_weight::Real = one(eltype(x)),
 )
   Enzyme.autodiff(
     Forward,
@@ -149,13 +149,13 @@ function Hvprod!(
 end
 
 function Hvprod!(
-  b::EnzymeReverseADHvprod{T, S, Tagf},
+  b::EnzymeReverseADHvprod,
   Hv,
   x,
   v,
   f,
   ::Val{:obj},
-  obj_weight::Real = one(T),
+  obj_weight::Real = one(eltype(x)),
 )
   Enzyme.autodiff(
     Forward,
