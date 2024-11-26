@@ -20,7 +20,7 @@ makedocs(
     "Support multiple precision" => "generic.md",
     "Sparse Jacobian and Hessian" => "sparse.md",
     "Performance tips" => "performance.md",
-    "Provide sparsity pattern for sparse derivatives" => "sparsity_pattern.md",
+    "Providing sparsity pattern for sparse derivatives" => "sparsity_pattern.md",
     "Reference" => "reference.md",
   ],
 )

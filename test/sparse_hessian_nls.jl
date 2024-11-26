@@ -50,6 +50,14 @@ dt = (Float32, Float64)
   H = Symmetric(sparse(rows, cols, vals, nvar, nvar), :L)
   @test H == [-20*v[2] 0; 0 0]
 
+  if (backend == ADNLPModels.SparseADHessian) || (backend == ADNLPModels.SparseReverseADHessian)
+    H_sp = get_sparsity_pattern(nls, :hessian_residual)
+    @test H_sp == SparseMatrixCSC{Bool, Int}(
+      [ 1 0 ;
+        0 0 ]
+    )
+  end
+
   nls = ADNLPModels.ADNLSModel!(F!, x0, 3, matrix_free = true; kw...)
   @test nls.adbackend.hessian_backend isa ADNLPModels.EmptyADbackend
   @test nls.adbackend.hessian_residual_backend isa ADNLPModels.EmptyADbackend
