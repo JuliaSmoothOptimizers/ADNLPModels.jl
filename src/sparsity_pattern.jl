@@ -123,9 +123,8 @@ function get_sparsity_pattern(model::AbstractADNLSModel, ::Val{:hessian_residual
     SparseMatrixCSC(n, n, colptr, rowval, nzval)
 end
 
-function validate_sparse_backend(backend::ADBackend, expected_type, derivative_name::String)
+function validate_sparse_backend(backend::B, expected_type, derivative_name::String) where {B <: ADBackend}
     if !(backend isa expected_type)
-        B = typeof(backend)
         error("The current backend $B doesn't compute a sparse $derivative_name.")
     end
 end
