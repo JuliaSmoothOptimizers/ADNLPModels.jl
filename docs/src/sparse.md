@@ -31,7 +31,7 @@ x = rand(T, 2)
 H = hess(nlp, x)
 ```
 
-The backends available for sparse derivatives (`SparseADJacobian`, `SparseADHessian`, and `SparseReverseADHessian`) allow for customization through keyword arguments such as `detector` and `coloring_algorithm`.
+The backends available for sparse derivatives (`SparseADJacobian`, `SparseEnzymeADJacobian`, `SparseADHessian`, and `SparseReverseADHessian`) allow for customization through keyword arguments such as `detector` and `coloring_algorithm`.
 These arguments specify the sparsity pattern detector and the coloring algorithm, respectively.
 
 - A **`detector`** must be of type `ADTypes.AbstractSparsityDetector`.
@@ -39,7 +39,7 @@ These arguments specify the sparsity pattern detector and the coloring algorithm
   Prior to version 0.8.0, the default was `SymbolicSparsityDetector()` from `Symbolics.jl`.
 
 - A **`coloring_algorithm`** must be of type `SparseMatrixColorings.GreedyColoringAlgorithm`.
-  The default algorithm is `GreedyColoringAlgorithm{:direct}()` for `SparseADJacobian` and `SparseADHessian`, while it is `GreedyColoringAlgorithm{:substitution}()` for `SparseReverseADHessian`.
+  The default algorithm is `GreedyColoringAlgorithm{:direct}()` for `SparseADJacobian`, `SparseEnzymeADJacobian` and `SparseADHessian`, while it is `GreedyColoringAlgorithm{:substitution}()` for `SparseReverseADHessian`.
   These algorithms are provided by the package `SparseMatrixColorings.jl`.
 
 The `GreedyColoringAlgorithm{:direct}()` performs column coloring for Jacobians and star coloring for Hessians.
