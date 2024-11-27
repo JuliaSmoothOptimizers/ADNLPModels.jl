@@ -1,6 +1,6 @@
 name = "ADNLPModels"
 uuid = "54578032-b7ea-4c30-94aa-7cbd1cce6c9a"
-version = "0.8.7"
+version = "0.8.8"
 
 [deps]
 ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
