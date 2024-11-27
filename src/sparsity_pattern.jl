@@ -74,57 +74,65 @@ Supported backends include `SparseADJacobian`, `SparseADHessian`, and `SparseRev
 * `S`: A sparse matrix of type `SparseMatrixCSC{Bool,Int}` indicating the sparsity pattern of the requested derivative.
 """
 function get_sparsity_pattern(model::ADModel, derivative::Symbol)
-    get_sparsity_pattern(model, Val(derivative))
+  get_sparsity_pattern(model, Val(derivative))
 end
 
 function get_sparsity_pattern(model::ADModel, ::Val{:jacobian})
-    backend = model.adbackend.jacobian_backend
-    validate_sparse_backend(backend, SparseADJacobian, "Jacobian")
-    m = model.meta.ncon
-    n = model.meta.nvar
-    colptr = backend.colptr
-    rowval = backend.rowval
-    nnzJ = length(rowval)
-    nzval = ones(Bool, nnzJ)
-    SparseMatrixCSC(m, n, colptr, rowval, nzval)
+  backend = model.adbackend.jacobian_backend
+  validate_sparse_backend(backend, SparseADJacobian, "Jacobian")
+  m = model.meta.ncon
+  n = model.meta.nvar
+  colptr = backend.colptr
+  rowval = backend.rowval
+  nnzJ = length(rowval)
+  nzval = ones(Bool, nnzJ)
+  SparseMatrixCSC(m, n, colptr, rowval, nzval)
 end
 
 function get_sparsity_pattern(model::ADModel, ::Val{:hessian})
-    backend = model.adbackend.hessian_backend
-    validate_sparse_backend(backend, Union{SparseADHessian, SparseReverseADHessian}, "Hessian")
-    n = model.meta.nvar
-    colptr = backend.colptr
-    rowval = backend.rowval
-    nnzH = length(rowval)
-    nzval = ones(Bool, nnzH)
-    SparseMatrixCSC(n, n, colptr, rowval, nzval)
+  backend = model.adbackend.hessian_backend
+  validate_sparse_backend(backend, Union{SparseADHessian, SparseReverseADHessian}, "Hessian")
+  n = model.meta.nvar
+  colptr = backend.colptr
+  rowval = backend.rowval
+  nnzH = length(rowval)
+  nzval = ones(Bool, nnzH)
+  SparseMatrixCSC(n, n, colptr, rowval, nzval)
 end
 
 function get_sparsity_pattern(model::AbstractADNLSModel, ::Val{:jacobian_residual})
-    backend = model.adbackend.jacobian_residual_backend
-    validate_sparse_backend(backend, SparseADJacobian, "Jacobian of the residual")
-    m = model.nls_meta.nequ
-    n = model.meta.nvar
-    colptr = backend.colptr
-    rowval = backend.rowval
-    nnzJ = length(rowval)
-    nzval = ones(Bool, nnzJ)
-    SparseMatrixCSC(m, n, colptr, rowval, nzval)
+  backend = model.adbackend.jacobian_residual_backend
+  validate_sparse_backend(backend, SparseADJacobian, "Jacobian of the residual")
+  m = model.nls_meta.nequ
+  n = model.meta.nvar
+  colptr = backend.colptr
+  rowval = backend.rowval
+  nnzJ = length(rowval)
+  nzval = ones(Bool, nnzJ)
+  SparseMatrixCSC(m, n, colptr, rowval, nzval)
 end
 
 function get_sparsity_pattern(model::AbstractADNLSModel, ::Val{:hessian_residual})
-    backend = model.adbackend.hessian_residual_backend
-    validate_sparse_backend(backend, Union{SparseADHessian, SparseReverseADHessian}, "Hessian of the residual")
-    n = model.meta.nvar
-    colptr = backend.colptr
-    rowval = backend.rowval
-    nnzH = length(rowval)
-    nzval = ones(Bool, nnzH)
-    SparseMatrixCSC(n, n, colptr, rowval, nzval)
+  backend = model.adbackend.hessian_residual_backend
+  validate_sparse_backend(
+    backend,
+    Union{SparseADHessian, SparseReverseADHessian},
+    "Hessian of the residual",
+  )
+  n = model.meta.nvar
+  colptr = backend.colptr
+  rowval = backend.rowval
+  nnzH = length(rowval)
+  nzval = ones(Bool, nnzH)
+  SparseMatrixCSC(n, n, colptr, rowval, nzval)
 end
 
-function validate_sparse_backend(backend::B, expected_type, derivative_name::String) where {B <: ADBackend}
-    if !(backend isa expected_type)
-        error("The current backend $B doesn't compute a sparse $derivative_name.")
-    end
+function validate_sparse_backend(
+  backend::B,
+  expected_type,
+  derivative_name::String,
+) where {B <: ADBackend}
+  if !(backend isa expected_type)
+    error("The current backend $B doesn't compute a sparse $derivative_name.")
+  end
 end
