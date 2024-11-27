@@ -1,7 +1,9 @@
-list_sparse_jac_backend =
-  ((ADNLPModels.SparseADJacobian, Dict()),
-   (ADNLPModels.SparseEnzymeADJacobian, Dict()),
-   (ADNLPModels.ForwardDiffADJacobian, Dict()))
+if test_enzyme
+  list_sparse_jac_backend = ((ADNLPModels.SparseEnzymeADJacobian, Dict()),)
+else
+  list_sparse_jac_backend = ((ADNLPModels.SparseADJacobian, Dict()),
+                             (ADNLPModels.ForwardDiffADJacobian, Dict()))
+end
 
 dt = (Float32, Float64)
 

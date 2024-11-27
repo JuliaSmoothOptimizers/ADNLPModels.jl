@@ -99,3 +99,10 @@ include("nlp/basic.jl")
 include("nls/basic.jl")
 include("nlp/nlpmodelstest.jl")
 include("nls/nlpmodelstest.jl")
+
+const test_enzyme = true
+
+include("sparse_jacobian.jl")
+include("sparse_jacobian_nls.jl")
+# include("sparse_hessian.jl")
+# include("sparse_hessian_nls.jl")
