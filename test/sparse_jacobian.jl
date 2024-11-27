@@ -51,6 +51,15 @@ dt = (Float32, Float64)
     0 1
   ]
 
+  if backend == ADNLPModels.SparseADJacobian
+    J_sp = get_sparsity_pattern(nlp, :jacobian)
+    @test J_sp == SparseMatrixCSC{Bool, Int}(
+      [ 1 0 ;
+        1 1 ;
+        0 1 ]
+    )
+  end
+
   nlp = ADNLPModel!(x -> sum(x), x0, c!, zeros(T, ncon), zeros(T, ncon), matrix_free = true; kw...)
   @test nlp.adbackend.jacobian_backend isa ADNLPModels.EmptyADbackend
 end

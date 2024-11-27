@@ -63,6 +63,14 @@ dt = (Float32, Float64)
   H = sparse(rows, cols, vals, nvar, nvar)
   @test H == [x[2] 0; x[1]+x[2] x[1]] + y[2] * [-20 0; 0 0]
 
+  if (backend == ADNLPModels.SparseADHessian) || (backend == ADNLPModels.SparseReverseADHessian)
+    H_sp = get_sparsity_pattern(nlp, :hessian)
+    @test H_sp == SparseMatrixCSC{Bool, Int}(
+      [ 1 0 ;
+        1 1 ]
+    )
+  end
+
   nlp = ADNLPModel!(
     x -> x[1] * x[2]^2 + x[1]^2 * x[2],
     x0,
