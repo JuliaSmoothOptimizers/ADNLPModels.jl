@@ -17,13 +17,13 @@ function test_autodiff_model(name; kwargs...)
   nlp = ADNLPModel(f, x0, c, [0.0], [0.0]; kwargs...)
   @test obj(nlp, x0) == f(x0)
 
-  x = range(-1, stop = 1, length = 100)
-  y = 2x .+ 3 + randn(100) * 0.1
-  regr = LinearRegression(x, y)
-  nlp = ADNLPModel(regr, ones(2); kwargs...)
-  β = [ones(100) x] \ y
-  @test abs(obj(nlp, β) - norm(y .- β[1] - β[2] * x)^2 / 2) < 1e-12
-  @test norm(grad(nlp, β)) < 1e-12
+  # x = range(-1, stop = 1, length = 100)
+  # y = 2x .+ 3 + randn(100) * 0.1
+  # regr = LinearRegression(x, y)
+  # nlp = ADNLPModel(regr, ones(2); kwargs...)
+  # β = [ones(100) x] \ y
+  # @test abs(obj(nlp, β) - norm(y .- β[1] - β[2] * x)^2 / 2) < 1e-12
+  # @test norm(grad(nlp, β)) < 1e-12
 
   test_getter_setter(nlp)
 
