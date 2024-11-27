@@ -1,7 +1,7 @@
 struct EnzymeReverseADJacobian <: ADBackend end
 struct EnzymeReverseADHessian <: ADBackend end
 
-struct EnzymeReverseADGradient <: ADNLPModels.ADBackend end
+struct EnzymeReverseADGradient <: InPlaceADbackend end
 
 function EnzymeReverseADGradient(
   nvar::Integer,
@@ -16,12 +16,13 @@ end
 
 function ADNLPModels.gradient(::EnzymeReverseADGradient, f, x)
   g = similar(x)
-  Enzyme.autodiff(Enzyme.Reverse, f, Enzyme.Duplicated(x, g)) # gradient!(Reverse, g, f, x)
+  # Enzyme.autodiff(Enzyme.Reverse, Const(f), Active, Enzyme.Duplicated(x, g)) # gradient!(Reverse, g, f, x)
+  Enzyme.gradient!(Reverse, g, Const(f), x)
   return g
 end
 
 function ADNLPModels.gradient!(::EnzymeReverseADGradient, g, f, x)
-  Enzyme.autodiff(Enzyme.Reverse, f, Enzyme.Duplicated(x, g)) # gradient!(Reverse, g, f, x)
+  Enzyme.autodiff(Enzyme.Reverse, Const(f), Active, Enzyme.Duplicated(x, g)) # gradient!(Reverse, g, f, x)
   return g
 end
 
@@ -57,7 +58,7 @@ function hessian(::EnzymeReverseADHessian, f, x)
   tmp = similar(x)
   for i in 1:length(x)
     seed[i] = one(eltype(seed))
-    Enzyme.hvp!(tmp, f, x, seed)
+    Enzyme.hvp!(tmp, Const(f), x, seed)
     hess[:, i] .= tmp
     seed[i] = zero(eltype(seed))
   end
@@ -80,9 +81,7 @@ function EnzymeReverseADJprod(
 end
 
 function Jprod!(b::EnzymeReverseADJprod, Jv, c!, x, v, ::Val)
-  @show c!(x)
-  @show Enzyme.autodiff(Enzyme.Forward, Const(c!), Duplicated(x, v))
-  error("This is BAD")
+  Enzyme.autodiff(Enzyme.Forward, Const(c!), Duplicated(b.x,Jv), Duplicated(x, v))
   return Jv
 end
 
@@ -102,7 +101,7 @@ function EnzymeReverseADJtprod(
 end
 
 function Jtprod!(b::EnzymeReverseADJtprod, Jtv, c!, x, v, ::Val)
-  Enzyme.autodiff(Enzyme.Reverse, c!, Duplicated(b.x, Jtv), Enzyme.Duplicated(x, v))
+  Enzyme.autodiff(Enzyme.Reverse, Const(c!), Duplicated(b.x, Jtv), Enzyme.Duplicated(x, v))
   return Jtv
 end
 
@@ -126,7 +125,7 @@ function Hvprod!(b::EnzymeReverseADHvprod, Hv, x, v, f, args...)
   # What to do with args?
   Enzyme.autodiff(
     Forward,
-    gradient!,
+    Const(Enzyme.gradient!),
     Const(Reverse),
     DuplicatedNoNeed(b.grad, Hv),
     Const(f),
@@ -147,7 +146,7 @@ function Hvprod!(
 )
   Enzyme.autodiff(
     Forward,
-    gradient!,
+    Const(Enzyme.gradient!),
     Const(Reverse),
     DuplicatedNoNeed(b.grad, Hv),
     Const(ℓ),
@@ -169,7 +168,7 @@ function Hvprod!(
 )
   Enzyme.autodiff(
     Forward,
-    gradient!,
+    Const(Enzyme.gradient!),
     Const(Reverse),
     DuplicatedNoNeed(b.grad, Hv),
     Const(f),
