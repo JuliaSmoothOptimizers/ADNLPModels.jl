@@ -64,6 +64,25 @@ function SparseADJacobian(
   )
 end
 
+function get_nln_nnzj(b::SparseADJacobian, nvar, ncon)
+  length(b.rowval)
+end
+
+function NLPModels.jac_structure!(
+  b::SparseADJacobian,
+  nlp::ADModel,
+  rows::AbstractVector{<:Integer},
+  cols::AbstractVector{<:Integer},
+)
+  rows .= b.rowval
+  for i = 1:(nlp.meta.nvar)
+    for j = b.colptr[i]:(b.colptr[i + 1] - 1)
+      cols[j] = i
+    end
+  end
+  return rows, cols
+end
+
 function sparse_jac_coord!(
   ℓ!::Function,
   b::SparseADJacobian{Tag},
@@ -90,25 +109,6 @@ function sparse_jac_coord!(
   end
   vals .= b.nzval
   return vals
-end
-
-function get_nln_nnzj(b::SparseADJacobian, nvar, ncon)
-  length(b.rowval)
-end
-
-function NLPModels.jac_structure!(
-  b::SparseADJacobian,
-  nlp::ADModel,
-  rows::AbstractVector{<:Integer},
-  cols::AbstractVector{<:Integer},
-)
-  rows .= b.rowval
-  for i = 1:(nlp.meta.nvar)
-    for j = b.colptr[i]:(b.colptr[i + 1] - 1)
-      cols[j] = i
-    end
-  end
-  return rows, cols
 end
 
 function NLPModels.jac_coord!(

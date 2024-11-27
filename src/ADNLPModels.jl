@@ -7,7 +7,7 @@ using LinearAlgebra, SparseArrays
 using ADTypes: ADTypes, AbstractColoringAlgorithm, AbstractSparsityDetector
 using SparseConnectivityTracer: TracerSparsityDetector
 using SparseMatrixColorings
-using ForwardDiff, ReverseDiff, Enzyme
+using ForwardDiff, ReverseDiff
 
 # JSO
 using NLPModels
