@@ -65,10 +65,10 @@ dt = (Float32, Float64)
 
   if (backend == ADNLPModels.SparseADHessian) || (backend == ADNLPModels.SparseReverseADHessian)
     H_sp = get_sparsity_pattern(nlp, :hessian)
-    @test H_sp == SparseMatrixCSC{Bool, Int}(
-      [ 1 0 ;
-        1 1 ]
-    )
+    @test H_sp == SparseMatrixCSC{Bool, Int}([
+      1 0
+      1 1
+    ])
   end
 
   nlp = ADNLPModel!(
