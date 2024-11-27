@@ -3,6 +3,9 @@ using ADNLPModels, ManualNLPModels, NLPModels, NLPModelsModifiers, NLPModelsTest
 using ADNLPModels:
   gradient, gradient!, jacobian, hessian, Jprod!, Jtprod!, directional_second_derivative, Hvprod!
 
+# Automatically loads the code for Enzyme with Requires
+import Enzyme
+
 for problem in NLPModelsTest.nlp_problems ∪ ["GENROSE"]
   include("nlp/problems/$(lowercase(problem)).jl")
 end
