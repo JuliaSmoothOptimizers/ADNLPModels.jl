@@ -148,182 +148,183 @@ end
 @init begin
   @require Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9" begin
 
-  function ADNLPModels.gradient(::EnzymeReverseADGradient, f, x)
-    g = similar(x)
-    # Enzyme.autodiff(Enzyme.Reverse, Const(f), Active, Enzyme.Duplicated(x, g)) # gradient!(Reverse, g, f, x)
-    Enzyme.gradient!(Reverse, g, Const(f), x)
-    return g
-  end
-
-  function ADNLPModels.gradient!(::EnzymeReverseADGradient, g, f, x)
-    Enzyme.autodiff(Enzyme.Reverse, Const(f), Active, Enzyme.Duplicated(x, g)) # gradient!(Reverse, g, f, x)
-    return g
-  end
-
-  jacobian(::EnzymeReverseADJacobian, f, x) = Enzyme.jacobian(Enzyme.Reverse, f, x)
-
-  function hessian(::EnzymeReverseADHessian, f, x)
-    seed = similar(x)
-    hess = zeros(eltype(x), length(x), length(x))
-    fill!(seed, zero(eltype(x)))
-    tmp = similar(x)
-    for i in 1:length(x)
-      seed[i] = one(eltype(seed))
-      Enzyme.hvp!(tmp, Const(f), x, seed)
-      hess[:, i] .= tmp
-      seed[i] = zero(eltype(seed))
+    function ADNLPModels.gradient(::EnzymeReverseADGradient, f, x)
+      g = similar(x)
+      # Enzyme.autodiff(Enzyme.Reverse, Const(f), Active, Enzyme.Duplicated(x, g)) # gradient!(Reverse, g, f, x)
+      Enzyme.gradient!(Reverse, g, Const(f), x)
+      return g
     end
-    return hess
-  end
 
-  function Jprod!(b::EnzymeReverseADJprod, Jv, c!, x, v, ::Val)
-    Enzyme.autodiff(Enzyme.Forward, Const(c!), Duplicated(b.x, Jv), Duplicated(x, v))
-    return Jv
-  end
+    function ADNLPModels.gradient!(::EnzymeReverseADGradient, g, f, x)
+      Enzyme.autodiff(Enzyme.Reverse, Const(f), Active, Enzyme.Duplicated(x, g)) # gradient!(Reverse, g, f, x)
+      return g
+    end
 
-  function Jtprod!(b::EnzymeReverseADJtprod, Jtv, c!, x, v, ::Val)
-    Enzyme.autodiff(Enzyme.Reverse, Const(c!), Duplicated(b.x, Jtv), Enzyme.Duplicated(x, v))
-    return Jtv
-  end
+    jacobian(::EnzymeReverseADJacobian, f, x) = Enzyme.jacobian(Enzyme.Reverse, f, x)
 
-  function Hvprod!(b::EnzymeReverseADHvprod, Hv, x, v, f, args...)
-    # What to do with args?
-    Enzyme.autodiff(
-      Forward,
-      Const(Enzyme.gradient!),
-      Const(Reverse),
-      DuplicatedNoNeed(b.grad, Hv),
-      Const(f),
-      Duplicated(x, v),
-    )
-    return Hv
-  end
-
-  function Hvprod!(
-    b::EnzymeReverseADHvprod,
-    Hv,
-    x,
-    v,
-    ℓ,
-    ::Val{:lag},
-    y,
-    obj_weight::Real = one(eltype(x)),
-  )
-    Enzyme.autodiff(
-      Forward,
-      Const(Enzyme.gradient!),
-      Const(Reverse),
-      DuplicatedNoNeed(b.grad, Hv),
-      Const(ℓ),
-      Duplicated(x, v),
-      Const(y),
-    )
-
-    return Hv
-  end
-
-  function Hvprod!(
-    b::EnzymeReverseADHvprod,
-    Hv,
-    x,
-    v,
-    f,
-    ::Val{:obj},
-    obj_weight::Real = one(eltype(x)),
-  )
-    Enzyme.autodiff(
-      Forward,
-      Const(Enzyme.gradient!),
-      Const(Reverse),
-      DuplicatedNoNeed(b.grad, Hv),
-      Const(f),
-      Duplicated(x, v),
-      Const(y),
-    )
-    return Hv
-  end
-
-  # Sparse Jacobian
-  function sparse_jac_coord!(
-    c!::Function,
-    b::SparseEnzymeADJacobian,
-    x::AbstractVector,
-    vals::AbstractVector,
-  )
-    # SparseMatrixColorings.jl requires a SparseMatrixCSC for the decompression
-    A = SparseMatrixCSC(b.ncon, b.nvar, b.colptr, b.rowval, b.nzval)
-
-    groups = column_groups(b.result_coloring)
-    for (icol, cols) in enumerate(groups)
-      # Update the seed
-      b.v .= 0
-      for col in cols
-        b.v[col] = 1
+    function hessian(::EnzymeReverseADHessian, f, x)
+      seed = similar(x)
+      hess = zeros(eltype(x), length(x), length(x))
+      fill!(seed, zero(eltype(x)))
+      tmp = similar(x)
+      for i in 1:length(x)
+        seed[i] = one(eltype(seed))
+        Enzyme.hvp!(tmp, Const(f), x, seed)
+        hess[:, i] .= tmp
+        seed[i] = zero(eltype(seed))
       end
-
-      # b.compressed_jacobian is just a vector Jv here
-      # We don't use the vector mode
-      Enzyme.autodiff(Enzyme.Forward, Const(c!), Duplicated(b.buffer, b.compressed_jacobian), Duplicated(x, b.v))
-
-      # Update the columns of the Jacobian that have the color `icol`
-      decompress_single_color!(A, b.compressed_jacobian, icol, b.result_coloring)
+      return hess
     end
-    vals .= b.nzval
-    return vals
-  end
 
-  function get_nln_nnzj(b::SparseEnzymeADJacobian, nvar, ncon)
-    length(b.rowval)
-  end
+    function Jprod!(b::EnzymeReverseADJprod, Jv, c!, x, v, ::Val)
+      Enzyme.autodiff(Enzyme.Forward, Const(c!), Duplicated(b.x, Jv), Duplicated(x, v))
+      return Jv
+    end
 
-  function NLPModels.jac_structure!(
-    b::SparseEnzymeADJacobian,
-    nlp::ADModel,
-    rows::AbstractVector{<:Integer},
-    cols::AbstractVector{<:Integer},
-  )
-    rows .= b.rowval
-    for i = 1:(nlp.meta.nvar)
-      for j = b.colptr[i]:(b.colptr[i + 1] - 1)
-        cols[j] = i
+    function Jtprod!(b::EnzymeReverseADJtprod, Jtv, c!, x, v, ::Val)
+      Enzyme.autodiff(Enzyme.Reverse, Const(c!), Duplicated(b.x, Jtv), Enzyme.Duplicated(x, v))
+      return Jtv
+    end
+
+    function Hvprod!(b::EnzymeReverseADHvprod, Hv, x, v, f, args...)
+      # What to do with args?
+      Enzyme.autodiff(
+        Forward,
+        Const(Enzyme.gradient!),
+        Const(Reverse),
+        DuplicatedNoNeed(b.grad, Hv),
+        Const(f),
+        Duplicated(x, v),
+      )
+      return Hv
+    end
+
+    function Hvprod!(
+      b::EnzymeReverseADHvprod,
+      Hv,
+      x,
+      v,
+      ℓ,
+      ::Val{:lag},
+      y,
+      obj_weight::Real = one(eltype(x)),
+    )
+      Enzyme.autodiff(
+        Forward,
+        Const(Enzyme.gradient!),
+        Const(Reverse),
+        DuplicatedNoNeed(b.grad, Hv),
+        Const(ℓ),
+        Duplicated(x, v),
+        Const(y),
+      )
+
+      return Hv
+    end
+
+    function Hvprod!(
+      b::EnzymeReverseADHvprod,
+      Hv,
+      x,
+      v,
+      f,
+      ::Val{:obj},
+      obj_weight::Real = one(eltype(x)),
+    )
+      Enzyme.autodiff(
+        Forward,
+        Const(Enzyme.gradient!),
+        Const(Reverse),
+        DuplicatedNoNeed(b.grad, Hv),
+        Const(f),
+        Duplicated(x, v),
+        Const(y),
+      )
+      return Hv
+    end
+
+    # Sparse Jacobian
+    function sparse_jac_coord!(
+      c!::Function,
+      b::SparseEnzymeADJacobian,
+      x::AbstractVector,
+      vals::AbstractVector,
+    )
+      # SparseMatrixColorings.jl requires a SparseMatrixCSC for the decompression
+      A = SparseMatrixCSC(b.ncon, b.nvar, b.colptr, b.rowval, b.nzval)
+
+      groups = column_groups(b.result_coloring)
+      for (icol, cols) in enumerate(groups)
+        # Update the seed
+        b.v .= 0
+        for col in cols
+          b.v[col] = 1
+        end
+
+        # b.compressed_jacobian is just a vector Jv here
+        # We don't use the vector mode
+        Enzyme.autodiff(Enzyme.Forward, Const(c!), Duplicated(b.buffer, b.compressed_jacobian), Duplicated(x, b.v))
+
+        # Update the columns of the Jacobian that have the color `icol`
+        decompress_single_color!(A, b.compressed_jacobian, icol, b.result_coloring)
       end
+      vals .= b.nzval
+      return vals
     end
-    return rows, cols
-  end
 
-  function NLPModels.jac_coord!(
-    b::SparseEnzymeADJacobian,
-    nlp::ADModel,
-    x::AbstractVector,
-    vals::AbstractVector,
-  )
-    sparse_jac_coord!(nlp.c!, b, x, vals)
-    return vals
-  end
+    function get_nln_nnzj(b::SparseEnzymeADJacobian, nvar, ncon)
+      length(b.rowval)
+    end
 
-  function NLPModels.jac_structure_residual!(
-    b::SparseEnzymeADJacobian,
-    nls::AbstractADNLSModel,
-    rows::AbstractVector{<:Integer},
-    cols::AbstractVector{<:Integer},
-  )
-    rows .= b.rowval
-    for i = 1:(nls.meta.nvar)
-      for j = b.colptr[i]:(b.colptr[i + 1] - 1)
-        cols[j] = i
+    function NLPModels.jac_structure!(
+      b::SparseEnzymeADJacobian,
+      nlp::ADModel,
+      rows::AbstractVector{<:Integer},
+      cols::AbstractVector{<:Integer},
+    )
+      rows .= b.rowval
+      for i = 1:(nlp.meta.nvar)
+        for j = b.colptr[i]:(b.colptr[i + 1] - 1)
+          cols[j] = i
+        end
       end
+      return rows, cols
     end
-    return rows, cols
-  end
 
-  function NLPModels.jac_coord_residual!(
-    b::SparseEnzymeADJacobian,
-    nls::AbstractADNLSModel,
-    x::AbstractVector,
-    vals::AbstractVector,
-  )
-    sparse_jac_coord!(nls.F!, b, x, vals)
-    return vals
+    function NLPModels.jac_coord!(
+      b::SparseEnzymeADJacobian,
+      nlp::ADModel,
+      x::AbstractVector,
+      vals::AbstractVector,
+    )
+      sparse_jac_coord!(nlp.c!, b, x, vals)
+      return vals
+    end
+
+    function NLPModels.jac_structure_residual!(
+      b::SparseEnzymeADJacobian,
+      nls::AbstractADNLSModel,
+      rows::AbstractVector{<:Integer},
+      cols::AbstractVector{<:Integer},
+    )
+      rows .= b.rowval
+      for i = 1:(nls.meta.nvar)
+        for j = b.colptr[i]:(b.colptr[i + 1] - 1)
+          cols[j] = i
+        end
+      end
+      return rows, cols
+    end
+
+    function NLPModels.jac_coord_residual!(
+      b::SparseEnzymeADJacobian,
+      nls::AbstractADNLSModel,
+      x::AbstractVector,
+      vals::AbstractVector,
+    )
+      sparse_jac_coord!(nls.F!, b, x, vals)
+      return vals
+    end
   end
 end
 
