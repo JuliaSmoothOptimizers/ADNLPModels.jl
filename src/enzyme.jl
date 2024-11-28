@@ -151,7 +151,7 @@ end
     function ADNLPModels.gradient(::EnzymeReverseADGradient, f, x)
       g = similar(x)
       # Enzyme.autodiff(Enzyme.Reverse, Const(f), Active, Enzyme.Duplicated(x, g)) # gradient!(Reverse, g, f, x)
-      Enzyme.gradient!(Reverse, g, Const(f), x)
+      Enzyme.gradient!(Enzyme.Reverse, g, Const(f), x)
       return g
     end
 
