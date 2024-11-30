@@ -148,19 +148,20 @@ end
 @init begin
   @require Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9" begin
 
+    import Enzyme: Const, Reverse, Forward, Duplicated, DuplicatedNoNeed
+
     function ADNLPModels.gradient(::EnzymeReverseADGradient, f, x)
       g = similar(x)
-      # Enzyme.autodiff(Enzyme.Reverse, Const(f), Active, Enzyme.Duplicated(x, g)) # gradient!(Reverse, g, f, x)
-      Enzyme.gradient!(Enzyme.Reverse, g, Const(f), x)
+      Enzyme.gradient!(Reverse, g, Const(f), x)
       return g
     end
 
     function ADNLPModels.gradient!(::EnzymeReverseADGradient, g, f, x)
-      Enzyme.autodiff(Enzyme.Reverse, Const(f), Active, Enzyme.Duplicated(x, g)) # gradient!(Reverse, g, f, x)
+      Enzyme.autodiff(Reverse, Const(f), Active, Duplicated(x, g))
       return g
     end
 
-    jacobian(::EnzymeReverseADJacobian, f, x) = Enzyme.jacobian(Enzyme.Reverse, f, x)
+    jacobian(::EnzymeReverseADJacobian, f, x) = Enzyme.jacobian(Reverse, f, x)
 
     function hessian(::EnzymeReverseADHessian, f, x)
       seed = similar(x)
@@ -182,7 +183,7 @@ end
     end
 
     function Jtprod!(b::EnzymeReverseADJtprod, Jtv, c!, x, v, ::Val)
-      Enzyme.autodiff(Enzyme.Reverse, Const(c!), Duplicated(b.x, Jtv), Enzyme.Duplicated(x, v))
+      Enzyme.autodiff(Reverse, Const(c!), Duplicated(b.x, Jtv), Duplicated(x, v))
       return Jtv
     end
 
