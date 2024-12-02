@@ -7,13 +7,6 @@ using ADNLPModels:
 # Automatically loads the code for Enzyme with Requires
 import Enzyme
 
-for problem in NLPModelsTest.nlp_problems ∪ ["GENROSE"]
-  include("nlp/problems/$(lowercase(problem)).jl")
-end
-for problem in NLPModelsTest.nls_problems
-  include("nls/problems/$(lowercase(problem)).jl")
-end
-
 EnzymeReverseAD() = ADNLPModels.ADModelBackend(
   ADNLPModels.EnzymeReverseADGradient(),
   ADNLPModels.EnzymeReverseADHvprod(zeros(1)),
@@ -104,6 +97,13 @@ include("sparse_jacobian.jl")
 include("sparse_jacobian_nls.jl")
 include("sparse_hessian.jl")
 include("sparse_hessian_nls.jl")
+
+for problem in NLPModelsTest.nlp_problems ∪ ["GENROSE"]
+  include("nlp/problems/$(lowercase(problem)).jl")
+end
+for problem in NLPModelsTest.nls_problems
+  include("nls/problems/$(lowercase(problem)).jl")
+end
 
 include("utils.jl")
 include("nlp/basic.jl")
