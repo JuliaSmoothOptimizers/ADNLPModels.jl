@@ -23,23 +23,29 @@ function EnzymeReverseADJacobian(
   return EnzymeReverseADJacobian()
 end
 
-struct EnzymeReverseADHessian <: ADBackend end
+struct EnzymeReverseADHessian{T} <: ADBackend
+  seed::Vector{T}
+  Hv::Vector{T}
+end
 
 function EnzymeReverseADHessian(
   nvar::Integer,
-
   f,
   ncon::Integer = 0,
   c::Function = (args...) -> [];
+  x0::AbstractVector{T} = rand(nvar),
   kwargs...,
 )
   @assert nvar > 0
   nnzh = nvar * (nvar + 1) / 2
-  return EnzymeReverseADHessian()
+
+  seed = zeros(T, nvar)
+  Hv = zeros(T, nvar)
+  return EnzymeReverseADHessian(seed, Hv)
 end
 
-struct EnzymeReverseADHvprod <: InPlaceADbackend
-  grad::Vector{Float64}
+struct EnzymeReverseADHvprod{T} <: InPlaceADbackend
+  grad::Vector{T}
 end
 
 function EnzymeReverseADHvprod(
@@ -50,12 +56,12 @@ function EnzymeReverseADHvprod(
   x0::AbstractVector{T} = rand(nvar),
   kwargs...,
 ) where {T}
-  grad = zeros(nvar)
+  grad = zeros(T, nvar)
   return EnzymeReverseADHvprod(grad)
 end
 
-struct EnzymeReverseADJprod <: InPlaceADbackend
-  x::Vector{Float64}
+struct EnzymeReverseADJprod{T} <: InPlaceADbackend
+  cx::Vector{T}
 end
 
 function EnzymeReverseADJprod(
@@ -65,12 +71,12 @@ function EnzymeReverseADJprod(
   c::Function = (args...) -> [];
   kwargs...,
 )
-  x = zeros(nvar)
-  return EnzymeReverseADJprod(x)
+  cx = zeros(T, nvar)
+  return EnzymeReverseADJprod(cx)
 end
 
-struct EnzymeReverseADJtprod <: InPlaceADbackend
-  x::Vector{Float64}
+struct EnzymeReverseADJtprod{T} <: InPlaceADbackend
+  cx::Vector{T}
 end
 
 function EnzymeReverseADJtprod(
@@ -80,8 +86,8 @@ function EnzymeReverseADJtprod(
   c::Function = (args...) -> [];
   kwargs...,
 )
-  x = zeros(nvar)
-  return EnzymeReverseADJtprod(x)
+  cx = zeros(T, nvar)
+  return EnzymeReverseADJtprod(cx)
 end
 
 struct SparseEnzymeADJacobian{R, C, S} <: ADBackend
@@ -93,7 +99,7 @@ struct SparseEnzymeADJacobian{R, C, S} <: ADBackend
   result_coloring::C
   compressed_jacobian::S
   v::Vector{R}
-  buffer::Vector{R}
+  cx::Vector{R}
 end
 
 function SparseEnzymeADJacobian(
@@ -130,7 +136,7 @@ function SparseEnzymeADJacobian(
   nzval = T.(J.nzval)
   compressed_jacobian = similar(x0, ncon)
   v = similar(x0)
-  buffer = zeros(T, ncon)
+  cx = zeros(T, ncon)
 
   SparseEnzymeADJacobian(
     nvar,
@@ -141,7 +147,7 @@ function SparseEnzymeADJacobian(
     result_coloring,
     compressed_jacobian,
     v,
-    buffer,
+    cx,
   )
 end
 
@@ -152,11 +158,12 @@ struct SparseEnzymeADHessian{R, C, S, L} <: ADNLPModels.ADBackend
   nzval::Vector{R}
   result_coloring::C
   coloring_mode::Symbol
+  compressed_hessian_icol::Vector{R}
   compressed_hessian::S
   v::Vector{R}
   y::Vector{R}
   grad::Vector{R}
-  buffer::Vector{R}
+  cx::Vector{R}
   ℓ::L
 end
 
@@ -193,18 +200,20 @@ function SparseEnzymeADHessian(
   nzval = T.(trilH.nzval)
   if coloring_algorithm isa GreedyColoringAlgorithm{:direct}
     coloring_mode = :direct
-    compressed_hessian = similar(x0)
+    compressed_hessian_icol = similar(x0)
+    compressed_hessian = compressed_hessian_icol
   else
     coloring_mode = :substitution
     group = column_groups(result_coloring)
     ncolors = length(group)
+    compressed_hessian_icol = similar(x0)
     compressed_hessian = similar(x0, (nvar, ncolors))
   end
   v = similar(x0)
   y = similar(x0, ncon)
-  buffer = similar(x0, ncon)
+  cx = similar(x0, ncon)
   grad = similar(x0)
-  ℓ(x, y, obj_weight, buffer) = obj_weight * f(x) + dot(c!(buffer, x), y)
+  ℓ(x, y, obj_weight, cx) = obj_weight * f(x) + dot(c!(cx, x), y)
 
   return SparseEnzymeADHessian(
     nvar,
@@ -213,11 +222,12 @@ function SparseEnzymeADHessian(
     nzval,
     result_coloring,
     coloring_mode,
+    compressed_hessian_icol,
     compressed_hessian,
     v,
     y,
     grad,
-    buffer,
+    cx,
     ℓ,
   )
 end
@@ -238,27 +248,27 @@ end
 
     jacobian(::EnzymeReverseADJacobian, f, x) = Enzyme.jacobian(Enzyme.Reverse, f, x)
 
-    function hessian(::EnzymeReverseADHessian, f, x)
-      seed = similar(x)
-      hess = zeros(eltype(x), length(x), length(x))
-      fill!(seed, zero(eltype(x)))
-      tmp = similar(x)
-      for i in 1:length(x)
-        seed[i] = one(eltype(seed))
-        Enzyme.hvp!(tmp, Enzyme.Const(f), x, seed)
-        hess[:, i] .= tmp
-        seed[i] = zero(eltype(seed))
+    function hessian(b::EnzymeReverseADHessian, f, x)
+      T = eltype(x)
+      n = length(x)
+      hess = zeros(T, n, n)
+      fill!(b.seed, zero(T))
+      for i in 1:n
+        seed[i] = one(T)
+        Enzyme.hvp!(b.Hv, Enzyme.Const(f), x, b.seed)
+        view(hess, :, i) .= b.Hv
+        seed[i] = zero(T)
       end
       return hess
     end
 
     function Jprod!(b::EnzymeReverseADJprod, Jv, c!, x, v, ::Val)
-      Enzyme.autodiff(Enzyme.Forward, Enzyme.Const(c!), Enzyme.Duplicated(b.x, Jv), Enzyme.Duplicated(x, v))
+      Enzyme.autodiff(Enzyme.Forward, Enzyme.Const(c!), Enzyme.Duplicated(b.cx, Jv), Enzyme.Duplicated(x, v))
       return Jv
     end
 
     function Jtprod!(b::EnzymeReverseADJtprod, Jtv, c!, x, v, ::Val)
-      Enzyme.autodiff(Enzyme.Reverse, Enzyme.Const(c!), Enzyme.Duplicated(b.x, Jtv), Enzyme.Duplicated(x, v))
+      Enzyme.autodiff(Enzyme.Reverse, Enzyme.Const(c!), Enzyme.Duplicated(b.cx, Jtv), Enzyme.Duplicated(x, v))
       return Jtv
     end
 
@@ -343,7 +353,7 @@ end
 
         # b.compressed_jacobian is just a vector Jv here
         # We don't use the vector mode
-        Enzyme.autodiff(Enzyme.Forward, Enzyme.Const(c!), Enzyme.Duplicated(b.buffer, b.compressed_jacobian), Enzyme.Duplicated(x, b.v))
+        Enzyme.autodiff(Enzyme.Forward, Enzyme.Const(c!), Enzyme.Duplicated(b.cx, b.compressed_jacobian), Enzyme.Duplicated(x, b.v))
 
         # Update the columns of the Jacobian that have the color `icol`
         decompress_single_color!(A, b.compressed_jacobian, icol, b.result_coloring)
@@ -425,11 +435,7 @@ end
           b.v[col] = 1
         end
 
-        # column icol of the compressed hessian
-        compressed_hessian_icol =
-          (b.coloring_mode == :direct) ? b.compressed_hessian : view(b.compressed_hessian, :, icol)
-
-        function _gradient!(dx, f, x, y, obj_weight, buffer)
+        function _gradient!(dx, f, x, y, obj_weight, cx)
           Enzyme.make_zero!(dx)
           res = Enzyme.autodiff(
             Enzyme.Reverse,
@@ -438,12 +444,12 @@ end
             Enzyme.Duplicated(x, dx),
             Enzyme.Const(y),
             Enzyme.Const(obj_weight),
-            Enzyme.Const(buffer)
+            Enzyme.Const(cx)
           )
           return nothing
         end
 
-        function _hvp!(res, f, x, v, y, obj_weight, buffer)
+        function _hvp!(res, f, x, v, y, obj_weight, cx)
           # grad = Enzyme.make_zero(x)
           Enzyme.autodiff(
               Enzyme.Forward,
@@ -453,19 +459,22 @@ end
               Enzyme.Duplicated(x, v),
               Enzyme.Const(y),
               Enzyme.Const(obj_weight),
-              Enzyme.Const(buffer),
+              Enzyme.Const(cx),
           )
           return nothing
         end
 
         _hvp!(
-          Enzyme.DuplicatedNoNeed(b.grad, compressed_hessian_icol),
-          b.ℓ, x, b.v, y, obj_weight, b.buffer
+          Enzyme.DuplicatedNoNeed(b.grad, b.compressed_hessian_icol),
+          b.ℓ, x, b.v, y, obj_weight, b.cx
         )
 
         if b.coloring_mode == :direct
           # Update the coefficients of the lower triangular part of the Hessian that are related to the color `icol`
-          decompress_single_color!(A, compressed_hessian_icol, icol, b.result_coloring, :L)
+          decompress_single_color!(A, b.compressed_hessian_icol, icol, b.result_coloring, :L)
+        end
+        if b.coloring_mode == :substitution
+          view(b.compressed_hessian, :, icol) .= b.compressed_hessian_icol
         end
       end
       if b.coloring_mode == :substitution
