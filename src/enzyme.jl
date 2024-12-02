@@ -429,17 +429,38 @@ end
         compressed_hessian_icol =
           (b.coloring_mode == :direct) ? b.compressed_hessian : view(b.compressed_hessian, :, icol)
 
-        # AD with Enzyme.jl
-        Enzyme.autodiff(
-          Enzyme.Forward,
-          Enzyme.Const(Enzyme.gradient!),
-          Enzyme.Const(Enzyme.Reverse),
+        function _gradient!(dx, f, x, y, obj_weight, buffer)
+          Enzyme.make_zero!(dx)
+          res = Enzyme.autodiff(
+            Enzyme.Reverse,
+            f,
+            Enzyme.Active,
+            Enzyme.Duplicated(x, dx),
+            Enzyme.Const(y),
+            Enzyme.Const(obj_weight),
+            Enzyme.Const(buffer)
+          )
+          return nothing
+        end
+
+        function _hvp!(res, f, x, v, y, obj_weight, buffer)
+          # grad = Enzyme.make_zero(x)
+          Enzyme.autodiff(
+              Enzyme.Forward,
+              _gradient!,
+              res,
+              Enzyme.Const(f),
+              Enzyme.Duplicated(x, v),
+              Enzyme.Const(y),
+              Enzyme.Const(obj_weight),
+              Enzyme.Const(buffer),
+          )
+          return nothing
+        end
+
+        _hvp!(
           Enzyme.DuplicatedNoNeed(b.grad, compressed_hessian_icol),
-          Enzyme.Const(b.ℓ),
-          Enzyme.Duplicated(x, b.v),
-          Enzyme.Const(y),
-          Enzyme.Const(obj_weight),
-          Enzyme.Const(b.buffer),
+          b.ℓ, x, b.v, y, obj_weight, b.buffer
         )
 
         if b.coloring_mode == :direct
