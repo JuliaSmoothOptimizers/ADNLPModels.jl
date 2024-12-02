@@ -145,7 +145,7 @@ function SparseEnzymeADJacobian(
   )
 end
 
-struct SparseEnzymeADHessian{R, C, S} <: ADNLPModels.ADBackend
+struct SparseEnzymeADHessian{R, C, S, L} <: ADNLPModels.ADBackend
   nvar::Int
   rowval::Vector{Int}
   colptr::Vector{Int}
@@ -156,6 +156,8 @@ struct SparseEnzymeADHessian{R, C, S} <: ADNLPModels.ADBackend
   v::Vector{R}
   y::Vector{R}
   grad::Vector{R}
+  buffer::Vector{R}
+  ℓ::L
 end
 
 function SparseEnzymeADHessian(
@@ -200,7 +202,9 @@ function SparseEnzymeADHessian(
   end
   v = similar(x0)
   y = similar(x0, ncon)
+  buffer = similar(x0, ncon)
   grad = similar(x0)
+  ℓ(x, y, obj_weight, buffer) = obj_weight * nlp.f(x) + dot(c!(buffer, x), y)
 
   return SparseEnzymeADHessian(
     nvar,
@@ -213,6 +217,8 @@ function SparseEnzymeADHessian(
     v,
     y,
     grad,
+    buffer,
+    ℓ,
   )
 end
 
@@ -423,18 +429,17 @@ end
         compressed_hessian_icol =
           (b.coloring_mode == :direct) ? b.compressed_hessian : view(b.compressed_hessian, :, icol)
 
-        # Lagrangian
-        ℓ = get_lag(nlp, b, obj_weight, y)
-
         # AD with Enzyme.jl
         Enzyme.autodiff(
           Enzyme.Forward,
           Enzyme.Const(Enzyme.gradient!),
           Enzyme.Const(Enzyme.Reverse),
           Enzyme.DuplicatedNoNeed(b.grad, compressed_hessian_icol),
-          Enzyme.Const(ℓ),
+          Enzyme.Const(b.ℓ),
           Enzyme.Duplicated(x, b.v),
           Enzyme.Const(y),
+          Enzyme.Const(obj_weight),
+          Enzyme.Const(buffer),
         )
 
         if b.coloring_mode == :direct
