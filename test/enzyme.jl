@@ -101,8 +101,8 @@ const test_enzyme = true
 
 include("sparse_jacobian.jl")
 include("sparse_jacobian_nls.jl")
-# include("sparse_hessian.jl")
-# include("sparse_hessian_nls.jl")
+include("sparse_hessian.jl")
+include("sparse_hessian_nls.jl")
 
 include("utils.jl")
 include("nlp/basic.jl")

@@ -95,7 +95,11 @@ end
 
 function get_sparsity_pattern(model::ADModel, ::Val{:hessian})
   backend = model.adbackend.hessian_backend
-  validate_sparse_backend(backend, Union{SparseADHessian, SparseReverseADHessian}, "Hessian")
+  validate_sparse_backend(
+    backend,
+    Union{SparseADHessian, SparseReverseADHessian, SparseEnzymeADHessian},
+    "Hessian",
+  )
   n = model.meta.nvar
   colptr = backend.colptr
   rowval = backend.rowval
@@ -124,7 +128,7 @@ function get_sparsity_pattern(model::AbstractADNLSModel, ::Val{:hessian_residual
   backend = model.adbackend.hessian_residual_backend
   validate_sparse_backend(
     backend,
-    Union{SparseADHessian, SparseReverseADHessian},
+    Union{SparseADHessian, SparseReverseADHessian, SparseEnzymeADHessian},
     "Hessian of the residual",
   )
   n = model.meta.nvar

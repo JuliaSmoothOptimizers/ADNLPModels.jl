@@ -145,6 +145,76 @@ function SparseEnzymeADJacobian(
   )
 end
 
+struct SparseEnzymeADHessian{R, C, S} <: ADNLPModels.ADBackend
+  nvar::Int
+  rowval::Vector{Int}
+  colptr::Vector{Int}
+  nzval::Vector{R}
+  result_coloring::C
+  coloring_mode::Symbol
+  compressed_hessian::S
+  v::Vector{R}
+  y::Vector{R}
+  grad::Vector{R}
+end
+
+function SparseEnzymeADHessian(
+  nvar,
+  f,
+  ncon,
+  c!;
+  x0::AbstractVector = rand(nvar),
+  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:substitution}(),
+  detector::AbstractSparsityDetector = TracerSparsityDetector(),
+  kwargs...,
+)
+  H = compute_hessian_sparsity(f, nvar, c!, ncon, detector = detector)
+  SparseEnzymeADHessian(nvar, f, ncon, c!, H; x0, coloring_algorithm, kwargs...)
+end
+
+function SparseEnzymeADHessian(
+  nvar,
+  f,
+  ncon,
+  c!,
+  H::SparseMatrixCSC{Bool, Int};
+  x0::AbstractVector{T} = rand(nvar),
+  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:substitution}(),
+  kwargs...,
+) where {T}
+  problem = ColoringProblem{:symmetric, :column}()
+  result_coloring = coloring(H, problem, coloring_algorithm, decompression_eltype = T)
+
+  trilH = tril(H)
+  rowval = trilH.rowval
+  colptr = trilH.colptr
+  nzval = T.(trilH.nzval)
+  if coloring_algorithm isa GreedyColoringAlgorithm{:direct}
+    coloring_mode = :direct
+    compressed_hessian = similar(x0)
+  else
+    coloring_mode = :substitution
+    group = column_groups(result_coloring)
+    ncolors = length(group)
+    compressed_hessian = similar(x0, (nvar, ncolors))
+  end
+  v = similar(x0)
+  y = similar(x0, ncon)
+  grad = similar(x0)
+
+  return SparseEnzymeADHessian(
+    nvar,
+    rowval,
+    colptr,
+    nzval,
+    result_coloring,
+    coloring_mode,
+    compressed_hessian,
+    v,
+    y,
+  )
+end
+
 @init begin
   @require Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9" begin
 
@@ -185,19 +255,6 @@ end
       return Jtv
     end
 
-    function Hvprod!(b::EnzymeReverseADHvprod, Hv, x, v, f, args...)
-      # What to do with args?
-      Enzyme.autodiff(
-        Enzyme.Forward,
-        Enzyme.Const(Enzyme.gradient!),
-        Enzyme.Const(Enzyme.Reverse),
-        Enzyme.DuplicatedNoNeed(b.grad, Hv),
-        Enzyme.Const(f),
-        Enzyme.Duplicated(x, v),
-      )
-      return Hv
-    end
-
     function Hvprod!(
       b::EnzymeReverseADHvprod,
       Hv,
@@ -217,7 +274,6 @@ end
         Enzyme.Duplicated(x, v),
         Enzyme.Const(y),
       )
-
       return Hv
     end
 
@@ -237,12 +293,30 @@ end
         Enzyme.DuplicatedNoNeed(b.grad, Hv),
         Enzyme.Const(f),
         Enzyme.Duplicated(x, v),
-        Enzyme.Const(y),
       )
       return Hv
     end
 
     # Sparse Jacobian
+    function get_nln_nnzj(b::SparseEnzymeADJacobian, nvar, ncon)
+      length(b.rowval)
+    end
+
+    function NLPModels.jac_structure!(
+      b::SparseEnzymeADJacobian,
+      nlp::ADModel,
+      rows::AbstractVector{<:Integer},
+      cols::AbstractVector{<:Integer},
+    )
+      rows .= b.rowval
+      for i = 1:(nlp.meta.nvar)
+        for j = b.colptr[i]:(b.colptr[i + 1] - 1)
+          cols[j] = i
+        end
+      end
+      return rows, cols
+    end
+
     function sparse_jac_coord!(
       c!::Function,
       b::SparseEnzymeADJacobian,
@@ -269,25 +343,6 @@ end
       end
       vals .= b.nzval
       return vals
-    end
-
-    function get_nln_nnzj(b::SparseEnzymeADJacobian, nvar, ncon)
-      length(b.rowval)
-    end
-
-    function NLPModels.jac_structure!(
-      b::SparseEnzymeADJacobian,
-      nlp::ADModel,
-      rows::AbstractVector{<:Integer},
-      cols::AbstractVector{<:Integer},
-    )
-      rows .= b.rowval
-      for i = 1:(nlp.meta.nvar)
-        for j = b.colptr[i]:(b.colptr[i + 1] - 1)
-          cols[j] = i
-        end
-      end
-      return rows, cols
     end
 
     function NLPModels.jac_coord!(
@@ -324,6 +379,131 @@ end
       sparse_jac_coord!(nls.F!, b, x, vals)
       return vals
     end
+
+    # Sparse Hessian
+    function get_nln_nnzh(b::SparseEnzymeADHessian, nvar)
+      return length(b.rowval)
+    end
+
+    function NLPModels.hess_structure!(
+      b::SparseEnzymeADHessian,
+      nlp::ADModel,
+      rows::AbstractVector{<:Integer},
+      cols::AbstractVector{<:Integer},
+    )
+      rows .= b.rowval
+      for i = 1:(nlp.meta.nvar)
+        for j = b.colptr[i]:(b.colptr[i + 1] - 1)
+          cols[j] = i
+        end
+      end
+      return rows, cols
+    end
+
+    function sparse_hess_coord!(
+      b::SparseEnzymeADHessian,
+      x::AbstractVector,
+      obj_weight,
+      y::AbstractVector,
+      vals::AbstractVector,
+    )
+      # SparseMatrixColorings.jl requires a SparseMatrixCSC for the decompression
+      A = SparseMatrixCSC(b.nvar, b.nvar, b.colptr, b.rowval, b.nzval)
+
+      groups = column_groups(b.result_coloring)
+      for (icol, cols) in enumerate(groups)
+        # Update the seed
+        b.v .= 0
+        for col in cols
+          b.v[col] = 1
+        end
+
+        # column icol of the compressed hessian
+        compressed_hessian_icol =
+          (b.coloring_mode == :direct) ? b.compressed_hessian : view(b.compressed_hessian, :, icol)
+
+        # Lagrangian
+        ℓ = get_lag(nlp, b, obj_weight, y)
+
+        # AD with Enzyme.jl
+        Enzyme.autodiff(
+          Enzyme.Forward,
+          Enzyme.Const(Enzyme.gradient!),
+          Enzyme.Const(Enzyme.Reverse),
+          Enzyme.DuplicatedNoNeed(b.grad, compressed_hessian_icol),
+          Enzyme.Const(ℓ),
+          Enzyme.Duplicated(x, b.v),
+          Enzyme.Const(y),
+        )
+
+        if b.coloring_mode == :direct
+          # Update the coefficients of the lower triangular part of the Hessian that are related to the color `icol`
+          decompress_single_color!(A, compressed_hessian_icol, icol, b.result_coloring, :L)
+        end
+      end
+      if b.coloring_mode == :substitution
+        decompress!(A, b.compressed_hessian, b.result_coloring, :L)
+      end
+      vals .= b.nzval
+      return vals
+    end
+
+    function NLPModels.hess_coord!(
+      b::SparseEnzymeADHessian,
+      nlp::ADModel,
+      x::AbstractVector,
+      y::AbstractVector,
+      obj_weight::Real,
+      vals::AbstractVector,
+    )
+      sparse_hess_coord!(b, x, obj_weight, y, vals)
+    end
+
+    # Could be optimized!
+    function NLPModels.hess_coord!(
+      b::SparseEnzymeADHessian,
+      nlp::ADModel,
+      x::AbstractVector,
+      obj_weight::Real,
+      vals::AbstractVector,
+    )
+      b.y .= 0
+      sparse_hess_coord!(b, x, obj_weight, b.y, vals)
+    end
+
+    function NLPModels.hess_coord!(
+      b::SparseEnzymeADHessian,
+      nlp::ADModel,
+      x::AbstractVector,
+      j::Integer,
+      vals::AbstractVector,
+    )
+      for (w, k) in enumerate(nlp.meta.nln)
+        b.y[w] = k == j ? 1 : 0
+      end
+      obj_weight = zero(eltype(x))
+      sparse_hess_coord!(b, x, obj_weight, b.y, vals)
+      return vals
+    end
+
+    function NLPModels.hess_structure_residual!(
+      b::SparseEnzymeADHessian,
+      nls::AbstractADNLSModel,
+      rows::AbstractVector{<:Integer},
+      cols::AbstractVector{<:Integer},
+    )
+      return hess_structure!(b, nls, rows, cols)
+    end
+
+    function NLPModels.hess_coord_residual!(
+      b::SparseEnzymeADHessian,
+      nls::AbstractADNLSModel,
+      x::AbstractVector,
+      v::AbstractVector,
+      vals::AbstractVector,
+    )
+      obj_weight = zero(eltype(x))
+      sparse_hess_coord!(b, x, obj_weight, v, vals)
+    end
   end
 end
-
