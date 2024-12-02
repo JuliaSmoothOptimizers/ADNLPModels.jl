@@ -204,7 +204,7 @@ function SparseEnzymeADHessian(
   y = similar(x0, ncon)
   buffer = similar(x0, ncon)
   grad = similar(x0)
-  ℓ(x, y, obj_weight, buffer) = obj_weight * nlp.f(x) + dot(c!(buffer, x), y)
+  ℓ(x, y, obj_weight, buffer) = obj_weight * f(x) + dot(c!(buffer, x), y)
 
   return SparseEnzymeADHessian(
     nvar,
