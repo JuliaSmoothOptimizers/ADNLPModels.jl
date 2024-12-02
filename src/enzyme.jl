@@ -256,10 +256,10 @@ end
       hess = zeros(T, n, n)
       fill!(b.seed, zero(T))
       for i in 1:n
-        seed[i] = one(T)
+        b.seed[i] = one(T)
         Enzyme.hvp!(b.Hv, Enzyme.Const(f), x, b.seed)
         view(hess, :, i) .= b.Hv
-        seed[i] = zero(T)
+        b.seed[i] = zero(T)
       end
       return hess
     end
