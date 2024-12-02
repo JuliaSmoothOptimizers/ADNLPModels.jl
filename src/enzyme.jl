@@ -35,7 +35,7 @@ function EnzymeReverseADHessian(
   c::Function = (args...) -> [];
   x0::AbstractVector{T} = rand(nvar),
   kwargs...,
-)
+) where {T}
   @assert nvar > 0
   nnzh = nvar * (nvar + 1) / 2
 
@@ -69,8 +69,9 @@ function EnzymeReverseADJprod(
   f,
   ncon::Integer = 0,
   c::Function = (args...) -> [];
+  x0::AbstractVector{T} = rand(nvar),
   kwargs...,
-)
+) where {T}
   cx = zeros(T, nvar)
   return EnzymeReverseADJprod(cx)
 end
@@ -84,8 +85,9 @@ function EnzymeReverseADJtprod(
   f,
   ncon::Integer = 0,
   c::Function = (args...) -> [];
+  x0::AbstractVector{T} = rand(nvar),
   kwargs...,
-)
+) where {T}
   cx = zeros(T, nvar)
   return EnzymeReverseADJtprod(cx)
 end
