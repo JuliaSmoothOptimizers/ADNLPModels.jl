@@ -439,7 +439,7 @@ end
           Enzyme.Duplicated(x, b.v),
           Enzyme.Const(y),
           Enzyme.Const(obj_weight),
-          Enzyme.Const(buffer),
+          Enzyme.Const(b.buffer),
         )
 
         if b.coloring_mode == :direct
