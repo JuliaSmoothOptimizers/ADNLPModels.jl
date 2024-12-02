@@ -212,6 +212,7 @@ function SparseEnzymeADHessian(
     compressed_hessian,
     v,
     y,
+    grad,
   )
 end
 
