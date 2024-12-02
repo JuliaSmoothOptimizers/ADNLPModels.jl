@@ -13,7 +13,7 @@ EnzymeReverseAD() = ADNLPModels.ADModelBackend(
   ADNLPModels.EnzymeReverseADJprod(zeros(1)),
   ADNLPModels.EnzymeReverseADJtprod(zeros(1)),
   ADNLPModels.EnzymeReverseADJacobian(),
-  ADNLPModels.EnzymeReverseADHessian(),
+  ADNLPModels.EnzymeReverseADHessian(zeros(1), zeros(1)),
   ADNLPModels.EnzymeReverseADHvprod(zeros(1)),
   ADNLPModels.EmptyADbackend(),
   ADNLPModels.EmptyADbackend(),
