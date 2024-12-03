@@ -217,7 +217,7 @@ function SparseEnzymeADHessian(
   grad = similar(x0)
   function ℓ(x, y, obj_weight, cx)
     res = obj_weight * f(x)
-    if ncon == 0
+    if ncon != 0
       c!(cx, x)
       res += sum(cx[i] * y[i] for i = 1:ncon)
     end
