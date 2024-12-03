@@ -362,7 +362,12 @@ end
 
         # b.compressed_jacobian is just a vector Jv here
         # We don't use the vector mode
-        Enzyme.autodiff(Enzyme.Forward, Enzyme.Const(c!), Enzyme.Duplicated(b.cx, b.compressed_jacobian), Enzyme.Duplicated(x, b.v))
+        Enzyme.autodiff(
+          Enzyme.Forward,
+          Enzyme.Const(c!),
+          Enzyme.Duplicated(b.cx, b.compressed_jacobian),
+          Enzyme.Duplicated(x, b.v)
+        )
 
         # Update the columns of the Jacobian that have the color `icol`
         decompress_single_color!(A, b.compressed_jacobian, icol, b.result_coloring)

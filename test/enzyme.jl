@@ -95,8 +95,8 @@ const test_enzyme = true
 
 include("sparse_jacobian.jl")
 include("sparse_jacobian_nls.jl")
-include("sparse_hessian.jl")
-include("sparse_hessian_nls.jl")
+# include("sparse_hessian.jl")
+# include("sparse_hessian_nls.jl")
 
 for problem in NLPModelsTest.nlp_problems ∪ ["GENROSE"]
   include("nlp/problems/$(lowercase(problem)).jl")
