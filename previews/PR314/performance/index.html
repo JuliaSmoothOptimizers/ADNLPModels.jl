@@ -267,33 +267,33 @@ for name in scalable_problems
     stats[back][stats[back].name .== name, :time] = [median(b.times)]
     stats[back][stats[back].name .== name, :allocs] = [median(b.allocs)]
   end
-end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[ Info:  camshape with 1000 vars and 2003 cons
-[ Info:  catenary with 999 vars and 332 cons
-┌ Warning: catenary: number of variables adjusted to be a multiple of 3
-└ @ OptimizationProblems.PureJuMP ~/.julia/packages/OptimizationProblems/9qr9C/src/PureJuMP/catenary.jl:20
-┌ Warning: catenary: number of variables adjusted to be greater or equal to 6
-└ @ OptimizationProblems.PureJuMP ~/.julia/packages/OptimizationProblems/9qr9C/src/PureJuMP/catenary.jl:22
-┌ Warning: catenary: number of variables adjusted to be a multiple of 3
-└ @ OptimizationProblems.ADNLPProblems ~/.julia/packages/OptimizationProblems/9qr9C/src/ADNLPProblems/catenary.jl:4
-┌ Warning: catenary: number of variables adjusted to be greater or equal to 6
-└ @ OptimizationProblems.ADNLPProblems ~/.julia/packages/OptimizationProblems/9qr9C/src/ADNLPProblems/catenary.jl:6
-┌ Warning: catenary: number of variables adjusted to be a multiple of 3
-└ @ OptimizationProblems.ADNLPProblems ~/.julia/packages/OptimizationProblems/9qr9C/src/ADNLPProblems/catenary.jl:4
-┌ Warning: catenary: number of variables adjusted to be greater or equal to 6
-└ @ OptimizationProblems.ADNLPProblems ~/.julia/packages/OptimizationProblems/9qr9C/src/ADNLPProblems/catenary.jl:6
-[ Info:  chain with 1000 vars and 752 cons
-[ Info:  channel with 1000 vars and 1000 cons
-[ Info:  clnlbeam with 999 vars and 664 cons
-[ Info:  controlinvestment with 1000 vars and 500 cons
-[ Info:  elec with 999 vars and 333 cons
-[ Info:  hovercraft1d with 998 vars and 668 cons
-[ Info:  marine with 1007 vars and 488 cons
-[ Info:  polygon with 1000 vars and 125251 cons
-[ Info:  polygon1 with 1000 vars and 500 cons
-[ Info:  polygon2 with 1000 vars and 1 cons
-[ Info:  polygon3 with 1000 vars and 1000 cons
-[ Info:  robotarm with 1009 vars and 1002 cons
-[ Info:  structural with 3540 vars and 3652 cons</code></pre><pre><code class="language-julia hljs">using Plots, SolverBenchmark
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi"><span class="sgr36"><span class="sgr1">[ Info: </span></span> camshape with 1000 vars and 2003 cons
+<span class="sgr36"><span class="sgr1">[ Info: </span></span> catenary with 999 vars and 332 cons
+<span class="sgr33"><span class="sgr1">┌ Warning: </span></span>catenary: number of variables adjusted to be a multiple of 3
+<span class="sgr33"><span class="sgr1">└ </span></span><span class="sgr90">@ OptimizationProblems.PureJuMP ~/.julia/packages/OptimizationProblems/9qr9C/src/PureJuMP/catenary.jl:20</span>
+<span class="sgr33"><span class="sgr1">┌ Warning: </span></span>catenary: number of variables adjusted to be greater or equal to 6
+<span class="sgr33"><span class="sgr1">└ </span></span><span class="sgr90">@ OptimizationProblems.PureJuMP ~/.julia/packages/OptimizationProblems/9qr9C/src/PureJuMP/catenary.jl:22</span>
+<span class="sgr33"><span class="sgr1">┌ Warning: </span></span>catenary: number of variables adjusted to be a multiple of 3
+<span class="sgr33"><span class="sgr1">└ </span></span><span class="sgr90">@ OptimizationProblems.ADNLPProblems ~/.julia/packages/OptimizationProblems/9qr9C/src/ADNLPProblems/catenary.jl:4</span>
+<span class="sgr33"><span class="sgr1">┌ Warning: </span></span>catenary: number of variables adjusted to be greater or equal to 6
+<span class="sgr33"><span class="sgr1">└ </span></span><span class="sgr90">@ OptimizationProblems.ADNLPProblems ~/.julia/packages/OptimizationProblems/9qr9C/src/ADNLPProblems/catenary.jl:6</span>
+<span class="sgr33"><span class="sgr1">┌ Warning: </span></span>catenary: number of variables adjusted to be a multiple of 3
+<span class="sgr33"><span class="sgr1">└ </span></span><span class="sgr90">@ OptimizationProblems.ADNLPProblems ~/.julia/packages/OptimizationProblems/9qr9C/src/ADNLPProblems/catenary.jl:4</span>
+<span class="sgr33"><span class="sgr1">┌ Warning: </span></span>catenary: number of variables adjusted to be greater or equal to 6
+<span class="sgr33"><span class="sgr1">└ </span></span><span class="sgr90">@ OptimizationProblems.ADNLPProblems ~/.julia/packages/OptimizationProblems/9qr9C/src/ADNLPProblems/catenary.jl:6</span>
+<span class="sgr36"><span class="sgr1">[ Info: </span></span> chain with 1000 vars and 752 cons
+<span class="sgr36"><span class="sgr1">[ Info: </span></span> channel with 1000 vars and 1000 cons
+<span class="sgr36"><span class="sgr1">[ Info: </span></span> clnlbeam with 999 vars and 664 cons
+<span class="sgr36"><span class="sgr1">[ Info: </span></span> controlinvestment with 1000 vars and 500 cons
+<span class="sgr36"><span class="sgr1">[ Info: </span></span> elec with 999 vars and 333 cons
+<span class="sgr36"><span class="sgr1">[ Info: </span></span> hovercraft1d with 998 vars and 668 cons
+<span class="sgr36"><span class="sgr1">[ Info: </span></span> marine with 1007 vars and 488 cons
+<span class="sgr36"><span class="sgr1">[ Info: </span></span> polygon with 1000 vars and 125251 cons
+<span class="sgr36"><span class="sgr1">[ Info: </span></span> polygon1 with 1000 vars and 500 cons
+<span class="sgr36"><span class="sgr1">[ Info: </span></span> polygon2 with 1000 vars and 1 cons
+<span class="sgr36"><span class="sgr1">[ Info: </span></span> polygon3 with 1000 vars and 1000 cons
+<span class="sgr36"><span class="sgr1">[ Info: </span></span> robotarm with 1009 vars and 1002 cons
+<span class="sgr36"><span class="sgr1">[ Info: </span></span> structural with 3540 vars and 3652 cons</code></pre><pre><code class="language-julia hljs">using Plots, SolverBenchmark
 costnames = [&quot;median time (in ns)&quot;, &quot;median allocs&quot;]
 costs = [
   df -&gt; df.time,
@@ -302,4 +302,4 @@ costs = [
 
 gr()
 
-profile_solvers(stats, costs, costnames)</code></pre><img src="984a6f80.svg" alt="Example block output"/></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../sparse/">« Sparse Jacobian and Hessian</a><a class="docs-footer-nextpage" href="../sparsity_pattern/">Providing sparsity pattern for sparse derivatives »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Tuesday 3 December 2024 19:03">Tuesday 3 December 2024</span>. Using Julia version 1.11.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+profile_solvers(stats, costs, costnames)</code></pre><img src="fc140e82.svg" alt="Example block output"/></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../sparse/">« Sparse Jacobian and Hessian</a><a class="docs-footer-nextpage" href="../sparsity_pattern/">Providing sparsity pattern for sparse derivatives »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Tuesday 3 December 2024 19:03">Tuesday 3 December 2024</span>. Using Julia version 1.11.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
