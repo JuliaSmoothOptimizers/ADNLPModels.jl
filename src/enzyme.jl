@@ -216,8 +216,12 @@ function SparseEnzymeADHessian(
   cx = similar(x0, ncon)
   grad = similar(x0)
   function ℓ(x, y, obj_weight, cx)
-    c!(cx, x)
-    obj_weight * f(x) + sum(cx[i] * y[i] for i = 1:ncon)
+    res = obj_weight * f(x)
+    if ncon == 0
+      c!(cx, x)
+      res += sum(cx[i] * y[i] for i = 1:ncon)
+    end
+    return res
   end
 
   return SparseEnzymeADHessian(
