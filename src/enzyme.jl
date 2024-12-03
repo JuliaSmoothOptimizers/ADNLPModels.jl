@@ -451,7 +451,7 @@ end
 
         function _gradient!(dx, ℓ, x, y, obj_weight, cx)
           Enzyme.make_zero!(dx)
-          dcx = make_zero(cx)
+          dcx = Enzyme.make_zero(cx)
           res = Enzyme.autodiff(
             Enzyme.Reverse,
             ℓ,
@@ -465,7 +465,7 @@ end
         end
 
         function _hvp!(res, ℓ, x, v, y, obj_weight, cx)
-          dcx = make_zero(cx)
+          dcx = Enzyme.make_zero(cx)
           Enzyme.autodiff(
               Enzyme.Forward,
               _gradient!,
