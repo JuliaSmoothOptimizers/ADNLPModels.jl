@@ -1,5 +1,9 @@
-list_sparse_jac_backend =
-  ((ADNLPModels.SparseADJacobian, Dict()), (ADNLPModels.ForwardDiffADJacobian, Dict()))
+if test_enzyme
+  list_sparse_jac_backend = ((ADNLPModels.SparseEnzymeADJacobian, Dict()),)
+else
+  list_sparse_jac_backend = ((ADNLPModels.SparseADJacobian, Dict()),
+                             (ADNLPModels.ForwardDiffADJacobian, Dict()))
+end
 
 dt = (Float32, Float64)
 
@@ -43,7 +47,7 @@ dt = (Float32, Float64)
     0 1
   ]
 
-  if backend == ADNLPModels.SparseADJacobian
+  if backend != ADNLPModels.ForwardDiffADJacobian
     J_sp = get_sparsity_pattern(nls, :jacobian_residual)
     @test J_sp == SparseMatrixCSC{Bool, Int}([
       1 0

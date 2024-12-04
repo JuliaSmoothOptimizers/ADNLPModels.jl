@@ -35,8 +35,10 @@
     @testset "Check multiple precision" begin
       multiple_precision_nls(nls_from_T, exclude = exclude, linear_api = true)
     end
-    @testset "Check view subarray" begin
-      view_subarray_nls.(nlss, exclude = exclude)
+    if backend != :enzyme
+      @testset "Check view subarray" begin
+        view_subarray_nls.(nlss, exclude = exclude)
+      end
     end
   end
 end

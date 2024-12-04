@@ -79,7 +79,11 @@ end
 
 function get_sparsity_pattern(model::ADModel, ::Val{:jacobian})
   backend = model.adbackend.jacobian_backend
-  validate_sparse_backend(backend, SparseADJacobian, "Jacobian")
+  validate_sparse_backend(
+    backend,
+    Union{SparseADJacobian, SparseEnzymeADJacobian},
+    "Jacobian",
+  )
   m = model.meta.ncon
   n = model.meta.nvar
   colptr = backend.colptr
@@ -91,7 +95,11 @@ end
 
 function get_sparsity_pattern(model::ADModel, ::Val{:hessian})
   backend = model.adbackend.hessian_backend
-  validate_sparse_backend(backend, Union{SparseADHessian, SparseReverseADHessian}, "Hessian")
+  validate_sparse_backend(
+    backend,
+    Union{SparseADHessian, SparseReverseADHessian, SparseEnzymeADHessian},
+    "Hessian",
+  )
   n = model.meta.nvar
   colptr = backend.colptr
   rowval = backend.rowval
@@ -102,7 +110,11 @@ end
 
 function get_sparsity_pattern(model::AbstractADNLSModel, ::Val{:jacobian_residual})
   backend = model.adbackend.jacobian_residual_backend
-  validate_sparse_backend(backend, SparseADJacobian, "Jacobian of the residual")
+  validate_sparse_backend(
+    backend,
+    Union{SparseADJacobian, SparseEnzymeADJacobian},
+    "Jacobian of the residual",
+  )
   m = model.nls_meta.nequ
   n = model.meta.nvar
   colptr = backend.colptr
@@ -116,7 +128,7 @@ function get_sparsity_pattern(model::AbstractADNLSModel, ::Val{:hessian_residual
   backend = model.adbackend.hessian_residual_backend
   validate_sparse_backend(
     backend,
-    Union{SparseADHessian, SparseReverseADHessian},
+    Union{SparseADHessian, SparseReverseADHessian, SparseEnzymeADHessian},
     "Hessian of the residual",
   )
   n = model.meta.nvar
