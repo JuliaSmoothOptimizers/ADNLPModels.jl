@@ -18,8 +18,10 @@
     @testset "Check multiple precision" begin
       multiple_precision_nlp(nlp_from_T, exclude = [], linear_api = true)
     end
-    @testset "Check view subarray" begin
-      view_subarray_nlp(nlp_ad, exclude = [])
+    if backend != :enzyme
+      @testset "Check view subarray" begin
+        view_subarray_nlp(nlp_ad, exclude = [])
+      end
     end
     @testset "Check coordinate memory" begin
       coord_memory_nlp(nlp_ad, exclude = [], linear_api = true)

@@ -75,7 +75,7 @@ test_autodiff_backend_error()
 
 push!(
   ADNLPModels.predefined_backend,
-  :enzyme_backend => Dict(
+  :enzyme => Dict(
     :gradient_backend => ADNLPModels.EnzymeReverseADGradient,
     :jprod_backend => ADNLPModels.EnzymeReverseADJprod,
     :jtprod_backend => ADNLPModels.EnzymeReverseADJtprod,
