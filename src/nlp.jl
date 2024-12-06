@@ -279,7 +279,7 @@ function ADNLPModel!(
   @lencheck nvar x0
   @lencheck ncon ucon y0
 
-  nlin = maximum(clinrows)
+  nlin = isempty(clinrows) ? 0 : maximum(clinrows)
   lin = 1:nlin
   lin_nnzj = length(clinvals)
   @lencheck lin_nnzj clinrows clincols
@@ -470,7 +470,7 @@ function ADNLPModel!(
   @lencheck nvar x0 lvar uvar
   @lencheck ncon y0 ucon
 
-  nlin = maximum(clinrows)
+  nlin = isempty(clinrows) ? 0 : maximum(clinrows)
   lin = 1:nlin
   lin_nnzj = length(clinvals)
   @lencheck lin_nnzj clinrows clincols
