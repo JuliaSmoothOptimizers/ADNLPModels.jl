@@ -4,6 +4,8 @@ using ADNLPModels, ManualNLPModels, NLPModels, NLPModelsModifiers, NLPModelsTest
 using ADNLPModels:
   gradient, gradient!, jacobian, hessian, Jprod!, Jtprod!, directional_second_derivative, Hvprod!
 
+const test_enzyme = false
+
 @testset "Test sparsity pattern of Jacobian and Hessian" begin
   f(x) = sum(x .^ 2)
   c(x) = x

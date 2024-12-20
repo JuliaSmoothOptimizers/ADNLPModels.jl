@@ -1,6 +1,6 @@
-mutable struct LinearRegression
-  x::Vector
-  y::Vector
+mutable struct LinearRegression{T}
+  x::Vector{T}
+  y::Vector{T}
 end
 
 function (regr::LinearRegression)(beta)
