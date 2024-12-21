@@ -55,8 +55,3 @@ get_adbackend(nlp)
 ```
 
 The backend `:zygote` focuses on backend based on [Zygote.jl](https://github.com/FluxML/Zygote.jl).
-
-```@example ex1
-nlp = ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon, backend = :zygote)
-get_adbackend(nlp)
-```
