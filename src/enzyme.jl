@@ -243,7 +243,6 @@ end
 
 @init begin
   @require Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9" begin
-
     function ADNLPModels.gradient(::EnzymeReverseADGradient, f, x)
       g = similar(x)
       Enzyme.gradient!(Enzyme.Reverse, g, Enzyme.Const(f), x)
@@ -262,7 +261,7 @@ end
       n = length(x)
       hess = zeros(T, n, n)
       fill!(b.seed, zero(T))
-      for i in 1:n
+      for i = 1:n
         b.seed[i] = one(T)
         Enzyme.hvp!(b.Hv, Enzyme.Const(f), x, b.seed)
         view(hess, :, i) .= b.Hv
@@ -272,12 +271,22 @@ end
     end
 
     function Jprod!(b::EnzymeReverseADJprod, Jv, c!, x, v, ::Val)
-      Enzyme.autodiff(Enzyme.Forward, Enzyme.Const(c!), Enzyme.Duplicated(b.cx, Jv), Enzyme.Duplicated(x, v))
+      Enzyme.autodiff(
+        Enzyme.Forward,
+        Enzyme.Const(c!),
+        Enzyme.Duplicated(b.cx, Jv),
+        Enzyme.Duplicated(x, v),
+      )
       return Jv
     end
 
     function Jtprod!(b::EnzymeReverseADJtprod, Jtv, c!, x, v, ::Val)
-      Enzyme.autodiff(Enzyme.Reverse, Enzyme.Const(c!), Enzyme.Duplicated(b.cx, Jtv), Enzyme.Duplicated(x, v))
+      Enzyme.autodiff(
+        Enzyme.Reverse,
+        Enzyme.Const(c!),
+        Enzyme.Duplicated(b.cx, Jtv),
+        Enzyme.Duplicated(x, v),
+      )
       return Jtv
     end
 
@@ -366,7 +375,7 @@ end
           Enzyme.Forward,
           Enzyme.Const(c!),
           Enzyme.Duplicated(b.cx, b.compressed_jacobian),
-          Enzyme.Duplicated(x, b.v)
+          Enzyme.Duplicated(x, b.v),
         )
 
         # Update the columns of the Jacobian that have the color `icol`
@@ -459,7 +468,7 @@ end
             Enzyme.Duplicated(x, dx),
             Enzyme.Const(y),
             Enzyme.Const(obj_weight),
-            Enzyme.Duplicated(cx, dcx)
+            Enzyme.Duplicated(cx, dcx),
           )
           return nothing
         end
@@ -467,21 +476,26 @@ end
         function _hvp!(res, ℓ, x, v, y, obj_weight, cx)
           dcx = Enzyme.make_zero(cx)
           Enzyme.autodiff(
-              Enzyme.Forward,
-              _gradient!,
-              res,
-              Enzyme.Const(ℓ),
-              Enzyme.Duplicated(x, v),
-              Enzyme.Const(y),
-              Enzyme.Const(obj_weight),
-              Enzyme.Duplicated(cx, dcx),
+            Enzyme.Forward,
+            _gradient!,
+            res,
+            Enzyme.Const(ℓ),
+            Enzyme.Duplicated(x, v),
+            Enzyme.Const(y),
+            Enzyme.Const(obj_weight),
+            Enzyme.Duplicated(cx, dcx),
           )
           return nothing
         end
 
         _hvp!(
           Enzyme.DuplicatedNoNeed(b.grad, b.compressed_hessian_icol),
-          b.ℓ, x, b.v, y, obj_weight, b.cx
+          b.ℓ,
+          x,
+          b.v,
+          y,
+          obj_weight,
+          b.cx,
         )
 
         if b.coloring_mode == :direct

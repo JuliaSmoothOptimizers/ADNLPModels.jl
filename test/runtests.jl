@@ -28,8 +28,8 @@ include("sparse_jacobian_nls.jl")
 include("sparse_hessian.jl")
 include("sparse_hessian_nls.jl")
 
-list_sparse_jac_backend = ((ADNLPModels.SparseADJacobian, Dict()),
-                           (ADNLPModels.ForwardDiffADJacobian, Dict()))
+list_sparse_jac_backend =
+  ((ADNLPModels.SparseADJacobian, Dict()), (ADNLPModels.ForwardDiffADJacobian, Dict()))
 
 @testset "Sparse Jacobian" begin
   for (backend, kw) in list_sparse_jac_backend
@@ -81,7 +81,8 @@ include("nls/nlpmodelstest.jl")
   test_autodiff_model("$backend", backend = backend)
 end
 
-@testset "Checking NLPModelsTest (NLP) tests with $backend" for backend in keys(ADNLPModels.predefined_backend)
+@testset "Checking NLPModelsTest (NLP) tests with $backend" for backend in
+                                                                keys(ADNLPModels.predefined_backend)
   (backend == :zygote) && continue
   (backend == :enzyme) && continue
   nlp_nlpmodelstest(backend)
@@ -93,7 +94,8 @@ end
   autodiff_nls_test("$backend", backend = backend)
 end
 
-@testset "Checking NLPModelsTest (NLS) tests with $backend" for backend in keys(ADNLPModels.predefined_backend)
+@testset "Checking NLPModelsTest (NLS) tests with $backend" for backend in
+                                                                keys(ADNLPModels.predefined_backend)
   (backend == :zygote) && continue
   (backend == :enzyme) && continue
   nls_nlpmodelstest(backend)
