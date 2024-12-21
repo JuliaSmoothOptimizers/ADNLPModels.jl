@@ -1,6 +1,6 @@
-mutable struct LinearRegression
-  x::Vector
-  y::Vector
+mutable struct LinearRegression{T}
+  x::Vector{T}
+  y::Vector{T}
 end
 
 function (regr::LinearRegression)(beta)
@@ -17,7 +17,7 @@ function test_autodiff_model(name; kwargs...)
   nlp = ADNLPModel(f, x0, c, [0.0], [0.0]; kwargs...)
   @test obj(nlp, x0) == f(x0)
 
-  x = range(-1, stop = 1, length = 100)
+  x = range(-1, stop = 1, length = 100) |> collect
   y = 2x .+ 3 + randn(100) * 0.1
   regr = LinearRegression(x, y)
   nlp = ADNLPModel(regr, ones(2); kwargs...)
@@ -342,8 +342,4 @@ function test_autodiff_model(name; kwargs...)
     nlp = ADNLPModel(f, x0, lvar, uvar, A, lcon, ucon)
     @test A == sparse(nlp.clinrows, nlp.clincols, nlp.clinvals)
   end
-end
-
-@testset "Basic tests using $backend " for backend in keys(ADNLPModels.predefined_backend)
-  test_autodiff_model("$backend", backend = backend)
 end

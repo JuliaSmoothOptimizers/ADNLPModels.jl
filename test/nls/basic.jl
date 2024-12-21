@@ -360,7 +360,3 @@ function autodiff_nls_test(name; kwargs...)
     @test A == sparse(nls.clinrows, nls.clincols, nls.clinvals)
   end
 end
-
-@testset "Basic NLS tests using $backend " for backend in keys(ADNLPModels.predefined_backend)
-  autodiff_nls_test("$backend", backend = backend)
-end

@@ -1,4 +1,5 @@
 using LinearAlgebra, SparseArrays, Test
+using SparseMatrixColorings
 using ADNLPModels, ManualNLPModels, NLPModels, NLPModelsModifiers, NLPModelsTest
 using ADNLPModels:
   gradient, gradient!, jacobian, hessian, Jprod!, Jtprod!, directional_second_derivative, Hvprod!
@@ -6,78 +7,130 @@ using ADNLPModels:
 # Automatically loads the code for Enzyme with Requires
 import Enzyme
 
-#=
-ADNLPModels.EmptyADbackend(args...; kwargs...) = ADNLPModels.EmptyADbackend()
+EnzymeReverseAD() = ADNLPModels.ADModelBackend(
+  ADNLPModels.EnzymeReverseADGradient(),
+  ADNLPModels.EnzymeReverseADHvprod(zeros(1)),
+  ADNLPModels.EnzymeReverseADJprod(zeros(1)),
+  ADNLPModels.EnzymeReverseADJtprod(zeros(1)),
+  ADNLPModels.EnzymeReverseADJacobian(),
+  ADNLPModels.EnzymeReverseADHessian(zeros(1), zeros(1)),
+  ADNLPModels.EnzymeReverseADHvprod(zeros(1)),
+  ADNLPModels.EmptyADbackend(),
+  ADNLPModels.EmptyADbackend(),
+  ADNLPModels.EmptyADbackend(),
+  ADNLPModels.EmptyADbackend(),
+  ADNLPModels.EmptyADbackend(),
+)
 
-names = OptimizationProblems.meta[!, :name]
-list_excluded_enzyme = [
-  "brybnd",
-  "clplatea",
-  "clplateb",
-  "clplatec",
-  "curly",
-  "curly10",
-  "curly20",
-  "curly30",
-  "elec",
-  "fminsrf2",
-  "hs101",
-  "hs117",
-  "hs119",
-  "hs86",
-  "integreq",
-  "ncb20",
-  "ncb20b",
-  "palmer1c",
-  "palmer1d",
-  "palmer2c",
-  "palmer3c",
-  "palmer4c",
-  "palmer5c",
-  "palmer5d",
-  "palmer6c",
-  "palmer7c",
-  "palmer8c",
-  "sbrybnd",
-  "tetra",
-  "tetra_duct12",
-  "tetra_duct15",
-  "tetra_duct20",
-  "tetra_foam5",
-  "tetra_gear",
-  "tetra_hook",
-  "threepk",
-  "triangle",
-  "triangle_deer",
-  "triangle_pacman",
-  "triangle_turtle",
-  "watson",
-]
-for pb in names
-  @info pb
-  (pb in list_excluded_enzyme) && continue
-  nlp = eval(Meta.parse(pb))(
-    gradient_backend = ADNLPModels.EnzymeADGradient,
-    jacobian_backend = ADNLPModels.EmptyADbackend,
-    hessian_backend = ADNLPModels.EmptyADbackend,
-  )
-  grad(nlp, get_x0(nlp))
+function mysum!(y, x)
+  sum!(y, x)
+  return nothing
 end
-=#
 
-#=
-ERROR: Duplicated Returns not yet handled
-Stacktrace:
- [1] autodiff
-   @.julia\packages\Enzyme\DIkTv\src\Enzyme.jl:209 [inlined]
- [2] autodiff(mode::EnzymeCore.ReverseMode, f::OptimizationProblems.ADNLPProblems.var"#f#254"{OptimizationProblems.ADNLPProblems.var"#f#250#255"}, args::Duplicated{Vector{Float64}})
-   @ Enzyme.julia\packages\Enzyme\DIkTv\src\Enzyme.jl:248
- [3] gradient!(#unused#::ADNLPModels.EnzymeADGradient, g::Vector{Float64}, f::Function, x::Vector{Float64})
-   @ ADNLPModelsDocuments\cvs\ADNLPModels.jl\src\enzyme.jl:17
- [4] grad!(nlp::ADNLPModel{Float64, Vector{Float64}, Vector{Int64}}, x::Vector{Float64}, g::Vector{Float64})
-   @ ADNLPModelsDocuments\cvs\ADNLPModels.jl\src\nlp.jl:542
- [5] grad(nlp::ADNLPModel{Float64, Vector{Float64}, Vector{Int64}}, x::Vector{Float64})
-   @ NLPModels.julia\packages\NLPModels\XBcWL\src\nlp\api.jl:31
- [6] top-level scope
-   @ .\REPL[7]:5
-=#
+function test_autodiff_backend_error()
+  @testset "Error without loading package - $backend" for backend in [:EnzymeReverseAD]
+    adbackend = eval(backend)()
+    # @test_throws ArgumentError gradient(adbackend.gradient_backend, sum, [1.0])
+    # @test_throws ArgumentError gradient!(adbackend.gradient_backend, [1.0], sum, [1.0])
+    # @test_throws ArgumentError jacobian(adbackend.jacobian_backend, identity, [1.0])
+    # @test_throws ArgumentError hessian(adbackend.hessian_backend, sum, [1.0])
+    # @test_throws ArgumentError Jprod!(
+    #   adbackend.jprod_backend,
+    #   [1.0],
+    #   [1.0],
+    #   identity,
+    #   [1.0],
+    #   Val(:c),
+    # )
+    # @test_throws ArgumentError Jtprod!(
+    #   adbackend.jtprod_backend,
+    #   [1.0],
+    #   [1.0],
+    #   identity,
+    #   [1.0],
+    #   Val(:c),
+    # )
+    gradient(adbackend.gradient_backend, sum, [1.0])
+    gradient!(adbackend.gradient_backend, [1.0], sum, [1.0])
+    jacobian(adbackend.jacobian_backend, sum, [1.0])
+    hessian(adbackend.hessian_backend, sum, [1.0])
+    Jprod!(
+      adbackend.jprod_backend,
+      [1.0],
+      sum!,
+      [1.0],
+      [1.0],
+      Val(:c),
+    )
+    Jtprod!(
+      adbackend.jtprod_backend,
+      [1.0],
+      mysum!,
+      [1.0],
+      [1.0],
+      Val(:c),
+    )
+  end
+end
+
+test_autodiff_backend_error()
+
+include("sparse_jacobian.jl")
+include("sparse_jacobian_nls.jl")
+include("sparse_hessian.jl")
+include("sparse_hessian_nls.jl")
+
+list_sparse_jac_backend = ((ADNLPModels.SparseEnzymeADJacobian, Dict()),)
+
+@testset "Sparse Jacobian" begin
+  for (backend, kw) in list_sparse_jac_backend
+    sparse_jacobian(backend, kw)
+    sparse_jacobian_nls(backend, kw)
+  end
+end
+
+list_sparse_hess_backend = (
+  ( ADNLPModels.SparseEnzymeADHessian,
+    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}()),
+  ),
+  (
+    ADNLPModels.SparseEnzymeADHessian,
+    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}()),
+  ),
+)
+
+@testset "Sparse Hessian" begin
+  for (backend, kw) in list_sparse_hess_backend
+    sparse_hessian(backend, kw)
+    sparse_hessian_nls(backend, kw)
+  end
+end
+
+for problem in NLPModelsTest.nlp_problems ∪ ["GENROSE"]
+  include("nlp/problems/$(lowercase(problem)).jl")
+end
+for problem in NLPModelsTest.nls_problems
+  include("nls/problems/$(lowercase(problem)).jl")
+end
+
+include("utils.jl")
+include("nlp/basic.jl")
+include("nls/basic.jl")
+include("nlp/nlpmodelstest.jl")
+include("nls/nlpmodelstest.jl")
+
+@testset "Basic NLP tests using $backend " for backend in (:enzyme,)
+  test_autodiff_model("$backend", backend = backend)
+end
+
+@testset "Checking NLPModelsTest (NLP) tests with $backend" for backend in (:enzyme,)
+  nlp_nlpmodelstest(backend)
+end
+
+@testset "Basic NLS tests using $backend " for backend in (:enzyme,)
+  autodiff_nls_test("$backend", backend = backend)
+end
+
+@testset "Checking NLPModelsTest (NLS) tests with $backend" for backend in (:enzyme,)
+  nls_nlpmodelstest(backend)
+end

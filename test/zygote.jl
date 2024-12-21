@@ -54,25 +54,6 @@ end
 # Test the argument error without loading the packages
 test_autodiff_backend_error()
 
-# Additional backends used for tests
-push!(
-  ADNLPModels.predefined_backend,
-  :zygote_backend => Dict(
-    :gradient_backend => ADNLPModels.ZygoteADGradient,
-    :jprod_backend => ADNLPModels.ZygoteADJprod,
-    :jtprod_backend => ADNLPModels.ZygoteADJtprod,
-    :hprod_backend => ADNLPModels.ForwardDiffADHvprod,
-    :jacobian_backend => ADNLPModels.ZygoteADJacobian,
-    :hessian_backend => ADNLPModels.ZygoteADHessian,
-    :ghjvprod_backend => ADNLPModels.ForwardDiffADGHjvprod,
-    :jprod_residual_backend => ADNLPModels.ZygoteADJprod,
-    :jtprod_residual_backend => ADNLPModels.ZygoteADJtprod,
-    :hprod_residual_backend => ADNLPModels.ForwardDiffADHvprod,
-    :jacobian_residual_backend => ADNLPModels.ZygoteADJacobian,
-    :hessian_residual_backend => ADNLPModels.ZygoteADHessian,
-  ),
-)
-
 # Automatically loads the code for Zygote with Requires
 import Zygote
 
@@ -81,3 +62,19 @@ include("nlp/basic.jl")
 include("nls/basic.jl")
 include("nlp/nlpmodelstest.jl")
 include("nls/nlpmodelstest.jl")
+
+@testset "Basic NLP tests using $backend " for backend in (:zygote,)
+  test_autodiff_model("$backend", backend = backend)
+end
+
+@testset "Checking NLPModelsTest (NLP) tests with $backend" for backend in (:zygote,)
+  nlp_nlpmodelstest(backend)
+end
+
+@testset "Basic NLS tests using $backend " for backend in (:zygote,)
+  autodiff_nls_test("$backend", backend = backend)
+end
+
+@testset "Checking NLPModelsTest (NLS) tests with $backend" for backend in (:zygote,)
+  nls_nlpmodelstest(backend)
+end

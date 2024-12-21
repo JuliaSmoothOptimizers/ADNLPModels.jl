@@ -1,4 +1,4 @@
-struct SparseADHessian{Tag, R, T, C, H, S, GT} <: ADNLPModels.ADBackend
+struct SparseADHessian{Tag, R, T, C, H, S, GT} <: ADBackend
   nvar::Int
   rowval::Vector{Int}
   colptr::Vector{Int}
@@ -104,7 +104,7 @@ function SparseADHessian(
   )
 end
 
-struct SparseReverseADHessian{Tagf, Tagψ, R, T, C, H, S, F, P} <: ADNLPModels.ADBackend
+struct SparseReverseADHessian{Tagf, Tagψ, R, T, C, H, S, F, P} <: ADBackend
   nvar::Int
   rowval::Vector{Int}
   colptr::Vector{Int}

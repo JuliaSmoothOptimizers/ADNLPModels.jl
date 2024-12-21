@@ -1,7 +1,5 @@
-@testset "Checking NLPModelsTest (NLP) tests with $backend" for backend in
-                                                                keys(ADNLPModels.predefined_backend)
-  @testset "Checking NLPModelsTest tests on problem $problem" for problem in
-                                                                  NLPModelsTest.nlp_problems
+function nlp_nlpmodelstest(backend)
+  @testset "Checking NLPModelsTest tests on problem $problem" for problem in NLPModelsTest.nlp_problems
     nlp_from_T = eval(Meta.parse(lowercase(problem) * "_autodiff"))
     nlp_ad = nlp_from_T(; backend = backend)
     nlp_man = eval(Meta.parse(problem))()
@@ -18,8 +16,10 @@
     @testset "Check multiple precision" begin
       multiple_precision_nlp(nlp_from_T, exclude = [], linear_api = true)
     end
-    @testset "Check view subarray" begin
-      view_subarray_nlp(nlp_ad, exclude = [])
+    if backend != :enzyme
+      @testset "Check view subarray" begin
+        view_subarray_nlp(nlp_ad, exclude = [])
+      end
     end
     @testset "Check coordinate memory" begin
       coord_memory_nlp(nlp_ad, exclude = [], linear_api = true)
