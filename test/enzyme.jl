@@ -75,24 +75,35 @@ end
 
 test_autodiff_backend_error()
 
+include("sparse_jacobian.jl")
+include("sparse_jacobian_nls.jl")
+include("sparse_hessian.jl")
+include("sparse_hessian_nls.jl")
+
+list_sparse_jac_backend = ((ADNLPModels.SparseEnzymeADJacobian, Dict()),)
+
 @testset "Sparse Jacobian" begin
-  list_sparse_jac_backend = ((ADNLPModels.SparseEnzymeADJacobian, Dict()),)
-  include("sparse_jacobian.jl")
-  include("sparse_jacobian_nls.jl")
+  for (backend, kw) in list_sparse_jac_backend
+    sparse_jacobian(backend, kw)
+    sparse_jacobian_nls(backend, kw)
+  end
 end
 
+list_sparse_hess_backend = (
+  ( ADNLPModels.SparseEnzymeADHessian,
+    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}()),
+  ),
+  (
+    ADNLPModels.SparseEnzymeADHessian,
+    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}()),
+  ),
+)
+
 @testset "Sparse Hessian" begin
-  list_sparse_hess_backend = (
-    ( ADNLPModels.SparseEnzymeADHessian,
-      Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}()),
-    ),
-    (
-      ADNLPModels.SparseEnzymeADHessian,
-      Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}()),
-    ),
-  )
-  include("sparse_hessian.jl")
-  include("sparse_hessian_nls.jl")
+  for (backend, kw) in list_sparse_hess_backend
+    sparse_hessian(backend, kw)
+    sparse_hessian_nls(backend, kw)
+  end
 end
 
 for problem in NLPModelsTest.nlp_problems ∪ ["GENROSE"]
