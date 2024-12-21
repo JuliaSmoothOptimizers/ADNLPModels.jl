@@ -1,13 +1,4 @@
-if test_enzyme
-  list_sparse_jac_backend = ((ADNLPModels.SparseEnzymeADJacobian, Dict()),)
-else
-  list_sparse_jac_backend = ((ADNLPModels.SparseADJacobian, Dict()),
-                             (ADNLPModels.ForwardDiffADJacobian, Dict()))
-end
-
-dt = (Float32, Float64)
-
-@testset "Basic Jacobian of residual derivative with backend=$(backend) and T=$(T)" for T in dt,
+@testset "Basic Jacobian of residual derivative with backend=$(backend) and T=$(T)" for T in (Float32, Float64),
   (backend, kw) in list_sparse_jac_backend
 
   F!(Fx, x) = begin

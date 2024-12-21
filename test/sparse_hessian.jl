@@ -1,35 +1,4 @@
-if test_enzyme
-  list_sparse_hess_backend = (
-    ( ADNLPModels.SparseEnzymeADHessian,
-      Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}()),
-    ),
-    (
-      ADNLPModels.SparseEnzymeADHessian,
-      Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}()),
-    ),
-  )
-else
-  list_sparse_hess_backend = (
-    (ADNLPModels.SparseADHessian, Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}())),
-    (
-      ADNLPModels.SparseADHessian,
-      Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}()),
-    ),
-    (
-      ADNLPModels.SparseReverseADHessian,
-      Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}()),
-    ),
-    (
-      ADNLPModels.SparseReverseADHessian,
-      Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}()),
-    ),
-    (ADNLPModels.ForwardDiffADHessian, Dict()),
-  )
-end
-
-dt = (Float32, Float64)
-
-@testset "Basic Hessian derivative with backend=$(backend) and T=$(T)" for T in dt,
+@testset "Basic Hessian derivative with backend=$(backend) and T=$(T)" for T in (Float32, Float64),
   (backend, kw) in list_sparse_hess_backend
 
   c!(cx, x) = begin

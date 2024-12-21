@@ -21,10 +21,12 @@ EnzymeReverseAD() = ADNLPModels.ADModelBackend(
   ADNLPModels.EmptyADbackend(),
   ADNLPModels.EmptyADbackend(),
 )
+
 function mysum!(y, x)
   sum!(y, x)
   return nothing
 end
+
 function test_autodiff_backend_error()
   @testset "Error without loading package - $backend" for backend in [:EnzymeReverseAD]
     adbackend = eval(backend)()
@@ -73,30 +75,25 @@ end
 
 test_autodiff_backend_error()
 
-push!(
-  ADNLPModels.predefined_backend,
-  :enzyme => Dict(
-    :gradient_backend => ADNLPModels.EnzymeReverseADGradient,
-    :jprod_backend => ADNLPModels.EnzymeReverseADJprod,
-    :jtprod_backend => ADNLPModels.EnzymeReverseADJtprod,
-    :hprod_backend => ADNLPModels.EnzymeReverseADHvprod,
-    :jacobian_backend => ADNLPModels.EnzymeReverseADJacobian,
-    :hessian_backend => ADNLPModels.EnzymeReverseADHessian,
-    :ghjvprod_backend => ADNLPModels.ForwardDiffADGHjvprod,
-    :jprod_residual_backend => ADNLPModels.EnzymeReverseADJprod,
-    :jtprod_residual_backend => ADNLPModels.EnzymeReverseADJtprod,
-    :hprod_residual_backend => ADNLPModels.EnzymeReverseADHvprod,
-    :jacobian_residual_backend => ADNLPModels.EnzymeReverseADJacobian,
-    :hessian_residual_backend => ADNLPModels.EnzymeReverseADHessian,
-  ),
-)
+@testset "Sparse Jacobian" begin
+  list_sparse_jac_backend = ((ADNLPModels.SparseEnzymeADJacobian, Dict()),)
+  include("sparse_jacobian.jl")
+  include("sparse_jacobian_nls.jl")
+end
 
-const test_enzyme = true
-
-include("sparse_jacobian.jl")
-include("sparse_jacobian_nls.jl")
-include("sparse_hessian.jl")
-include("sparse_hessian_nls.jl")
+@testset "Sparse Hessian" begin
+  list_sparse_hess_backend = (
+    ( ADNLPModels.SparseEnzymeADHessian,
+      Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}()),
+    ),
+    (
+      ADNLPModels.SparseEnzymeADHessian,
+      Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}()),
+    ),
+  )
+  include("sparse_hessian.jl")
+  include("sparse_hessian_nls.jl")
+end
 
 for problem in NLPModelsTest.nlp_problems ∪ ["GENROSE"]
   include("nlp/problems/$(lowercase(problem)).jl")
@@ -110,3 +107,19 @@ include("nlp/basic.jl")
 include("nls/basic.jl")
 include("nlp/nlpmodelstest.jl")
 include("nls/nlpmodelstest.jl")
+
+@testset "Basic NLP tests using $backend " for backend in (:enzyme,)
+  test_autodiff_model("$backend", backend = backend)
+end
+
+@testset "Checking NLPModelsTest (NLP) tests with $backend" for backend in (:enzyme,)
+  nlp_nlpmodelstest(backend)
+end
+
+@testset "Basic NLS tests using $backend " for backend in (:enzyme,)
+  autodiff_nls_test("$backend", backend = backend)
+end
+
+@testset "Checking NLPModelsTest (NLS) tests with $backend" for backend in (:enzyme,)
+  nls_nlpmodelstest(backend)
+end

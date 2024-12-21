@@ -4,8 +4,6 @@ using ADNLPModels, ManualNLPModels, NLPModels, NLPModelsModifiers, NLPModelsTest
 using ADNLPModels:
   gradient, gradient!, jacobian, hessian, Jprod!, Jtprod!, directional_second_derivative, Hvprod!
 
-const test_enzyme = false
-
 @testset "Test sparsity pattern of Jacobian and Hessian" begin
   f(x) = sum(x .^ 2)
   c(x) = x
@@ -25,12 +23,30 @@ end
   include("manual.jl")
 end
 
-@testset "Basic Jacobian derivative test" begin
+@testset "Sparse Jacobian" begin
+  list_sparse_jac_backend = ((ADNLPModels.SparseADJacobian, Dict()),
+                             (ADNLPModels.ForwardDiffADJacobian, Dict()))
   include("sparse_jacobian.jl")
   include("sparse_jacobian_nls.jl")
 end
 
-@testset "Basic Hessian derivative test" begin
+@testset "Sparse Hessian" begin
+  list_sparse_hess_backend = (
+    (ADNLPModels.SparseADHessian, Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}())),
+    (
+      ADNLPModels.SparseADHessian,
+      Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}()),
+    ),
+    (
+      ADNLPModels.SparseReverseADHessian,
+      Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}()),
+    ),
+    (
+      ADNLPModels.SparseReverseADHessian,
+      Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}()),
+    ),
+    (ADNLPModels.ForwardDiffADHessian, Dict()),
+  )
   include("sparse_hessian.jl")
   include("sparse_hessian_nls.jl")
 end
@@ -44,6 +60,30 @@ end
 
 include("utils.jl")
 include("nlp/basic.jl")
-include("nls/basic.jl")
 include("nlp/nlpmodelstest.jl")
+include("nls/basic.jl")
 include("nls/nlpmodelstest.jl")
+
+@testset "Basic NLP tests using $backend " for backend in keys(ADNLPModels.predefined_backend)
+  (backend == :zygote) && continue
+  (backend == :enzyme) && continue
+  test_autodiff_model("$backend", backend = backend)
+end
+
+@testset "Checking NLPModelsTest (NLP) tests with $backend" for backend in keys(ADNLPModels.predefined_backend)
+  (backend == :zygote) && continue
+  (backend == :enzyme) && continue
+  nlp_nlpmodelstest(backend)
+end
+
+@testset "Basic NLS tests using $backend " for backend in keys(ADNLPModels.predefined_backend)
+  (backend == :zygote) && continue
+  (backend == :enzyme) && continue
+  autodiff_nls_test("$backend", backend = backend)
+end
+
+@testset "Checking NLPModelsTest (NLS) tests with $backend" for backend in keys(ADNLPModels.predefined_backend)
+  (backend == :zygote) && continue
+  (backend == :enzyme) && continue
+  nls_nlpmodelstest(backend)
+end

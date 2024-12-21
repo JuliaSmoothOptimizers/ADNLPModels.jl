@@ -30,7 +30,7 @@ function gradient!(adbackend::ReverseDiffADGradient, g, f, x)
   return ReverseDiff.gradient!(g, adbackend.cfg, x)
 end
 
-struct GenericReverseDiffADGradient <: ADNLPModels.ADBackend end
+struct GenericReverseDiffADGradient <: ADBackend end
 
 function GenericReverseDiffADGradient(
   nvar::Integer,
@@ -43,7 +43,7 @@ function GenericReverseDiffADGradient(
   return GenericReverseDiffADGradient()
 end
 
-function ADNLPModels.gradient!(::GenericReverseDiffADGradient, g, f, x)
+function gradient!(::GenericReverseDiffADGradient, g, f, x)
   return ReverseDiff.gradient!(g, f, x)
 end
 
@@ -139,7 +139,7 @@ function Jtprod!(::GenericReverseDiffADJtprod, Jtv, f, x, v, ::Val)
   return Jtv
 end
 
-struct ReverseDiffADJtprod{T, S, GT} <: ADNLPModels.InPlaceADbackend
+struct ReverseDiffADJtprod{T, S, GT} <: InPlaceADbackend
   gtape::GT
   _tmp_out::Vector{ReverseDiff.TrackedReal{T, T, Nothing}}
   _rval::S  # temporary storage for jtprod
@@ -167,7 +167,7 @@ function ReverseDiffADJtprod(
   return ReverseDiffADJtprod(gtape, _tmp_out, _rval)
 end
 
-function ADNLPModels.Jtprod!(b::ReverseDiffADJtprod, Jtv, c!, x, v, ::Val)
+function Jtprod!(b::ReverseDiffADJtprod, Jtv, c!, x, v, ::Val)
   ReverseDiff.gradient!((Jtv, b._rval), b.gtape, (x, v))
   return Jtv
 end

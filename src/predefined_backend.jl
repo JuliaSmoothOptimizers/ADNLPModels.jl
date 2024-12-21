@@ -13,8 +13,8 @@ default_backend = Dict(
   :hessian_residual_backend => SparseADHessian,
 )
 
-optimized = Dict(
-  :gradient_backend => ReverseDiffADGradient, # EnzymeADGradient
+optimized_backend = Dict(
+  :gradient_backend => ReverseDiffADGradient,
   :hprod_backend => ReverseDiffADHvprod,
   :jprod_backend => ForwardDiffADJprod,
   :jtprod_backend => ReverseDiffADJtprod,
@@ -28,7 +28,7 @@ optimized = Dict(
   :hessian_residual_backend => SparseReverseADHessian,
 )
 
-generic = Dict(
+generic_backend = Dict(
   :gradient_backend => GenericForwardDiffADGradient,
   :hprod_backend => GenericForwardDiffADHvprod,
   :jprod_backend => GenericForwardDiffADJprod,
@@ -43,7 +43,41 @@ generic = Dict(
   :hessian_residual_backend => ForwardDiffADHessian,
 )
 
-predefined_backend = Dict(:default => default_backend, :optimized => optimized, :generic => generic)
+enzyme_backend = Dict(
+  :gradient_backend => EnzymeReverseADGradient,
+  :jprod_backend => EnzymeReverseADJprod,
+  :jtprod_backend => EnzymeReverseADJtprod,
+  :hprod_backend => EnzymeReverseADHvprod,
+  :jacobian_backend => EnzymeReverseADJacobian,
+  :hessian_backend => EnzymeReverseADHessian,
+  :ghjvprod_backend => ForwardDiffADGHjvprod,
+  :jprod_residual_backend => EnzymeReverseADJprod,
+  :jtprod_residual_backend => EnzymeReverseADJtprod,
+  :hprod_residual_backend => EnzymeReverseADHvprod,
+  :jacobian_residual_backend => EnzymeReverseADJacobian,
+  :hessian_residual_backend => EnzymeReverseADHessian,
+)
+
+zygote_backend = Dict(
+  :gradient_backend => ZygoteADGradient,
+  :jprod_backend => ZygoteADJprod,
+  :jtprod_backend => ZygoteADJtprod,
+  :hprod_backend => ForwardDiffADHvprod,
+  :jacobian_backend => ZygoteADJacobian,
+  :hessian_backend => ZygoteADHessian,
+  :ghjvprod_backend => ForwardDiffADGHjvprod,
+  :jprod_residual_backend => ZygoteADJprod,
+  :jtprod_residual_backend => ZygoteADJtprod,
+  :hprod_residual_backend => ForwardDiffADHvprod,
+  :jacobian_residual_backend => ZygoteADJacobian,
+  :hessian_residual_backend => ZygoteADHessian,
+)
+
+predefined_backend = Dict(:default => default_backend,
+                          :optimized => optimized_backend,
+                          :generic => generic_backend,
+                          :enzyme => enzyme_backend,
+                          :zygote => zygote_backend)
 
 """
     get_default_backend(meth::Symbol, backend::Symbol; kwargs...)

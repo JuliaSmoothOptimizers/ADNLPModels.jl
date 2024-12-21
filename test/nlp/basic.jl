@@ -343,7 +343,3 @@ function test_autodiff_model(name; kwargs...)
     @test A == sparse(nlp.clinrows, nlp.clincols, nlp.clinvals)
   end
 end
-
-@testset "Basic tests using $backend " for backend in keys(ADNLPModels.predefined_backend)
-  test_autodiff_model("$backend", backend = backend)
-end

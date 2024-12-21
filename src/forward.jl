@@ -71,7 +71,7 @@ function Jprod!(::GenericForwardDiffADJprod, Jv, f, x, v, ::Val)
   return Jv
 end
 
-struct ForwardDiffADJprod{T, Tag} <: ADNLPModels.InPlaceADbackend
+struct ForwardDiffADJprod{T, Tag} <: InPlaceADbackend
   z::Vector{ForwardDiff.Dual{Tag, T, 1}}
   cz::Vector{ForwardDiff.Dual{Tag, T, 1}}
 end
@@ -91,7 +91,7 @@ function ForwardDiffADJprod(
   return ForwardDiffADJprod(z, cz)
 end
 
-function ADNLPModels.Jprod!(b::ForwardDiffADJprod{T, Tag}, Jv, c!, x, v, ::Val) where {T, Tag}
+function Jprod!(b::ForwardDiffADJprod{T, Tag}, Jv, c!, x, v, ::Val) where {T, Tag}
   map!(ForwardDiff.Dual{Tag}, b.z, x, v) # x + ε * v
   c!(b.cz, b.z) # c!(cz, x + ε * v)
   ForwardDiff.extract_derivative!(Tag, Jv, b.cz) # ∇c!(cx, x)ᵀv
@@ -113,7 +113,7 @@ function Jtprod!(::GenericForwardDiffADJtprod, Jtv, f, x, v, ::Val)
   return Jtv
 end
 
-struct ForwardDiffADJtprod{Tag, GT, S} <: ADNLPModels.InPlaceADbackend
+struct ForwardDiffADJtprod{Tag, GT, S} <: InPlaceADbackend
   cfg::ForwardDiff.GradientConfig{Tag}
   ψ::GT
   temp::S
@@ -144,7 +144,7 @@ function ForwardDiffADJtprod(
   return ForwardDiffADJtprod(cfg, ψ, temp, sol)
 end
 
-function ADNLPModels.Jtprod!(
+function Jtprod!(
   b::ForwardDiffADJtprod{Tag, GT, S},
   Jtv,
   c!,

@@ -153,7 +153,7 @@ function SparseEnzymeADJacobian(
   )
 end
 
-struct SparseEnzymeADHessian{R, C, S, L} <: ADNLPModels.ADBackend
+struct SparseEnzymeADHessian{R, C, S, L} <: ADBackend
   nvar::Int
   rowval::Vector{Int}
   colptr::Vector{Int}
