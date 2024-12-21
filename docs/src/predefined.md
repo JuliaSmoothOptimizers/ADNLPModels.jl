@@ -46,3 +46,17 @@ It is possible to use these pre-defined backends using the keyword argument `bac
 nlp = ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon, backend = :optimized)
 get_adbackend(nlp)
 ```
+
+The backend `:enzyme` focuses on backend based on [Enzyme.jl](https://github.com/EnzymeAD/Enzyme.jl).
+
+```@example ex1
+nlp = ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon, backend = :enzyme)
+get_adbackend(nlp)
+```
+
+The backend `:zygote` focuses on backend based on [Zygote.jl](https://github.com/FluxML/Zygote.jl).
+
+```@example ex1
+nlp = ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon, backend = :zygote)
+get_adbackend(nlp)
+```

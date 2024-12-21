@@ -10,11 +10,11 @@ The functions used internally to define the NLPModel API and the possible backen
 | Functions | FowardDiff backends | ReverseDiff backends | Zygote backends | Enzyme backend | Sparse backend |
 | --------- | ------------------- | -------------------- | --------------- | -------------- | -------------- |
 | `gradient` and `gradient!` | `ForwardDiffADGradient`/`GenericForwardDiffADGradient` | `ReverseDiffADGradient`/`GenericReverseDiffADGradient` | `ZygoteADGradient` | `EnzymeADGradient` | -- |
-| `jacobian` | `ForwardDiffADJacobian` | `ReverseDiffADJacobian` | `ZygoteADJacobian` | -- | `SparseADJacobian` |
-| `hessian` | `ForwardDiffADHessian` | `ReverseDiffADHessian` | `ZygoteADHessian` | -- | `SparseADHessian`/`SparseReverseADHessian` |
-| `Jprod` | `ForwardDiffADJprod`/`GenericForwardDiffADJprod` | `ReverseDiffADJprod`/`GenericReverseDiffADJprod` | `ZygoteADJprod` | -- | -- |
-| `Jtprod` | `ForwardDiffADJtprod`/`GenericForwardDiffADJtprod` | `ReverseDiffADJtprod`/`GenericReverseDiffADJtprod` | `ZygoteADJtprod` | -- | -- |
-| `Hvprod` | `ForwardDiffADHvprod`/`GenericForwardDiffADHvprod` | `ReverseDiffADHvprod`/`GenericReverseDiffADHvprod` | -- | -- | -- |
+| `jacobian` | `ForwardDiffADJacobian` | `ReverseDiffADJacobian` | `ZygoteADJacobian` | `EnzymeADJacobian` | `SparseADJacobian` |
+| `hessian` | `ForwardDiffADHessian` | `ReverseDiffADHessian` | `ZygoteADHessian` | `EnzymeADHessian` | `SparseADHessian`/`SparseReverseADHessian` |
+| `Jprod` | `ForwardDiffADJprod`/`GenericForwardDiffADJprod` | `ReverseDiffADJprod`/`GenericReverseDiffADJprod` | `ZygoteADJprod` | `EnzymeADJprod` | -- |
+| `Jtprod` | `ForwardDiffADJtprod`/`GenericForwardDiffADJtprod` | `ReverseDiffADJtprod`/`GenericReverseDiffADJtprod` | `ZygoteADJtprod` | `EnzymeADJtprod` | -- |
+| `Hvprod` | `ForwardDiffADHvprod`/`GenericForwardDiffADHvprod` | `ReverseDiffADHvprod`/`GenericReverseDiffADHvprod` | -- | `EnzymeADHvprod` | -- |
 | `directional_second_derivative` | `ForwardDiffADGHjvprod` | -- | -- | -- | -- |
 
 The functions `hess_structure!`, `hess_coord!`, `jac_structure!` and `jac_coord!` defined in `ad.jl` are generic to all the backends for now.

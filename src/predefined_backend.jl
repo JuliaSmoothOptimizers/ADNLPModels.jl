@@ -48,14 +48,14 @@ enzyme_backend = Dict(
   :jprod_backend => EnzymeReverseADJprod,
   :jtprod_backend => EnzymeReverseADJtprod,
   :hprod_backend => EnzymeReverseADHvprod,
-  :jacobian_backend => EnzymeReverseADJacobian,
-  :hessian_backend => EnzymeReverseADHessian,
+  :jacobian_backend => SparseEnzymeADJacobian,
+  :hessian_backend => SparseEnzymeADHessian,
   :ghjvprod_backend => ForwardDiffADGHjvprod,
   :jprod_residual_backend => EnzymeReverseADJprod,
   :jtprod_residual_backend => EnzymeReverseADJtprod,
   :hprod_residual_backend => EnzymeReverseADHvprod,
-  :jacobian_residual_backend => EnzymeReverseADJacobian,
-  :hessian_residual_backend => EnzymeReverseADHessian,
+  :jacobian_residual_backend => SparseEnzymeADJacobian,
+  :hessian_residual_backend => SparseEnzymeADHessian,
 )
 
 zygote_backend = Dict(
