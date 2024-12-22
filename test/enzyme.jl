@@ -54,22 +54,8 @@ function test_autodiff_backend_error()
     gradient!(adbackend.gradient_backend, [1.0], sum, [1.0])
     jacobian(adbackend.jacobian_backend, sum, [1.0])
     hessian(adbackend.hessian_backend, sum, [1.0])
-    Jprod!(
-      adbackend.jprod_backend,
-      [1.0],
-      sum!,
-      [1.0],
-      [1.0],
-      Val(:c),
-    )
-    Jtprod!(
-      adbackend.jtprod_backend,
-      [1.0],
-      mysum!,
-      [1.0],
-      [1.0],
-      Val(:c),
-    )
+    Jprod!(adbackend.jprod_backend, [1.0], sum!, [1.0], [1.0], Val(:c))
+    Jtprod!(adbackend.jtprod_backend, [1.0], mysum!, [1.0], [1.0], Val(:c))
   end
 end
 
@@ -90,7 +76,8 @@ list_sparse_jac_backend = ((ADNLPModels.SparseEnzymeADJacobian, Dict()),)
 end
 
 list_sparse_hess_backend = (
-  ( ADNLPModels.SparseEnzymeADHessian,
+  (
+    ADNLPModels.SparseEnzymeADHessian,
     Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}()),
   ),
   (

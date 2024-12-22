@@ -144,14 +144,7 @@ function ForwardDiffADJtprod(
   return ForwardDiffADJtprod(cfg, ψ, temp, sol)
 end
 
-function Jtprod!(
-  b::ForwardDiffADJtprod{Tag, GT, S},
-  Jtv,
-  c!,
-  x,
-  v,
-  ::Val,
-) where {Tag, GT, S}
+function Jtprod!(b::ForwardDiffADJtprod{Tag, GT, S}, Jtv, c!, x, v, ::Val) where {Tag, GT, S}
   ncon = length(v)
   nvar = length(x)
 

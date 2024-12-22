@@ -79,11 +79,7 @@ end
 
 function get_sparsity_pattern(model::ADModel, ::Val{:jacobian})
   backend = model.adbackend.jacobian_backend
-  validate_sparse_backend(
-    backend,
-    Union{SparseADJacobian, SparseEnzymeADJacobian},
-    "Jacobian",
-  )
+  validate_sparse_backend(backend, Union{SparseADJacobian, SparseEnzymeADJacobian}, "Jacobian")
   m = model.meta.ncon
   n = model.meta.nvar
   colptr = backend.colptr

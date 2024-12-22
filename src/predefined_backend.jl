@@ -73,11 +73,13 @@ zygote_backend = Dict(
   :hessian_residual_backend => ZygoteADHessian,
 )
 
-predefined_backend = Dict(:default => default_backend,
-                          :optimized => optimized_backend,
-                          :generic => generic_backend,
-                          :enzyme => enzyme_backend,
-                          :zygote => zygote_backend)
+predefined_backend = Dict(
+  :default => default_backend,
+  :optimized => optimized_backend,
+  :generic => generic_backend,
+  :enzyme => enzyme_backend,
+  :zygote => zygote_backend,
+)
 
 """
     get_default_backend(meth::Symbol, backend::Symbol; kwargs...)

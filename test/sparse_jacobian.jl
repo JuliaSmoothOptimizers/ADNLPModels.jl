@@ -1,5 +1,6 @@
 function sparse_jacobian(backend, kw)
-  @testset "Basic Jacobian derivative with backend=$(backend) and T=$(T)" for T in (Float32, Float64)
+  @testset "Basic Jacobian derivative with backend=$(backend) and T=$(T)" for T in
+                                                                              (Float32, Float64)
     c!(cx, x) = begin
       cx[1] = x[1] - 1
       cx[2] = 10 * (x[2] - x[1]^2)
@@ -54,7 +55,8 @@ function sparse_jacobian(backend, kw)
       ])
     end
 
-    nlp = ADNLPModel!(x -> sum(x), x0, c!, zeros(T, ncon), zeros(T, ncon), matrix_free = true; kw...)
+    nlp =
+      ADNLPModel!(x -> sum(x), x0, c!, zeros(T, ncon), zeros(T, ncon), matrix_free = true; kw...)
     @test nlp.adbackend.jacobian_backend isa ADNLPModels.EmptyADbackend
   end
 end

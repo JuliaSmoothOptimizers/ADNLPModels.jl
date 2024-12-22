@@ -1,5 +1,8 @@
 function sparse_hessian_nls(backend, kw)
-  @testset "Basic Hessian of residual derivative with backend=$(backend) and T=$(T)" for T in (Float32, Float64)
+  @testset "Basic Hessian of residual derivative with backend=$(backend) and T=$(T)" for T in (
+    Float32,
+    Float64,
+  )
     F!(Fx, x) = begin
       Fx[1] = x[1] - 1
       Fx[2] = 10 * (x[2] - x[1]^2)
