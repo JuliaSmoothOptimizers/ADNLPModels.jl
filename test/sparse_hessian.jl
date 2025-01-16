@@ -62,10 +62,9 @@ function sparse_hessian(backend, kw)
     )
     @test nlp.adbackend.hessian_backend isa ADNLPModels.EmptyADbackend
 
-    n = 4
     x = ones(T, 4)
     nlp = ADNLPModel(
-      x -> sum(100 * (x[i + 1] - x[i]^2)^2 + (x[i] - 1)^2 for i = 1:(n - 1)),
+      x -> sum(100 * (x[i + 1] - x[i]^2)^2 + (x[i] - 1)^2 for i = 1:3),
       x,
       hessian_backend = backend,
       name = "Extended Rosenbrock",
