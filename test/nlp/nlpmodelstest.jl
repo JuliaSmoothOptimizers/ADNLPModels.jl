@@ -18,7 +18,7 @@ function nlp_nlpmodelstest(backend)
     @testset "Check multiple precision" begin
       multiple_precision_nlp(nlp_from_T, exclude = [], linear_api = true)
     end
-    if backend != :enzyme
+    if backend != :enzyme && backend != :enzyme_backend
       @testset "Check view subarray" begin
         view_subarray_nlp(nlp_ad, exclude = [])
       end
