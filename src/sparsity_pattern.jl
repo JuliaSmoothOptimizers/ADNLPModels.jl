@@ -45,7 +45,8 @@ function compute_hessian_sparsity(
     else
       cx = zeros(eltype(x), ncon)
       y0 = rand(ncon)
-      return f(x) + dot(c!(cx, x), y0)
+      c!(cx, x)
+      return f(x) + dot(cx, y0)
     end
   end
 
