@@ -125,8 +125,8 @@ This means that we can set all other backends to `ADNLPModels.EmptyADbackend`.
 
 ```@example ex2
 nlp = ADNLPModel!(f, x0, c_in, lcon, ucon, jprod_backend = ADNLPModels.EmptyADbackend,
-                  jtprod_backend = ADNLPModels.EmptyADbackend, hprod_backend = ADNLPModels.EmptyADbackend(),
-                  ghjvprod_backend = ADNLPModels.EmptyADbackend(), show_time = true)
+                  jtprod_backend = ADNLPModels.EmptyADbackend, hprod_backend = ADNLPModels.EmptyADbackend,
+                  ghjvprod_backend = ADNLPModels.EmptyADbackend, show_time = true)
 ```
 
 ## Benchmarks
