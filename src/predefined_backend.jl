@@ -117,6 +117,6 @@ function get_default_backend(::Val{:jacobian_residual_backend}, backend, matrix_
 end
 
 function get_default_backend(::Val{:hessian_residual_backend}, backend, matrix_free::Bool = false; excluded_backend::Vector{Symbol}=Symbol[])
-  backend = (matrix_free || sym in :hessian_residual_backend) ? EmptyADbackend : predefined_backend[backend][:hessian_residual_backend]
+  backend = (matrix_free || :hessian_residual_backend in excluded_backend) ? EmptyADbackend : predefined_backend[backend][:hessian_residual_backend]
   return backend
 end
