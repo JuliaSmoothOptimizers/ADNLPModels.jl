@@ -112,11 +112,15 @@ function SparseEnzymeADJacobian(
   x0::AbstractVector = rand(nvar),
   coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
+  show_time::Bool = false,
   kwargs...,
 )
-  output = similar(x0, ncon)
-  J = compute_jacobian_sparsity(c!, output, x0, detector = detector)
-  SparseEnzymeADJacobian(nvar, f, ncon, c!, J; x0, coloring_algorithm, kwargs...)
+  timer = @elapsed begin
+    output = similar(x0, ncon)
+    J = compute_jacobian_sparsity(c!, output, x0, detector = detector)
+  end
+  show_time && println("  • Sparsity pattern detection of the Jacobian: $timer seconds.")
+  SparseEnzymeADJacobian(nvar, f, ncon, c!, J; x0, coloring_algorithm, show_time, kwargs...)
 end
 
 function SparseEnzymeADJacobian(
@@ -127,18 +131,26 @@ function SparseEnzymeADJacobian(
   J::SparseMatrixCSC{Bool, Int};
   x0::AbstractVector{T} = rand(nvar),
   coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
+  show_time::Bool = false,
   kwargs...,
 ) where {T}
-  # We should support :row and :bidirectional in the future
-  problem = ColoringProblem{:nonsymmetric, :column}()
-  result_coloring = coloring(J, problem, coloring_algorithm, decompression_eltype = T)
+  timer = @elapsed begin
+    # We should support :row and :bidirectional in the future
+    problem = ColoringProblem{:nonsymmetric, :column}()
+    result_coloring = coloring(J, problem, coloring_algorithm, decompression_eltype = T)
 
-  rowval = J.rowval
-  colptr = J.colptr
-  nzval = T.(J.nzval)
-  compressed_jacobian = similar(x0, ncon)
-  v = similar(x0)
-  cx = zeros(T, ncon)
+    rowval = J.rowval
+    colptr = J.colptr
+    nzval = T.(J.nzval)
+    compressed_jacobian = similar(x0, ncon)
+  end
+  show_time && println("  • Coloring of the sparse Jacobian: $timer seconds.")
+
+  timer = @elapsed begin
+    v = similar(x0)
+    cx = zeros(T, ncon)
+  end
+  show_time && println("  • Allocation of the AD buffers for the sparse Jacobian: $timer seconds.")
 
   SparseEnzymeADJacobian(
     nvar,
@@ -177,10 +189,14 @@ function SparseEnzymeADHessian(
   x0::AbstractVector = rand(nvar),
   coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:substitution}(),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
+  show_time::Bool = false,
   kwargs...,
 )
-  H = compute_hessian_sparsity(f, nvar, c!, ncon, detector = detector)
-  SparseEnzymeADHessian(nvar, f, ncon, c!, H; x0, coloring_algorithm, kwargs...)
+  timer = @elapsed begin
+    H = compute_hessian_sparsity(f, nvar, c!, ncon, detector = detector)
+  end
+  show_time && println("  • Sparsity pattern detection of the Hessian: $timer seconds.")
+  SparseEnzymeADHessian(nvar, f, ncon, c!, H; x0, coloring_algorithm, show_time, kwargs...)
 end
 
 function SparseEnzymeADHessian(
@@ -191,38 +207,48 @@ function SparseEnzymeADHessian(
   H::SparseMatrixCSC{Bool, Int};
   x0::AbstractVector{T} = rand(nvar),
   coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:substitution}(),
+  show_time::Bool = false,
   kwargs...,
 ) where {T}
-  problem = ColoringProblem{:symmetric, :column}()
-  result_coloring = coloring(H, problem, coloring_algorithm, decompression_eltype = T)
+  timer = @elapsed begin
+    problem = ColoringProblem{:symmetric, :column}()
+    result_coloring = coloring(H, problem, coloring_algorithm, decompression_eltype = T)
 
-  trilH = tril(H)
-  rowval = trilH.rowval
-  colptr = trilH.colptr
-  nzval = T.(trilH.nzval)
-  if coloring_algorithm isa GreedyColoringAlgorithm{:direct}
-    coloring_mode = :direct
-    compressed_hessian_icol = similar(x0)
-    compressed_hessian = compressed_hessian_icol
-  else
-    coloring_mode = :substitution
-    group = column_groups(result_coloring)
-    ncolors = length(group)
-    compressed_hessian_icol = similar(x0)
-    compressed_hessian = similar(x0, (nvar, ncolors))
-  end
-  v = similar(x0)
-  y = similar(x0, ncon)
-  cx = similar(x0, ncon)
-  grad = similar(x0)
-  function ℓ(x, y, obj_weight, cx)
-    res = obj_weight * f(x)
-    if ncon != 0
-      c!(cx, x)
-      res += sum(cx[i] * y[i] for i = 1:ncon)
+    trilH = tril(H)
+    rowval = trilH.rowval
+    colptr = trilH.colptr
+    nzval = T.(trilH.nzval)
+    if coloring_algorithm isa GreedyColoringAlgorithm{:direct}
+      coloring_mode = :direct
+      compressed_hessian_icol = similar(x0)
+      compressed_hessian = compressed_hessian_icol
+    else
+      coloring_mode = :substitution
+      group = column_groups(result_coloring)
+      ncolors = length(group)
+      compressed_hessian_icol = similar(x0)
+      compressed_hessian = similar(x0, (nvar, ncolors))
     end
-    return res
   end
+  show_time && println("  • Coloring of the sparse Hessian: $timer seconds.")
+
+  timer = @elapsed begin
+    v = similar(x0)
+    y = similar(x0, ncon)
+    cx = similar(x0, ncon)
+    grad = similar(x0)
+
+    function ℓ(x, y, obj_weight, cx)
+      res = obj_weight * f(x)
+      if ncon != 0
+        c!(cx, x)
+        res += sum(cx[i] * y[i] for i = 1:ncon)
+      end
+      return res
+    end
+  end
+  show_time && println("  • Allocation of the AD buffers for the sparse Hessian: $timer seconds.")
+
 
   return SparseEnzymeADHessian(
     nvar,

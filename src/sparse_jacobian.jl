@@ -19,11 +19,15 @@ function SparseADJacobian(
   x0::AbstractVector = rand(nvar),
   coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
+  show_time::Bool = false,
   kwargs...,
 )
-  output = similar(x0, ncon)
-  J = compute_jacobian_sparsity(c!, output, x0, detector = detector)
-  SparseADJacobian(nvar, f, ncon, c!, J; x0, coloring_algorithm, kwargs...)
+  timer = @elapsed begin
+    output = similar(x0, ncon)
+    J = compute_jacobian_sparsity(c!, output, x0, detector = detector)
+  end
+  show_time && println("  • Sparsity pattern detection of the Jacobian: $timer seconds.")
+  SparseADJacobian(nvar, f, ncon, c!, J; x0, coloring_algorithm, show_time, kwargs...)
 end
 
 function SparseADJacobian(
@@ -34,21 +38,28 @@ function SparseADJacobian(
   J::SparseMatrixCSC{Bool, Int};
   x0::AbstractVector{T} = rand(nvar),
   coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
+  show_time::Bool = false,
   kwargs...,
 ) where {T}
-  # We should support :row and :bidirectional in the future
-  problem = ColoringProblem{:nonsymmetric, :column}()
-  result_coloring = coloring(J, problem, coloring_algorithm, decompression_eltype = T)
+  timer = @elapsed begin
+    # We should support :row and :bidirectional in the future
+    problem = ColoringProblem{:nonsymmetric, :column}()
+    result_coloring = coloring(J, problem, coloring_algorithm, decompression_eltype = T)
 
-  rowval = J.rowval
-  colptr = J.colptr
-  nzval = T.(J.nzval)
-  compressed_jacobian = similar(x0, ncon)
-  seed = BitVector(undef, nvar)
+    rowval = J.rowval
+    colptr = J.colptr
+    nzval = T.(J.nzval)
+    compressed_jacobian = similar(x0, ncon)
+    seed = BitVector(undef, nvar)
+  end
+  show_time && println("  • Coloring of the sparse Jacobian: $timer seconds.")
 
-  tag = ForwardDiff.Tag{typeof(c!), T}
-  z = Vector{ForwardDiff.Dual{tag, T, 1}}(undef, nvar)
-  cz = similar(z, ncon)
+  timer = @elapsed begin
+    tag = ForwardDiff.Tag{typeof(c!), T}
+    z = Vector{ForwardDiff.Dual{tag, T, 1}}(undef, nvar)
+    cz = similar(z, ncon)
+  end
+  show_time && println("  • Allocation of the AD buffers for the sparse Jacobian: $timer seconds.")
 
   SparseADJacobian(
     nvar,
