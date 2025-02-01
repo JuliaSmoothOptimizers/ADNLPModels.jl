@@ -96,19 +96,27 @@ function get_default_backend(meth::Symbol, args...; kwargs...)
   return get_default_backend(Val(meth), args...; kwargs...)
 end
 
-function get_default_backend(::Val{sym}, backend, args...; kwargs...) where {sym}
-  return predefined_backend[backend][sym]
+function get_default_backend(::Val{sym}, backend, args...; excluded_backend::Vector{Symbol}=Symbol[], kwargs...) where {sym}
+  backend = (sym in excluded_backend) ? EmptyADbackend : predefined_backend[backend][sym]
+  return backend
 end
 
-function get_default_backend(::Val{:jacobian_backend}, backend, matrix_free::Bool = false)
-  return matrix_free ? EmptyADbackend : predefined_backend[backend][:jacobian_backend]
+function get_default_backend(::Val{:jacobian_backend}, backend, matrix_free::Bool = false; excluded_backend::Vector{Symbol}=Symbol[])
+  backend = (matrix_free || :jacobian_backend in excluded_backend) ? EmptyADbackend : predefined_backend[backend][:jacobian_backend]
+  return backend
 end
-function get_default_backend(::Val{:hessian_backend}, backend, matrix_free::Bool = false)
-  return matrix_free ? EmptyADbackend : predefined_backend[backend][:hessian_backend]
+
+function get_default_backend(::Val{:hessian_backend}, backend, matrix_free::Bool = false; excluded_backend::Vector{Symbol}=Symbol[])
+  backend = (matrix_free || :hessian_backend in excluded_backend) ? EmptyADbackend : predefined_backend[backend][:hessian_backend]
+  return backend
 end
-function get_default_backend(::Val{:jacobian_residual_backend}, backend, matrix_free::Bool = false)
-  return matrix_free ? EmptyADbackend : predefined_backend[backend][:jacobian_residual_backend]
+
+function get_default_backend(::Val{:jacobian_residual_backend}, backend, matrix_free::Bool = false; excluded_backend::Vector{Symbol}=Symbol[])
+  backend = (matrix_free || :jacobian_residual_backend in excluded_backend) ? EmptyADbackend : predefined_backend[backend][:jacobian_residual_backend]
+  return backend
 end
-function get_default_backend(::Val{:hessian_residual_backend}, backend, matrix_free::Bool = false)
-  return matrix_free ? EmptyADbackend : predefined_backend[backend][:hessian_residual_backend]
+
+function get_default_backend(::Val{:hessian_residual_backend}, backend, matrix_free::Bool = false; excluded_backend::Vector{Symbol}=Symbol[])
+  backend = (matrix_free || sym in :hessian_residual_backend) ? EmptyADbackend : predefined_backend[backend][:hessian_residual_backend]
+  return backend
 end

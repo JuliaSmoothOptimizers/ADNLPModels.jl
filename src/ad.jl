@@ -16,6 +16,7 @@ The default constructors are
     ADModelNLSBackend(nvar, F!, nequ, ncon = 0, c = (args...) -> []; show_time::Bool = false, kwargs...)
 
 If `show_time` is set to `true`, it prints the time used to generate each backend.
+If `excluded_backend` is not an empty array `Symbol[]`, the excluded backends will be set to `EmptyADbackend`.
 
 The remaining `kwargs` are either the different backends as listed below or arguments passed to the backend's constructors:
   - `gradient_backend = ForwardDiffADGradient`;
@@ -54,9 +55,10 @@ function ADModelBackend(
   backend::Symbol = :default,
   matrix_free::Bool = false,
   show_time::Bool = false,
-  gradient_backend = get_default_backend(:gradient_backend, backend),
-  hprod_backend = get_default_backend(:hprod_backend, backend),
-  hessian_backend = get_default_backend(:hessian_backend, backend, matrix_free),
+  excluded_backend::Vector{Symbol} = Symbol[],
+  gradient_backend = get_default_backend(:gradient_backend, backend; excluded_backend),
+  hprod_backend = get_default_backend(:hprod_backend, backend; excluded_backend),
+  hessian_backend = get_default_backend(:hessian_backend, backend, matrix_free; excluded_backend),
   kwargs...,
 )
   c! = (args...) -> []
@@ -116,13 +118,14 @@ function ADModelBackend(
   backend::Symbol = :default,
   matrix_free::Bool = false,
   show_time::Bool = false,
-  gradient_backend = get_default_backend(:gradient_backend, backend),
-  hprod_backend = get_default_backend(:hprod_backend, backend),
-  jprod_backend = get_default_backend(:jprod_backend, backend),
-  jtprod_backend = get_default_backend(:jtprod_backend, backend),
-  jacobian_backend = get_default_backend(:jacobian_backend, backend, matrix_free),
-  hessian_backend = get_default_backend(:hessian_backend, backend, matrix_free),
-  ghjvprod_backend = get_default_backend(:ghjvprod_backend, backend),
+  excluded_backend::Vector{Symbol} = Symbol[],
+  gradient_backend = get_default_backend(:gradient_backend, backend; excluded_backend),
+  hprod_backend = get_default_backend(:hprod_backend, backend; excluded_backend),
+  jprod_backend = get_default_backend(:jprod_backend, backend; excluded_backend),
+  jtprod_backend = get_default_backend(:jtprod_backend, backend; excluded_backend),
+  jacobian_backend = get_default_backend(:jacobian_backend, backend, matrix_free; excluded_backend),
+  hessian_backend = get_default_backend(:hessian_backend, backend, matrix_free; excluded_backend),
+  ghjvprod_backend = get_default_backend(:ghjvprod_backend, backend; excluded_backend),
   kwargs...,
 )
   GB = gradient_backend
@@ -218,14 +221,15 @@ function ADModelNLSBackend(
   backend::Symbol = :default,
   matrix_free::Bool = false,
   show_time::Bool = false,
-  gradient_backend = get_default_backend(:gradient_backend, backend),
-  hprod_backend = get_default_backend(:hprod_backend, backend),
-  hessian_backend = get_default_backend(:hessian_backend, backend, matrix_free),
-  hprod_residual_backend = get_default_backend(:hprod_residual_backend, backend),
-  jprod_residual_backend = get_default_backend(:jprod_residual_backend, backend),
-  jtprod_residual_backend = get_default_backend(:jtprod_residual_backend, backend),
-  jacobian_residual_backend = get_default_backend(:jacobian_residual_backend, backend, matrix_free),
-  hessian_residual_backend = get_default_backend(:hessian_residual_backend, backend, matrix_free),
+  excluded_backend::Vector{Symbol} = Symbol[],
+  gradient_backend = get_default_backend(:gradient_backend, backend; excluded_backend),
+  hprod_backend = get_default_backend(:hprod_backend, backend; excluded_backend),
+  hessian_backend = get_default_backend(:hessian_backend, backend, matrix_free; excluded_backend),
+  hprod_residual_backend = get_default_backend(:hprod_residual_backend, backend; excluded_backend),
+  jprod_residual_backend = get_default_backend(:jprod_residual_backend, backend; excluded_backend),
+  jtprod_residual_backend = get_default_backend(:jtprod_residual_backend, backend; excluded_backend),
+  jacobian_residual_backend = get_default_backend(:jacobian_residual_backend, backend, matrix_free; excluded_backend),
+  hessian_residual_backend = get_default_backend(:hessian_residual_backend, backend, matrix_free; excluded_backend),
   kwargs...,
 )
   function F(x; nequ = nequ)
@@ -344,18 +348,19 @@ function ADModelNLSBackend(
   backend::Symbol = :default,
   matrix_free::Bool = false,
   show_time::Bool = false,
-  gradient_backend = get_default_backend(:gradient_backend, backend),
-  hprod_backend = get_default_backend(:hprod_backend, backend),
-  jprod_backend = get_default_backend(:jprod_backend, backend),
-  jtprod_backend = get_default_backend(:jtprod_backend, backend),
-  jacobian_backend = get_default_backend(:jacobian_backend, backend, matrix_free),
-  hessian_backend = get_default_backend(:hessian_backend, backend, matrix_free),
-  ghjvprod_backend = get_default_backend(:ghjvprod_backend, backend),
-  hprod_residual_backend = get_default_backend(:hprod_residual_backend, backend),
-  jprod_residual_backend = get_default_backend(:jprod_residual_backend, backend),
-  jtprod_residual_backend = get_default_backend(:jtprod_residual_backend, backend),
-  jacobian_residual_backend = get_default_backend(:jacobian_residual_backend, backend, matrix_free),
-  hessian_residual_backend = get_default_backend(:hessian_residual_backend, backend, matrix_free),
+  excluded_backend::Vector{Symbol} = Symbol[],
+  gradient_backend = get_default_backend(:gradient_backend, backend; excluded_backend),
+  hprod_backend = get_default_backend(:hprod_backend, backend; excluded_backend),
+  jprod_backend = get_default_backend(:jprod_backend, backend; excluded_backend),
+  jtprod_backend = get_default_backend(:jtprod_backend, backend; excluded_backend),
+  jacobian_backend = get_default_backend(:jacobian_backend, backend, matrix_free; excluded_backend),
+  hessian_backend = get_default_backend(:hessian_backend, backend, matrix_free; excluded_backend),
+  ghjvprod_backend = get_default_backend(:ghjvprod_backend, backend; excluded_backend),
+  hprod_residual_backend = get_default_backend(:hprod_residual_backend, backend; excluded_backend),
+  jprod_residual_backend = get_default_backend(:jprod_residual_backend, backend; excluded_backend),
+  jtprod_residual_backend = get_default_backend(:jtprod_residual_backend, backend; excluded_backend),
+  jacobian_residual_backend = get_default_backend(:jacobian_residual_backend, backend, matrix_free; excluded_backend),
+  hessian_residual_backend = get_default_backend(:hessian_residual_backend, backend, matrix_free; excluded_backend),
   kwargs...,
 )
   function F(x; nequ = nequ)
