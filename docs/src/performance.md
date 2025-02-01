@@ -1,6 +1,6 @@
 # Performance tips
 
-The package `ADNLPModels.jl` is designed to easily model optimization problems andto allow an efficient access to the [`NLPModel API`](https://github.com/JuliaSmoothOptimizers/NLPModels.jl).
+The package `ADNLPModels.jl` is designed to easily model optimization problems and to allow an efficient access to the [`NLPModel API`](https://github.com/JuliaSmoothOptimizers/NLPModels.jl).
 In this tutorial, we will see some tips to ensure the maximum performance of the model.
 
 ## Use in-place constructor
@@ -79,7 +79,7 @@ v = ones(2)
 @btime jprod_residual!(nls_in, x, v, Fx)
 ```
 
-## Use only the needed operations
+## Use only the needed backends
 
 It is tempting to define the most generic and efficient `ADNLPModel` from the start.
 
@@ -118,6 +118,15 @@ or, equivalently, using the `matrix_free` keyword argument
 
 ```@example ex2
 nlp = ADNLPModel!(f, x0, c_in, lcon, ucon, show_time = true, matrix_free = true)
+```
+
+More classic nonlinear optimization solvers like [Ipopt.jl](https://github.com/jump-dev/Ipopt.jl), [KNITRO.jl](https://github.com/jump-dev/KNITRO.jl), or [MadNLP.jl](https://github.com/MadNLP/MadNLP.jl) only require the gradient and sparse Jacobians and Hessians.
+This means that we can set all other backends to `ADNLPModels.EmptyADbackend`.
+
+```@example ex2
+nlp = ADNLPModel!(f, x0, c_in, lcon, ucon, jprod_backend = ADNLPModels.EmptyADbackend,
+                  jtprod_backend = ADNLPModels.EmptyADbackend, hprod_backend = ADNLPModels.EmptyADbackend,
+                  ghjvprod_backend = ADNLPModels.EmptyADbackend, show_time = true)
 ```
 
 ## Benchmarks
