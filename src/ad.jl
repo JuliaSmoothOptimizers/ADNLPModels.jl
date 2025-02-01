@@ -16,7 +16,7 @@ The default constructors are
     ADModelNLSBackend(nvar, F!, nequ, ncon = 0, c = (args...) -> []; show_time::Bool = false, kwargs...)
 
 If `show_time` is set to `true`, it prints the time used to generate each backend.
-If `excluded_backend` is not an empty array `Symbol[]`, the excluded backends will be set to `EmptyADbackend`.
+`excluded_backend` is the list of backends that are not used and will be set to `EmptyADbackend`.
 
 The remaining `kwargs` are either the different backends as listed below or arguments passed to the backend's constructors:
   - `gradient_backend = ForwardDiffADGradient`;
