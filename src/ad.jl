@@ -87,7 +87,7 @@ function ADModelBackend(
     hessian_backend = if hessian_backend isa Union{AbstractNLPModel, ADBackend}
       hessian_backend
     else
-      HB(nvar, f, ncon, c!; kwargs...)
+      HB(nvar, f, ncon, c!; show_time, kwargs...)
     end
   end
   show_time && println("hessian  backend $HB: $b seconds;")
@@ -170,7 +170,7 @@ function ADModelBackend(
     jacobian_backend = if jacobian_backend isa Union{AbstractNLPModel, ADBackend}
       jacobian_backend
     else
-      JB(nvar, f, ncon, c!; kwargs...)
+      JB(nvar, f, ncon, c!; show_time, kwargs...)
     end
   end
   show_time && println("jacobian backend $JB: $b seconds;")
@@ -180,7 +180,7 @@ function ADModelBackend(
     hessian_backend = if hessian_backend isa Union{AbstractNLPModel, ADBackend}
       hessian_backend
     else
-      HB(nvar, f, ncon, c!; kwargs...)
+      HB(nvar, f, ncon, c!; show_time, kwargs...)
     end
   end
   show_time && println("hessian  backend $HB: $b seconds;")
@@ -263,7 +263,7 @@ function ADModelNLSBackend(
     hessian_backend = if hessian_backend isa Union{AbstractNLPModel, ADBackend}
       hessian_backend
     else
-      HB(nvar, f, ncon, c!; kwargs...)
+      HB(nvar, f, ncon, c!; show_time, kwargs...)
     end
   end
   show_time && println("hessian  backend $HB: $b seconds;")
@@ -304,7 +304,7 @@ function ADModelNLSBackend(
       if jacobian_residual_backend isa Union{AbstractNLPModel, ADBackend}
         jacobian_residual_backend
       else
-        JBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
+        JBLS(nvar, x -> zero(eltype(x)), nequ, F!; show_time, kwargs...)
       end
   end
   show_time && println("jacobian_residual backend $JBLS: $b seconds;")
@@ -314,7 +314,7 @@ function ADModelNLSBackend(
     hessian_residual_backend = if hessian_residual_backend isa Union{AbstractNLPModel, ADBackend}
       hessian_residual_backend
     else
-      HBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
+      HBLS(nvar, x -> zero(eltype(x)), nequ, F!; show_time, kwargs...)
     end
   end
   show_time && println("hessian_residual  backend $HBLS: $b seconds. \n")
@@ -410,7 +410,7 @@ function ADModelNLSBackend(
     jacobian_backend = if jacobian_backend isa Union{AbstractNLPModel, ADBackend}
       jacobian_backend
     else
-      JB(nvar, f, ncon, c!; kwargs...)
+      JB(nvar, f, ncon, c!; show_time, kwargs...)
     end
   end
   show_time && println("jacobian backend $JB: $b seconds;")
@@ -420,7 +420,7 @@ function ADModelNLSBackend(
     hessian_backend = if hessian_backend isa Union{AbstractNLPModel, ADBackend}
       hessian_backend
     else
-      HB(nvar, f, ncon, c!; kwargs...)
+      HB(nvar, f, ncon, c!; show_time, kwargs...)
     end
   end
   show_time && println("hessian  backend $HB: $b seconds;")
@@ -471,7 +471,7 @@ function ADModelNLSBackend(
       if jacobian_residual_backend isa Union{AbstractNLPModel, ADBackend}
         jacobian_residual_backend
       else
-        JBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
+        JBLS(nvar, x -> zero(eltype(x)), nequ, F!; show_time, kwargs...)
       end
   end
   show_time && println("jacobian_residual backend $JBLS: $b seconds;")
@@ -481,7 +481,7 @@ function ADModelNLSBackend(
     hessian_residual_backend = if hessian_residual_backend isa Union{AbstractNLPModel, ADBackend}
       hessian_residual_backend
     else
-      HBLS(nvar, x -> zero(eltype(x)), nequ, F!; kwargs...)
+      HBLS(nvar, x -> zero(eltype(x)), nequ, F!; show_time, kwargs...)
     end
   end
   show_time && println("hessian_residual  backend $HBLS: $b seconds. \n")

@@ -24,10 +24,14 @@ function SparseADHessian(
   x0::AbstractVector = rand(nvar),
   coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
+  show_time::Bool = false,
   kwargs...,
 )
-  H = compute_hessian_sparsity(f, nvar, c!, ncon, detector = detector)
-  SparseADHessian(nvar, f, ncon, c!, H; x0, coloring_algorithm, kwargs...)
+  timer = @elapsed begin
+    H = compute_hessian_sparsity(f, nvar, c!, ncon, detector = detector)
+  end
+  show_time && println("  • Sparsity pattern detection of the Hessian: $timer seconds.")
+  SparseADHessian(nvar, f, ncon, c!, H; x0, coloring_algorithm, show_time, kwargs...)
 end
 
 function SparseADHessian(
@@ -38,52 +42,60 @@ function SparseADHessian(
   H::SparseMatrixCSC{Bool, Int64};
   x0::S = rand(nvar),
   coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
+  show_time::Bool = false,
   kwargs...,
 ) where {S}
   T = eltype(S)
 
-  problem = ColoringProblem{:symmetric, :column}()
-  result_coloring = coloring(H, problem, coloring_algorithm, decompression_eltype = T)
+  timer = @elapsed begin
+    problem = ColoringProblem{:symmetric, :column}()
+    result_coloring = coloring(H, problem, coloring_algorithm, decompression_eltype = T)
 
-  trilH = tril(H)
-  rowval = trilH.rowval
-  colptr = trilH.colptr
-  nzval = T.(trilH.nzval)
-  if coloring_algorithm isa GreedyColoringAlgorithm{:direct}
-    coloring_mode = :direct
-    compressed_hessian = similar(x0)
-  else
-    coloring_mode = :substitution
-    group = column_groups(result_coloring)
-    ncolors = length(group)
-    compressed_hessian = similar(x0, (nvar, ncolors))
-  end
-  seed = BitVector(undef, nvar)
-
-  function lag(z; nvar = nvar, ncon = ncon, f = f, c! = c!)
-    cx, x, y, ob = view(z, 1:ncon),
-    view(z, (ncon + 1):(nvar + ncon)),
-    view(z, (nvar + ncon + 1):(nvar + ncon + ncon)),
-    z[end]
-    if ncon > 0
-      c!(cx, x)
-      return ob * f(x) + dot(cx, y)
+    trilH = tril(H)
+    rowval = trilH.rowval
+    colptr = trilH.colptr
+    nzval = T.(trilH.nzval)
+    if coloring_algorithm isa GreedyColoringAlgorithm{:direct}
+      coloring_mode = :direct
+      compressed_hessian = similar(x0)
     else
-      return ob * f(x)
+      coloring_mode = :substitution
+      group = column_groups(result_coloring)
+      ncolors = length(group)
+      compressed_hessian = similar(x0, (nvar, ncolors))
     end
+    seed = BitVector(undef, nvar)
   end
-  ntotal = nvar + 2 * ncon + 1
-  sol = similar(x0, ntotal)
-  lz = Vector{ForwardDiff.Dual{ForwardDiff.Tag{typeof(lag), T}, T, 1}}(undef, ntotal)
-  glz = similar(lz)
-  cfg = ForwardDiff.GradientConfig(lag, lz)
-  function ∇φ!(gz, z; lag = lag, cfg = cfg)
-    ForwardDiff.gradient!(gz, lag, z, cfg)
-    return gz
+  show_time && println("  • Coloring of the sparse Hessian: $timer seconds.")
+
+  timer = @elapsed begin
+    function lag(z; nvar = nvar, ncon = ncon, f = f, c! = c!)
+      cx, x, y, ob = view(z, 1:ncon),
+      view(z, (ncon + 1):(nvar + ncon)),
+      view(z, (nvar + ncon + 1):(nvar + ncon + ncon)),
+      z[end]
+      if ncon > 0
+        c!(cx, x)
+        return ob * f(x) + dot(cx, y)
+      else
+        return ob * f(x)
+      end
+    end
+
+    ntotal = nvar + 2 * ncon + 1
+    sol = similar(x0, ntotal)
+    lz = Vector{ForwardDiff.Dual{ForwardDiff.Tag{typeof(lag), T}, T, 1}}(undef, ntotal)
+    glz = similar(lz)
+    cfg = ForwardDiff.GradientConfig(lag, lz)
+    function ∇φ!(gz, z; lag = lag, cfg = cfg)
+      ForwardDiff.gradient!(gz, lag, z, cfg)
+      return gz
+    end
+    longv = fill!(S(undef, ntotal), 0)
+    Hvp = fill!(S(undef, ntotal), 0)
+    y = fill!(S(undef, ncon), 0)
   end
-  longv = fill!(S(undef, ntotal), 0)
-  Hvp = fill!(S(undef, ntotal), 0)
-  y = fill!(S(undef, ncon), 0)
+  show_time && println("  • Allocation of the AD buffers for the sparse Hessian: $timer seconds.")
 
   return SparseADHessian(
     nvar,
@@ -133,10 +145,14 @@ function SparseReverseADHessian(
   x0::AbstractVector = rand(nvar),
   coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:substitution}(),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
+  show_time::Bool = false,
   kwargs...,
 )
-  H = compute_hessian_sparsity(f, nvar, c!, ncon, detector = detector)
-  SparseReverseADHessian(nvar, f, ncon, c!, H; x0, coloring_algorithm, kwargs...)
+  timer = @elapsed begin
+    H = compute_hessian_sparsity(f, nvar, c!, ncon, detector = detector)
+  end
+  show_time && println("  • Sparsity pattern detection of the Hessian: $timer seconds.")
+  SparseReverseADHessian(nvar, f, ncon, c!, H; x0, coloring_algorithm, show_time, kwargs...)
 end
 
 function SparseReverseADHessian(
@@ -147,55 +163,62 @@ function SparseReverseADHessian(
   H::SparseMatrixCSC{Bool, Int};
   x0::AbstractVector{T} = rand(nvar),
   coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:substitution}(),
+  show_time::Bool = false,
   kwargs...,
 ) where {T}
-  problem = ColoringProblem{:symmetric, :column}()
-  result_coloring = coloring(H, problem, coloring_algorithm, decompression_eltype = T)
+  timer = @elapsed begin
+    problem = ColoringProblem{:symmetric, :column}()
+    result_coloring = coloring(H, problem, coloring_algorithm, decompression_eltype = T)
 
-  trilH = tril(H)
-  rowval = trilH.rowval
-  colptr = trilH.colptr
-  nzval = T.(trilH.nzval)
-  if coloring_algorithm isa GreedyColoringAlgorithm{:direct}
-    coloring_mode = :direct
-    compressed_hessian = similar(x0)
-  else
-    coloring_mode = :substitution
-    group = column_groups(result_coloring)
-    ncolors = length(group)
-    compressed_hessian = similar(x0, (nvar, ncolors))
+    trilH = tril(H)
+    rowval = trilH.rowval
+    colptr = trilH.colptr
+    nzval = T.(trilH.nzval)
+    if coloring_algorithm isa GreedyColoringAlgorithm{:direct}
+      coloring_mode = :direct
+      compressed_hessian = similar(x0)
+    else
+      coloring_mode = :substitution
+      group = column_groups(result_coloring)
+      ncolors = length(group)
+      compressed_hessian = similar(x0, (nvar, ncolors))
+    end
+    seed = BitVector(undef, nvar)
   end
-  seed = BitVector(undef, nvar)
+  show_time && println("  • Coloring of the sparse Hessian: $timer seconds.")
 
   # unconstrained Hessian
-  tagf = ForwardDiff.Tag{typeof(f), T}
-  z = Vector{ForwardDiff.Dual{tagf, T, 1}}(undef, nvar)
-  gz = similar(z)
-  f_tape = ReverseDiff.GradientTape(f, z)
-  cfgf = ReverseDiff.compile(f_tape)
-  ∇f!(gz, z; cfg = cfgf) = ReverseDiff.gradient!(gz, cfg, z)
+  timer = @elapsed begin
+    tagf = ForwardDiff.Tag{typeof(f), T}
+    z = Vector{ForwardDiff.Dual{tagf, T, 1}}(undef, nvar)
+    gz = similar(z)
+    f_tape = ReverseDiff.GradientTape(f, z)
+    cfgf = ReverseDiff.compile(f_tape)
+    ∇f!(gz, z; cfg = cfgf) = ReverseDiff.gradient!(gz, cfg, z)
 
-  # constraints
-  ψ(x, u) = begin # ; tmp_out = _tmp_out
-    ncon = length(u)
-    tmp_out = similar(x, ncon)
-    c!(tmp_out, x)
-    dot(tmp_out, u)
+    # constraints
+    ψ(x, u) = begin # ; tmp_out = _tmp_out
+      ncon = length(u)
+      tmp_out = similar(x, ncon)
+      c!(tmp_out, x)
+      dot(tmp_out, u)
+    end
+    tagψ = ForwardDiff.Tag{typeof(ψ), T}
+    zψ = Vector{ForwardDiff.Dual{tagψ, T, 1}}(undef, nvar)
+    yψ = fill!(similar(zψ, ncon), zero(T))
+    ψ_tape = ReverseDiff.GradientConfig((zψ, yψ))
+    cfgψ = ReverseDiff.compile(ReverseDiff.GradientTape(ψ, (zψ, yψ), ψ_tape))
+
+    gzψ = similar(zψ)
+    gyψ = similar(yψ)
+    function ∇l!(gz, gy, z, y; cfg = cfgψ)
+      ReverseDiff.gradient!((gz, gy), cfg, (z, y))
+    end
+    Hv_temp = similar(x0)
+    y = similar(x0, ncon)
   end
-  tagψ = ForwardDiff.Tag{typeof(ψ), T}
-  zψ = Vector{ForwardDiff.Dual{tagψ, T, 1}}(undef, nvar)
-  yψ = fill!(similar(zψ, ncon), zero(T))
-  ψ_tape = ReverseDiff.GradientConfig((zψ, yψ))
-  cfgψ = ReverseDiff.compile(ReverseDiff.GradientTape(ψ, (zψ, yψ), ψ_tape))
+  show_time && println("  • Allocation of the AD buffers for the sparse Hessian: $timer seconds.")
 
-  gzψ = similar(zψ)
-  gyψ = similar(yψ)
-  function ∇l!(gz, gy, z, y; cfg = cfgψ)
-    ReverseDiff.gradient!((gz, gy), cfg, (z, y))
-  end
-  Hv_temp = similar(x0)
-
-  y = similar(x0, ncon)
   return SparseReverseADHessian(
     nvar,
     rowval,
