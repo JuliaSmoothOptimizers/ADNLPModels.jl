@@ -249,7 +249,6 @@ function SparseEnzymeADHessian(
   end
   show_time && println("  • Allocation of the AD buffers for the sparse Hessian: $timer seconds.")
 
-
   return SparseEnzymeADHessian(
     nvar,
     rowval,
