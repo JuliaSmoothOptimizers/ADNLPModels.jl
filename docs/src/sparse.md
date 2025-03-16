@@ -8,7 +8,8 @@ using ADNLPModels, NLPModels
 f(x) = (x[1] - 1)^2
 T = Float64
 x0 = T[-1.2; 1.0]
-lvar, uvar = zeros(T, 2), ones(T, 2)
+nvar, ncon = 2, 1
+lvar, uvar = zeros(T, nvar), ones(T, nvar)
 lcon, ucon = -T[0.5], T[0.5]
 c!(cx, x) = begin
   cx[1] = x[2]
@@ -22,14 +23,16 @@ nlp = ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon, backend = :optimized)
 ```
 
 ```@example ex1
-x = rand(T, 2)
+x = rand(T, nvar)
 J = jac(nlp, x)
 ```
 
 ```@example ex1
-x = rand(T, 2)
+x = rand(T, nvar)
 H = hess(nlp, x)
 ```
+
+## Options for sparsity pattern detection and coloring
 
 The backends available for sparse derivatives (`SparseADJacobian`, `SparseEnzymeADJacobian`, `SparseADHessian`, `SparseReverseADHessian`, and `SparseEnzymeADHessian`) allow for customization through keyword arguments such as `detector` and `coloring_algorithm`.
 These arguments specify the sparsity pattern detector and the coloring algorithm, respectively.
@@ -37,10 +40,30 @@ These arguments specify the sparsity pattern detector and the coloring algorithm
 - A **`detector`** must be of type `ADTypes.AbstractSparsityDetector`.
   The default detector is `TracerSparsityDetector()` from the package `SparseConnectivityTracer.jl`.
   Prior to version 0.8.0, the default was `SymbolicSparsityDetector()` from `Symbolics.jl`.
+  A `TracerLocalSparsityDetector()` is also available and can be used if the sparsity pattern of Jacobians and Hessians depends on `x`.
+
+```@example ex1
+import SparseConnectivityTracer.TracerLocalSparsityDetector
+
+set_adbackend!(
+  nlp,
+  jacobian_backend = ADNLPModels.SparseADJacobian(nvar, f, ncon, c!, detector=TracerLocalSparsityDetector()),
+  hessian_backend = ADNLPModels.SparseADHessian(nvar, f, ncon, c!, detector=TracerLocalSparsityDetector()),
+)
+```
 
 - A **`coloring_algorithm`** must be of type `SparseMatrixColorings.GreedyColoringAlgorithm`.
   The default algorithm is `GreedyColoringAlgorithm{:direct}()` for `SparseADJacobian`, `SparseEnzymeADJacobian` and `SparseADHessian`, while it is `GreedyColoringAlgorithm{:substitution}()` for `SparseReverseADHessian` and `SparseEnzymeADHessian`.
   These algorithms are provided by the package `SparseMatrixColorings.jl`.
+
+```@example ex1
+using SparseMatrixColorings
+
+set_adbackend!(
+  nlp,
+  hessian_backend = ADNLPModels.SparseADHessian(nvar, f, ncon, c!, coloring_algorithm=GreedyColoringAlgorithm{:substitution}()),
+)
+```
 
 The `GreedyColoringAlgorithm{:direct}()` performs column coloring for Jacobians and star coloring for Hessians.
 In contrast, `GreedyColoringAlgorithm{:substitution}()` applies acyclic coloring for Hessians. The `:substitution` mode generally requires fewer colors than `:direct`, thus fewer directional derivatives are needed to reconstruct the sparse Hessian.
