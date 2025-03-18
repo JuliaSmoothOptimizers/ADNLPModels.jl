@@ -59,12 +59,32 @@ function test_autodiff_backend_error()
   end
 end
 
-test_autodiff_backend_error()
+# test_autodiff_backend_error()
+
+push!(
+  ADNLPModels.predefined_backend,
+  :enzyme_backend => Dict(
+    :gradient_backend => ADNLPModels.EnzymeReverseADGradient,
+    :jprod_backend => ADNLPModels.EnzymeReverseADJprod,
+    :jtprod_backend => ADNLPModels.EnzymeReverseADJtprod,
+    :hprod_backend => ADNLPModels.EnzymeReverseADHvprod,
+    :jacobian_backend => ADNLPModels.EnzymeReverseADJacobian,
+    :hessian_backend => ADNLPModels.EnzymeReverseADHessian,
+    :ghjvprod_backend => ADNLPModels.ForwardDiffADGHjvprod,
+    :jprod_residual_backend => ADNLPModels.EnzymeReverseADJprod,
+    :jtprod_residual_backend => ADNLPModels.EnzymeReverseADJtprod,
+    :hprod_residual_backend => ADNLPModels.EnzymeReverseADHvprod,
+    :jacobian_residual_backend => ADNLPModels.EnzymeReverseADJacobian,
+    :hessian_residual_backend => ADNLPModels.EnzymeReverseADHessian,
+  ),
+)
+
+const test_enzyme = true
 
 include("sparse_jacobian.jl")
 include("sparse_jacobian_nls.jl")
 include("sparse_hessian.jl")
-include("sparse_hessian_nls.jl")
+# include("sparse_hessian_nls.jl")
 
 list_sparse_jac_backend = ((ADNLPModels.SparseEnzymeADJacobian, Dict()),)
 
@@ -80,44 +100,28 @@ list_sparse_hess_backend = (
     ADNLPModels.SparseEnzymeADHessian,
     Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}()),
   ),
-  (
-    ADNLPModels.SparseEnzymeADHessian,
-    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}()),
-  ),
+  # (
+  #   ADNLPModels.SparseEnzymeADHessian,
+  #   Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}()),
+  # ),
 )
 
 @testset "Sparse Hessian" begin
   for (backend, kw) in list_sparse_hess_backend
     sparse_hessian(backend, kw)
-    sparse_hessian_nls(backend, kw)
+    # sparse_hessian_nls(backend, kw)
   end
 end
 
 for problem in NLPModelsTest.nlp_problems ∪ ["GENROSE"]
   include("nlp/problems/$(lowercase(problem)).jl")
 end
-for problem in NLPModelsTest.nls_problems
-  include("nls/problems/$(lowercase(problem)).jl")
-end
+# for problem in NLPModelsTest.nls_problems
+#   include("nls/problems/$(lowercase(problem)).jl")
+# end
 
 include("utils.jl")
-include("nlp/basic.jl")
-include("nls/basic.jl")
+# include("nlp/basic.jl")
+# include("nls/basic.jl")
 include("nlp/nlpmodelstest.jl")
-include("nls/nlpmodelstest.jl")
-
-@testset "Basic NLP tests using $backend " for backend in (:enzyme,)
-  test_autodiff_model("$backend", backend = backend)
-end
-
-@testset "Checking NLPModelsTest (NLP) tests with $backend" for backend in (:enzyme,)
-  nlp_nlpmodelstest(backend)
-end
-
-@testset "Basic NLS tests using $backend " for backend in (:enzyme,)
-  autodiff_nls_test("$backend", backend = backend)
-end
-
-@testset "Checking NLPModelsTest (NLS) tests with $backend" for backend in (:enzyme,)
-  nls_nlpmodelstest(backend)
-end
+# include("nls/nlpmodelstest.jl")

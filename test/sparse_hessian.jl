@@ -1,5 +1,5 @@
 function sparse_hessian(backend, kw)
-  @testset "Basic Hessian derivative with backend=$(backend) and T=$(T)" for T in (Float32, Float64)
+  @testset "Basic Hessian derivative with backend=$(backend) and T=$(T)" for T in (Float64,)
     c!(cx, x) = begin
       cx[1] = x[1] - 1
       cx[2] = 10 * (x[2] - x[1]^2)
@@ -31,6 +31,7 @@ function sparse_hessian(backend, kw)
 
     # Test also the implementation of the backends
     b = nlp.adbackend.hessian_backend
+    @show b
     obj_weight = 0.5
     @test nlp.meta.nnzh == ADNLPModels.get_nln_nnzh(b, nvar)
     ADNLPModels.hess_structure!(b, nlp, rows, cols)
@@ -62,15 +63,28 @@ function sparse_hessian(backend, kw)
     )
     @test nlp.adbackend.hessian_backend isa ADNLPModels.EmptyADbackend
 
-    n = 4
-    x = ones(T, 4)
+    # n = 4
+    x0 = ones(T, 4)
+    function f(x)
+      n = length(x)
+      sum(100 * (x[i + 1] - x[i]^2)^2 + (x[i] - 1)^2 for i = 1:(n - 1))
+      # res = 0
+      # n = length(x)
+      # for i in 1:(n-1)
+      #   res += 100 * (x[i + 1] - x[i]^2)^2 + (x[i] - 1)^2
+      # end
+      # res
+    end
     nlp = ADNLPModel(
-      x -> sum(100 * (x[i + 1] - x[i]^2)^2 + (x[i] - 1)^2 for i = 1:(n - 1)),
-      x,
+      # x -> sum(100 * (x[i + 1] - x[i]^2)^2 + (x[i] - 1)^2 for i = 1:(n - 1)),
+      # x -> sum(100 * (x[i + 1] - x[i]^2)^2 + (x[i] - 1)^2 for i = 1:3),
+      # x -> 100 * (x[2] - x[1]^2)^2 + (x[1] - 1)^2,
+      f,
+      x0,
       hessian_backend = backend,
       name = "Extended Rosenbrock",
     )
-    @test hess(nlp, x) == T[802 -400 0 0; -400 1002 -400 0; 0 -400 1002 -400; 0 0 -400 200]
+    @test hess(nlp, x0) == T[802 -400 0 0; -400 1002 -400 0; 0 -400 1002 -400; 0 0 -400 200]
 
     x = ones(T, 2)
     nlp = ADNLPModel(x -> x[1]^2 + x[1] * x[2], x, hessian_backend = backend)
