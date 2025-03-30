@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Providing sparsity pattern for sparse derivatives · ADNLPModels.jl</title><meta name="title" content="Providing sparsity pattern for sparse derivatives · ADNLPModels.jl"/><meta property="og:title" content="Providing sparsity pattern for sparse derivatives · ADNLPModels.jl"/><meta property="twitter:title" content="Providing sparsity pattern for sparse derivatives · ADNLPModels.jl"/><meta name="description" content="Documentation for ADNLPModels.jl."/><meta property="og:description" content="Documentation for ADNLPModels.jl."/><meta property="twitter:description" content="Documentation for ADNLPModels.jl."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script><link href="../assets/style.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../"><img src="../assets/logo.png" alt="ADNLPModels.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../">ADNLPModels.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../tutorial/">Tutorial</a></li><li><a class="tocitem" href="../backend/">Backend</a></li><li><a class="tocitem" href="../predefined/">Default backends</a></li><li><a class="tocitem" href="../mixed/">Build a hybrid NLPModel</a></li><li><a class="tocitem" href="../generic/">Support multiple precision</a></li><li><a class="tocitem" href="../sparse/">Sparse Jacobian and Hessian</a></li><li><a class="tocitem" href="../performance/">Performance tips</a></li><li class="is-active"><a class="tocitem" href>Providing sparsity pattern for sparse derivatives</a></li><li><a class="tocitem" href="../reference/">Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Providing sparsity pattern for sparse derivatives</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Providing sparsity pattern for sparse derivatives</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl/blob/main/docs/src/sparsity_pattern.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="sparsity-pattern"><a class="docs-heading-anchor" href="#sparsity-pattern">Improve sparse derivatives</a><a id="sparsity-pattern-1"></a><a class="docs-heading-anchor-permalink" href="#sparsity-pattern" title="Permalink"></a></h1><p>In this tutorial, we show a feature of ADNLPModels.jl to potentially improve the computation of sparse Jacobian and Hessian.</p><p>Our test problem is an academic investment control problem:</p><p class="math-container">\[\begin{aligned}
+\min_{u,x} \quad &amp; \int_0^1 (u(t) - 1) x(t) \\
+&amp; \dot{x}(t) = \gamma u(t) x(t).
+\end{aligned}\]</p><p>Using a simple quadrature formula for the objective functional and a forward finite difference for the differential equation, one can obtain a finite-dimensional continuous optimization problem. One implementation is available in the package <a href="https://github.com/JuliaSmoothOptimizers/OptimizationProblems.jl"><code>OptimizationProblems.jl</code></a>.</p><pre><code class="language-julia hljs">using ADNLPModels
+using SparseArrays
+
+T = Float64
+n = 100000
+N = div(n, 2)
+h = 1 // N
+x0 = 1
+gamma = 3
+function f(y; N = N, h = h)
+  @views x, u = y[1:N], y[(N + 1):end]
+  return 1 // 2 * h * sum((u[k] - 1) * x[k] + (u[k + 1] - 1) * x[k + 1] for k = 1:(N - 1))
+end
+function c!(cx, y; N = N, h = h, gamma = gamma)
+  @views x, u = y[1:N], y[(N + 1):end]
+  for k = 1:(N - 1)
+    cx[k] = x[k + 1] - x[k] - 1 // 2 * h * gamma * (u[k] * x[k] + u[k + 1] * x[k + 1])
+  end
+  return cx
+end
+lvar = vcat(-T(Inf) * ones(T, N), zeros(T, N))
+uvar = vcat(T(Inf) * ones(T, N), ones(T, N))
+xi = vcat(ones(T, N), zeros(T, N))
+lcon = ucon = vcat(one(T), zeros(T, N - 1))
+
+@elapsed begin
+  nlp = ADNLPModel!(f, xi, lvar, uvar, [1], [1], T[1], c!, lcon, ucon; hessian_backend = ADNLPModels.EmptyADbackend)
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2.118216</code></pre><p><code>ADNLPModel</code> will automatically prepare an AD backend for computing sparse Jacobian and Hessian. We disabled the Hessian computation here to focus the measurement on the Jacobian computation. The keyword argument <code>show_time = true</code> can also be passed to the problem&#39;s constructor to get more detailed information about the time used to prepare the AD backend.</p><pre><code class="language-julia hljs">using NLPModels
+x = sqrt(2) * ones(n)
+jac_nln(nlp, x)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">49999×100000 SparseArrays.SparseMatrixCSC{Float64, Int64} with 199996 stored entries:
+⎡⠙⢦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠳⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⎤
+⎢⠀⠀⠙⢦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠳⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⎥
+⎢⠀⠀⠀⠀⠙⢦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠳⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⎥
+⎢⠀⠀⠀⠀⠀⠀⠙⢦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠓⢦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⎥
+⎢⠀⠀⠀⠀⠀⠀⠀⠀⠙⢦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⎥
+⎢⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢦⡀⠀⠀⠀⠀⠀⠀⠀⎥
+⎢⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠲⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢦⡀⠀⠀⠀⠀⠀⎥
+⎢⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠳⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢦⡀⠀⠀⠀⎥
+⎢⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠳⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢦⡀⠀⎥
+⎣⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠳⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠦⎦</code></pre><p>However, it can be rather costly to determine for a given function the sparsity pattern of the Jacobian and the Hessian of the Lagrangian. The good news is that determining this pattern a priori can be relatively straightforward, especially for problems like our optimal control investment problem and other problems with differential equations in the constraints.</p><p>The following example instantiates the Jacobian backend while manually providing the sparsity pattern.</p><pre><code class="language-julia hljs">using ADNLPModels
+using SparseArrays
+
+T = Float64
+n = 100000
+N = div(n, 2)
+h = 1 // N
+x0 = 1
+gamma = 3
+function f(y; N = N, h = h)
+  @views x, u = y[1:N], y[(N + 1):end]
+  return 1 // 2 * h * sum((u[k] - 1) * x[k] + (u[k + 1] - 1) * x[k + 1] for k = 1:(N - 1))
+end
+function c!(cx, y; N = N, h = h, gamma = gamma)
+  @views x, u = y[1:N], y[(N + 1):end]
+  for k = 1:(N - 1)
+    cx[k] = x[k + 1] - x[k] - 1 // 2 * h * gamma * (u[k] * x[k] + u[k + 1] * x[k + 1])
+  end
+  return cx
+end
+lvar = vcat(-T(Inf) * ones(T, N), zeros(T, N))
+uvar = vcat(T(Inf) * ones(T, N), ones(T, N))
+xi = vcat(ones(T, N), zeros(T, N))
+lcon = ucon = vcat(one(T), zeros(T, N - 1))
+
+@elapsed begin
+  Is = Vector{Int}(undef, 4 * (N - 1))
+  Js = Vector{Int}(undef, 4 * (N - 1))
+  Vs = ones(Bool, 4 * (N - 1))
+  for i = 1:(N - 1)
+    Is[((i - 1) * 4 + 1):(i * 4)] = [i; i; i; i]
+    Js[((i - 1) * 4 + 1):(i * 4)] = [i; i + 1; N + i; N + i + 1]
+  end
+  J = sparse(Is, Js, Vs, N - 1, n)
+
+  jac_back = ADNLPModels.SparseADJacobian(n, f, N - 1, c!, J)
+  nlp = ADNLPModel!(f, xi, lvar, uvar, [1], [1], T[1], c!, lcon, ucon; hessian_backend = ADNLPModels.EmptyADbackend, jacobian_backend = jac_back)
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1.672443534</code></pre><p>We recover the same Jacobian.</p><pre><code class="language-julia hljs">using NLPModels
+x = sqrt(2) * ones(n)
+jac_nln(nlp, x)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">49999×100000 SparseArrays.SparseMatrixCSC{Float64, Int64} with 199996 stored entries:
+⎡⠙⢦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠳⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⎤
+⎢⠀⠀⠙⢦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠳⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⎥
+⎢⠀⠀⠀⠀⠙⢦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠳⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⎥
+⎢⠀⠀⠀⠀⠀⠀⠙⢦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠓⢦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⎥
+⎢⠀⠀⠀⠀⠀⠀⠀⠀⠙⢦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⎥
+⎢⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢦⡀⠀⠀⠀⠀⠀⠀⠀⎥
+⎢⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠲⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢦⡀⠀⠀⠀⠀⠀⎥
+⎢⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠳⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢦⡀⠀⠀⠀⎥
+⎢⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠳⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢦⡀⠀⎥
+⎣⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠳⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠦⎦</code></pre><p>The same can be done for the Hessian of the Lagrangian.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../performance/">« Performance tips</a><a class="docs-footer-nextpage" href="../reference/">Reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.10.0 on <span class="colophon-date" title="Sunday 30 March 2025 23:28">Sunday 30 March 2025</span>. Using Julia version 1.10.9.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
