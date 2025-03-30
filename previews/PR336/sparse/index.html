@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Sparse Jacobian and Hessian · ADNLPModels.jl</title><meta name="title" content="Sparse Jacobian and Hessian · ADNLPModels.jl"/><meta property="og:title" content="Sparse Jacobian and Hessian · ADNLPModels.jl"/><meta property="twitter:title" content="Sparse Jacobian and Hessian · ADNLPModels.jl"/><meta name="description" content="Documentation for ADNLPModels.jl."/><meta property="og:description" content="Documentation for ADNLPModels.jl."/><meta property="twitter:description" content="Documentation for ADNLPModels.jl."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script><link href="../assets/style.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../"><img src="../assets/logo.png" alt="ADNLPModels.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../">ADNLPModels.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../tutorial/">Tutorial</a></li><li><a class="tocitem" href="../backend/">Backend</a></li><li><a class="tocitem" href="../predefined/">Default backends</a></li><li><a class="tocitem" href="../mixed/">Build a hybrid NLPModel</a></li><li><a class="tocitem" href="../generic/">Support multiple precision</a></li><li class="is-active"><a class="tocitem" href>Sparse Jacobian and Hessian</a><ul class="internal"><li><a class="tocitem" href="#Options-for-sparsity-pattern-detection-and-coloring"><span>Options for sparsity pattern detection and coloring</span></a></li><li><a class="tocitem" href="#Extracting-sparsity-patterns"><span>Extracting sparsity patterns</span></a></li><li><a class="tocitem" href="#Using-known-sparsity-patterns"><span>Using known sparsity patterns</span></a></li></ul></li><li><a class="tocitem" href="../performance/">Performance tips</a></li><li><a class="tocitem" href="../sparsity_pattern/">Providing sparsity pattern for sparse derivatives</a></li><li><a class="tocitem" href="../reference/">Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Sparse Jacobian and Hessian</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Sparse Jacobian and Hessian</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl/blob/main/docs/src/sparse.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="sparse"><a class="docs-heading-anchor" href="#sparse">Sparse Hessian and Jacobian computations</a><a id="sparse-1"></a><a class="docs-heading-anchor-permalink" href="#sparse" title="Permalink"></a></h1><p>By default, the Jacobian and Hessian are treated as sparse.</p><pre><code class="language-julia hljs">using ADNLPModels, NLPModels
+
+f(x) = (x[1] - 1)^2
+T = Float64
+x0 = T[-1.2; 1.0]
+nvar, ncon = 2, 1
+lvar, uvar = zeros(T, nvar), ones(T, nvar)
+lcon, ucon = -T[0.5], T[0.5]
+c!(cx, x) = begin
+  cx[1] = x[2]
+  return cx
+end
+nlp = ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon, backend = :optimized)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ADNLPModel - Model with automatic differentiation backend ADModelBackend{
+  ReverseDiffADGradient,
+  ReverseDiffADHvprod,
+  ForwardDiffADJprod,
+  ReverseDiffADJtprod,
+  SparseADJacobian,
+  SparseReverseADHessian,
+  ForwardDiffADGHjvprod,
+}
+  Problem name: Generic
+   All variables: ████████████████████ 2      All constraints: ████████████████████ 1     
+            free: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 free: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           lower: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                lower: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           upper: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                upper: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+         low/upp: ████████████████████ 2              low/upp: ████████████████████ 1     
+           fixed: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                fixed: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+          infeas: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0               infeas: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+            nnzh: ( 66.67% sparsity)   1               linear: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+                                                    nonlinear: ████████████████████ 1     
+                                                         nnzj: ( 50.00% sparsity)   1     
+
+  Counters:
+             obj: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 grad: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 cons: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+        cons_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0             cons_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 jcon: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           jgrad: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                  jac: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0              jac_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+         jac_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                jprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0            jprod_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+       jprod_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0               jtprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0           jtprod_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+      jtprod_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 hess: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                hprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           jhess: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0               jhprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+</code></pre><pre><code class="language-julia hljs">(get_nnzj(nlp), get_nnzh(nlp))  # Number of nonzero elements in the Jacobian and Hessian</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(1, 1)</code></pre><pre><code class="language-julia hljs">x = rand(T, nvar)
+J = jac(nlp, x)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1×2 SparseArrays.SparseMatrixCSC{Float64, Int64} with 1 stored entry:
+  ⋅   1.0</code></pre><pre><code class="language-julia hljs">x = rand(T, nvar)
+H = hess(nlp, x)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2×2 LinearAlgebra.Symmetric{Float64, SparseArrays.SparseMatrixCSC{Float64, Int64}}:
+ 2.0   ⋅ 
+  ⋅    ⋅ </code></pre><h2 id="Options-for-sparsity-pattern-detection-and-coloring"><a class="docs-heading-anchor" href="#Options-for-sparsity-pattern-detection-and-coloring">Options for sparsity pattern detection and coloring</a><a id="Options-for-sparsity-pattern-detection-and-coloring-1"></a><a class="docs-heading-anchor-permalink" href="#Options-for-sparsity-pattern-detection-and-coloring" title="Permalink"></a></h2><p>The backends available for sparse derivatives (<code>SparseADJacobian</code>, <code>SparseEnzymeADJacobian</code>, <code>SparseADHessian</code>, <code>SparseReverseADHessian</code>, and <code>SparseEnzymeADHessian</code>) allow for customization through keyword arguments such as <code>detector</code> and <code>coloring_algorithm</code>. These arguments specify the sparsity pattern detector and the coloring algorithm, respectively.</p><ul><li>A <strong><code>detector</code></strong> must be of type <code>ADTypes.AbstractSparsityDetector</code>. The default detector is <code>TracerSparsityDetector()</code> from the package <code>SparseConnectivityTracer.jl</code>. Prior to version 0.8.0, the default was <code>SymbolicSparsityDetector()</code> from <code>Symbolics.jl</code>. A <code>TracerLocalSparsityDetector()</code> is also available and can be used if the sparsity pattern of Jacobians and Hessians depends on <code>x</code>.</li></ul><pre><code class="language-julia hljs">import SparseConnectivityTracer.TracerLocalSparsityDetector
+
+set_adbackend!(
+  nlp,
+  jacobian_backend = ADNLPModels.SparseADJacobian(nvar, f, ncon, c!, detector=TracerLocalSparsityDetector()),
+  hessian_backend = ADNLPModels.SparseADHessian(nvar, f, ncon, c!, detector=TracerLocalSparsityDetector()),
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ADNLPModel - Model with automatic differentiation backend ADModelBackend{
+  ReverseDiffADGradient,
+  ReverseDiffADHvprod,
+  ForwardDiffADJprod,
+  ReverseDiffADJtprod,
+  SparseADJacobian,
+  SparseADHessian,
+  ForwardDiffADGHjvprod,
+}
+  Problem name: Generic
+   All variables: ████████████████████ 2      All constraints: ████████████████████ 1     
+            free: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 free: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           lower: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                lower: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           upper: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                upper: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+         low/upp: ████████████████████ 2              low/upp: ████████████████████ 1     
+           fixed: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                fixed: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+          infeas: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0               infeas: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+            nnzh: ( 66.67% sparsity)   1               linear: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+                                                    nonlinear: ████████████████████ 1     
+                                                         nnzj: ( 50.00% sparsity)   1     
+
+  Counters:
+             obj: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 grad: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 cons: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+        cons_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0             cons_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 jcon: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           jgrad: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                  jac: ████████████████████ 1              jac_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+         jac_nln: ████████████████████ 1                jprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0            jprod_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+       jprod_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0               jtprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0           jtprod_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+      jtprod_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 hess: ████████████████████ 1                hprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           jhess: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0               jhprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+</code></pre><ul><li>A <strong><code>coloring_algorithm</code></strong> must be of type <code>SparseMatrixColorings.GreedyColoringAlgorithm</code>. The default algorithm is <code>GreedyColoringAlgorithm{:direct}()</code> for <code>SparseADJacobian</code>, <code>SparseEnzymeADJacobian</code> and <code>SparseADHessian</code>, while it is <code>GreedyColoringAlgorithm{:substitution}()</code> for <code>SparseReverseADHessian</code> and <code>SparseEnzymeADHessian</code>. These algorithms are provided by the package <code>SparseMatrixColorings.jl</code>.</li></ul><pre><code class="language-julia hljs">using SparseMatrixColorings
+
+set_adbackend!(
+  nlp,
+  hessian_backend = ADNLPModels.SparseADHessian(nvar, f, ncon, c!, coloring_algorithm=GreedyColoringAlgorithm{:substitution}()),
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ADNLPModel - Model with automatic differentiation backend ADModelBackend{
+  ReverseDiffADGradient,
+  ReverseDiffADHvprod,
+  ForwardDiffADJprod,
+  ReverseDiffADJtprod,
+  SparseADJacobian,
+  SparseADHessian,
+  ForwardDiffADGHjvprod,
+}
+  Problem name: Generic
+   All variables: ████████████████████ 2      All constraints: ████████████████████ 1     
+            free: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 free: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           lower: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                lower: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           upper: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                upper: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+         low/upp: ████████████████████ 2              low/upp: ████████████████████ 1     
+           fixed: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                fixed: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+          infeas: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0               infeas: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+            nnzh: ( 66.67% sparsity)   1               linear: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+                                                    nonlinear: ████████████████████ 1     
+                                                         nnzj: ( 50.00% sparsity)   1     
+
+  Counters:
+             obj: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 grad: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 cons: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+        cons_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0             cons_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 jcon: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           jgrad: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                  jac: ████████████████████ 1              jac_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+         jac_nln: ████████████████████ 1                jprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0            jprod_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+       jprod_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0               jtprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0           jtprod_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+      jtprod_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 hess: ████████████████████ 1                hprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           jhess: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0               jhprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+</code></pre><p>The <code>GreedyColoringAlgorithm{:direct}()</code> performs column coloring for Jacobians and star coloring for Hessians. In contrast, <code>GreedyColoringAlgorithm{:substitution}()</code> applies acyclic coloring for Hessians. The <code>:substitution</code> mode generally requires fewer colors than <code>:direct</code>, thus fewer directional derivatives are needed to reconstruct the sparse Hessian. However, it necessitates storing the compressed sparse Hessian, while <code>:direct</code> coloring only requires storage for one column of the compressed Hessian.</p><p>The <code>:direct</code> coloring mode is numerically more stable and may be preferable for highly ill-conditioned Hessians, as it avoids solving triangular systems to compute nonzero entries from the compressed Hessian.</p><h2 id="Extracting-sparsity-patterns"><a class="docs-heading-anchor" href="#Extracting-sparsity-patterns">Extracting sparsity patterns</a><a id="Extracting-sparsity-patterns-1"></a><a class="docs-heading-anchor-permalink" href="#Extracting-sparsity-patterns" title="Permalink"></a></h2><p><code>ADNLPModels.jl</code> provides the function <a href="../reference/#ADNLPModels.get_sparsity_pattern-Tuple{Union{ADNLPModels.AbstractADNLPModel{T, S}, ADNLPModels.AbstractADNLSModel{T, S}} where {T, S}, Symbol}"><code>get_sparsity_pattern</code></a> to retrieve the sparsity patterns of the Jacobian or Hessian from a model.</p><pre><code class="language-julia hljs">using SparseArrays, ADNLPModels, NLPModels
+
+nvar = 10
+ncon = 5
+
+f(x) = sum((x[i] - i)^2 for i = 1:nvar) + x[nvar] * sum(x[j] for j = 1:nvar-1)
+
+function c!(cx, x)
+  cx[1] = x[1] + x[2]
+  cx[2] = x[1] + x[2] + x[3]
+  cx[3] = x[2] + x[3] + x[4]
+  cx[4] = x[3] + x[4] + x[5]
+  cx[5] = x[4] + x[5]
+  return cx
+end
+
+T = Float64
+x0 = -ones(T, nvar)
+lvar = zeros(T, nvar)
+uvar = 2 * ones(T, nvar)
+lcon = -0.5 * ones(T, ncon)
+ucon = 0.5 * ones(T, ncon)
+
+nlp = ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ADNLPModel - Model with automatic differentiation backend ADModelBackend{
+  ForwardDiffADGradient,
+  ForwardDiffADHvprod,
+  ForwardDiffADJprod,
+  ForwardDiffADJtprod,
+  SparseADJacobian,
+  SparseADHessian,
+  ForwardDiffADGHjvprod,
+}
+  Problem name: Generic
+   All variables: ████████████████████ 10     All constraints: ████████████████████ 5     
+            free: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 free: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           lower: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                lower: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           upper: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                upper: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+         low/upp: ████████████████████ 10             low/upp: ████████████████████ 5     
+           fixed: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                fixed: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+          infeas: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0               infeas: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+            nnzh: ( 65.45% sparsity)   19              linear: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+                                                    nonlinear: ████████████████████ 5     
+                                                         nnzj: ( 74.00% sparsity)   13    
+
+  Counters:
+             obj: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 grad: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 cons: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+        cons_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0             cons_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 jcon: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           jgrad: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                  jac: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0              jac_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+         jac_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                jprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0            jprod_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+       jprod_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0               jtprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0           jtprod_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+      jtprod_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 hess: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                hprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           jhess: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0               jhprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+</code></pre><pre><code class="language-julia hljs">J = get_sparsity_pattern(nlp, :jacobian)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">5×10 SparseArrays.SparseMatrixCSC{Bool, Int64} with 13 stored entries:
+ 1  1  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅
+ 1  1  1  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅
+ ⋅  1  1  1  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅
+ ⋅  ⋅  1  1  1  ⋅  ⋅  ⋅  ⋅  ⋅
+ ⋅  ⋅  ⋅  1  1  ⋅  ⋅  ⋅  ⋅  ⋅</code></pre><pre><code class="language-julia hljs">H = get_sparsity_pattern(nlp, :hessian)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">10×10 SparseArrays.SparseMatrixCSC{Bool, Int64} with 19 stored entries:
+ 1  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅
+ ⋅  1  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅
+ ⋅  ⋅  1  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅
+ ⋅  ⋅  ⋅  1  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅
+ ⋅  ⋅  ⋅  ⋅  1  ⋅  ⋅  ⋅  ⋅  ⋅
+ ⋅  ⋅  ⋅  ⋅  ⋅  1  ⋅  ⋅  ⋅  ⋅
+ ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  1  ⋅  ⋅  ⋅
+ ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  1  ⋅  ⋅
+ ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  1  ⋅
+ 1  1  1  1  1  1  1  1  1  1</code></pre><h2 id="Using-known-sparsity-patterns"><a class="docs-heading-anchor" href="#Using-known-sparsity-patterns">Using known sparsity patterns</a><a id="Using-known-sparsity-patterns-1"></a><a class="docs-heading-anchor-permalink" href="#Using-known-sparsity-patterns" title="Permalink"></a></h2><p>If the sparsity pattern of the Jacobian or the Hessian is already known, you can provide it directly. This may happen when the pattern is derived from the application or has been computed previously and saved for reuse. Note that both the lower and upper triangular parts of the Hessian are required during the coloring phase.</p><pre><code class="language-julia hljs">using SparseArrays, ADNLPModels, NLPModels
+
+nvar = 10
+ncon = 5
+
+f(x) = sum((x[i] - i)^2 for i = 1:nvar) + x[nvar] * sum(x[j] for j = 1:nvar-1)
+
+H = SparseMatrixCSC{Bool, Int}(
+  [ 1  0  0  0  0  0  0  0  0  1 ;
+    0  1  0  0  0  0  0  0  0  1 ;
+    0  0  1  0  0  0  0  0  0  1 ;
+    0  0  0  1  0  0  0  0  0  1 ;
+    0  0  0  0  1  0  0  0  0  1 ;
+    0  0  0  0  0  1  0  0  0  1 ;
+    0  0  0  0  0  0  1  0  0  1 ;
+    0  0  0  0  0  0  0  1  0  1 ;
+    0  0  0  0  0  0  0  0  1  1 ;
+    1  1  1  1  1  1  1  1  1  1 ]
+)
+
+function c!(cx, x)
+  cx[1] = x[1] + x[2]
+  cx[2] = x[1] + x[2] + x[3]
+  cx[3] = x[2] + x[3] + x[4]
+  cx[4] = x[3] + x[4] + x[5]
+  cx[5] = x[4] + x[5]
+  return cx
+end
+
+J = SparseMatrixCSC{Bool, Int}(
+  [ 1  1  0  0  0  0  0  0  0  0 ;
+    1  1  1  0  0  0  0  0  0  0 ;
+    0  1  1  1  0  0  0  0  0  0 ;
+    0  0  1  1  1  0  0  0  0  0 ;
+    0  0  0  1  1  0  0  0  0  0 ]
+)
+
+T = Float64
+x0 = -ones(T, nvar)
+lvar = zeros(T, nvar)
+uvar = 2 * ones(T, nvar)
+lcon = -0.5 * ones(T, ncon)
+ucon = 0.5 * ones(T, ncon)
+
+J_backend = ADNLPModels.SparseADJacobian(nvar, f, ncon, c!, J)
+H_backend = ADNLPModels.SparseADHessian(nvar, f, ncon, c!, H)
+
+nlp = ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon, jacobian_backend=J_backend, hessian_backend=H_backend)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ADNLPModel - Model with automatic differentiation backend ADModelBackend{
+  ForwardDiffADGradient,
+  ForwardDiffADHvprod,
+  ForwardDiffADJprod,
+  ForwardDiffADJtprod,
+  SparseADJacobian,
+  SparseADHessian,
+  ForwardDiffADGHjvprod,
+}
+  Problem name: Generic
+   All variables: ████████████████████ 10     All constraints: ████████████████████ 5     
+            free: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 free: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           lower: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                lower: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           upper: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                upper: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+         low/upp: ████████████████████ 10             low/upp: ████████████████████ 5     
+           fixed: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                fixed: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+          infeas: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0               infeas: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+            nnzh: ( 65.45% sparsity)   19              linear: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+                                                    nonlinear: ████████████████████ 5     
+                                                         nnzj: ( 74.00% sparsity)   13    
+
+  Counters:
+             obj: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 grad: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 cons: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+        cons_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0             cons_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 jcon: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           jgrad: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                  jac: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0              jac_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+         jac_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                jprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0            jprod_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+       jprod_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0               jtprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0           jtprod_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+      jtprod_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 hess: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                hprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           jhess: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0               jhprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+</code></pre><p>The section <a href="../sparsity_pattern/#sparsity-pattern">&quot;providing the sparsity pattern for sparse derivatives&quot;</a> illustrates this feature with a more advanced application.</p><h3 id="Acknowledgements"><a class="docs-heading-anchor" href="#Acknowledgements">Acknowledgements</a><a id="Acknowledgements-1"></a><a class="docs-heading-anchor-permalink" href="#Acknowledgements" title="Permalink"></a></h3><p>The package <a href="https://github.com/adrhill/SparseConnectivityTracer.jl"><code>SparseConnectivityTracer.jl</code></a> is used to compute the sparsity pattern of Jacobians and Hessians. The evaluation of the number of directional derivatives and the seeds required to compute compressed Jacobians and Hessians is performed using <a href="https://github.com/gdalle/SparseMatrixColorings.jl"><code>SparseMatrixColorings.jl</code></a>. As of release v0.8.1, it has replaced <a href="https://github.com/exanauts/ColPack.jl"><code>ColPack.jl</code></a>. We acknowledge Guillaume Dalle (@gdalle), Adrian Hill (@adrhill), Alexis Montoison (@amontoison), and Michel Schanen (@michel2323) for the development of these packages.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../generic/">« Support multiple precision</a><a class="docs-footer-nextpage" href="../performance/">Performance tips »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.9.0 on <span class="colophon-date" title="Sunday 30 March 2025 20:20">Sunday 30 March 2025</span>. Using Julia version 1.10.9.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
