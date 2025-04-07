@@ -300,8 +300,7 @@ function ADModelNLSBackend(
 
   JBLS = jacobian_residual_backend
   b = @elapsed begin
-    jacobian_residual_backend =
-      if jacobian_residual_backend isa Union{AbstractNLPModel, ADBackend}
+    jacobian_residual_backend = if jacobian_residual_backend isa Union{AbstractNLPModel, ADBackend}
         jacobian_residual_backend
       else
         JBLS(nvar, x -> zero(eltype(x)), nequ, F!; show_time, kwargs...)
@@ -467,8 +466,7 @@ function ADModelNLSBackend(
 
   JBLS = jacobian_residual_backend
   b = @elapsed begin
-    jacobian_residual_backend =
-      if jacobian_residual_backend isa Union{AbstractNLPModel, ADBackend}
+    jacobian_residual_backend = if jacobian_residual_backend isa Union{AbstractNLPModel, ADBackend}
         jacobian_residual_backend
       else
         JBLS(nvar, x -> zero(eltype(x)), nequ, F!; show_time, kwargs...)
