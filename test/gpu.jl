@@ -16,6 +16,7 @@ end
 )
   @testset "Checking GPU multiple precision on problem $problem" for problem in
                                                                      NLPModelsTest.nlp_problems
+
     nlp_from_T = eval(Meta.parse(lowercase(problem) * "_autodiff"))
     CUDA.allowscalar() do
       # sparse Jacobian/Hessian doesn't work here
@@ -39,6 +40,7 @@ end
 )
   @testset "Checking GPU multiple precision on problem $problem" for problem in
                                                                      NLPModelsTest.nls_problems
+
     nls_from_T = eval(Meta.parse(lowercase(problem) * "_autodiff"))
     CUDA.allowscalar() do
       # sparse Jacobian/Hessian doesn't work here
