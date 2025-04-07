@@ -17,7 +17,7 @@ function SparseADJacobian(
   ncon,
   c!;
   x0::AbstractVector = rand(nvar),
-  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
+  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(SmallestLast()),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
   show_time::Bool = false,
   kwargs...,
@@ -37,7 +37,7 @@ function SparseADJacobian(
   c!,
   J::SparseMatrixCSC{Bool, Int};
   x0::AbstractVector{T} = rand(nvar),
-  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
+  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(SmallestLast()),
   show_time::Bool = false,
   kwargs...,
 ) where {T}

@@ -45,10 +45,12 @@ These arguments specify the sparsity pattern detector and the coloring algorithm
 ```@example ex1
 import SparseConnectivityTracer.TracerLocalSparsityDetector
 
+detector = TracerLocalSparsityDetector()
+
 set_adbackend!(
   nlp,
-  jacobian_backend = ADNLPModels.SparseADJacobian(nvar, f, ncon, c!, detector=TracerLocalSparsityDetector()),
-  hessian_backend = ADNLPModels.SparseADHessian(nvar, f, ncon, c!, detector=TracerLocalSparsityDetector()),
+  jacobian_backend = ADNLPModels.SparseADJacobian(nvar, f, ncon, c!; detector),
+  hessian_backend = ADNLPModels.SparseADHessian(nvar, f, ncon, c!; detector),
 )
 ```
 
@@ -59,14 +61,17 @@ set_adbackend!(
 ```@example ex1
 using SparseMatrixColorings
 
+order = SmallestLast()  # NaturalOrder(), RandomOrder(), ...
+coloring_algorithm = GreedyColoringAlgorithm{:substitution}(order)
+
 set_adbackend!(
   nlp,
-  hessian_backend = ADNLPModels.SparseADHessian(nvar, f, ncon, c!, coloring_algorithm=GreedyColoringAlgorithm{:substitution}()),
+  hessian_backend = ADNLPModels.SparseADHessian(nvar, f, ncon, c!; coloring_algorithm)
 )
 ```
 
-The `GreedyColoringAlgorithm{:direct}()` performs column coloring for Jacobians and star coloring for Hessians.
-In contrast, `GreedyColoringAlgorithm{:substitution}()` applies acyclic coloring for Hessians. The `:substitution` mode generally requires fewer colors than `:direct`, thus fewer directional derivatives are needed to reconstruct the sparse Hessian.
+The `GreedyColoringAlgorithm{:direct}(order)` performs column coloring for Jacobians and star coloring for Hessians.
+In contrast, `GreedyColoringAlgorithm{:substitution}(order)` applies acyclic coloring for Hessians. The `:substitution` mode generally requires fewer colors than `:direct`, thus fewer directional derivatives are needed to reconstruct the sparse Hessian.
 However, it necessitates storing the compressed sparse Hessian, while `:direct` coloring only requires storage for one column of the compressed Hessian.
 
 The `:direct` coloring mode is numerically more stable and may be preferable for highly ill-conditioned Hessians, as it avoids solving triangular systems to compute nonzero entries from the compressed Hessian.
