@@ -33,7 +33,7 @@ else
 end
 
 @info "RUN"
-@time result = with_logger(ConsoleLogger(Error)) do    # remove warnings
+@time result = with_logger(ConsoleLogger(Error)) do     # remove warnings
   if "params.json" in (path == "" ? readdir() : readdir(path))
     loadparams!(suite, BenchmarkTools.load("params.json")[1], :evals, :samples)
   end
