@@ -167,6 +167,11 @@ nlp = ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon, jacobian_backend=J_backend,
 
 The section ["providing the sparsity pattern for sparse derivatives"](@ref sparsity-pattern) illustrates this feature with a more advanced application.
 
+## Automatic sparse differentiation (ASD)
+
+For a deeper understanding of how `ADNLPModels.jl` computes sparse Jacobians and Hessians, you can refer to the following blog post: ["An Illustrated Guide to Automatic Sparse Differentiation"](https://iclr-blogposts.github.io/2025/blog/sparse-autodiff/).
+It explains the key ideas behind sparse automatic differentiation (ASD), and why this approach is critical for large-scale nonlinear optimization.
+
 ### Acknowledgements
 
 The package [`SparseConnectivityTracer.jl`](https://github.com/adrhill/SparseConnectivityTracer.jl) is used to compute the sparsity pattern of Jacobians and Hessians.
