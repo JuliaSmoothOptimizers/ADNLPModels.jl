@@ -29,7 +29,7 @@ include("sparse_hessian.jl")
 include("sparse_hessian_nls.jl")
 
 list_sparse_jac_backend =
-  ((ADNLPModels.SparseADJacobian, Dict()), (ADNLPModels.ForwardDiffADJacobian, Dict()))
+  ((ADNLPModels.SparseADJacobian, Dict()), (ADNLPModels.SparseReverseADJacobian, Dict()))
 
 @testset "Sparse Jacobian" begin
   for (backend, kw) in list_sparse_jac_backend

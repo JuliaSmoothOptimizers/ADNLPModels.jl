@@ -1,4 +1,4 @@
-struct SparseADHessian{Tag, R, T, C, H, S, GT} <: ADBackend
+struct SparseADHessian{R, T, C, H, S, GT} <: ADBackend
   nvar::Int
   rowval::Vector{Int}
   colptr::Vector{Int}
@@ -7,8 +7,8 @@ struct SparseADHessian{Tag, R, T, C, H, S, GT} <: ADBackend
   coloring_mode::Symbol
   compressed_hessian::H
   seed::BitVector
-  lz::Vector{ForwardDiff.Dual{Tag, T, 1}}
-  glz::Vector{ForwardDiff.Dual{Tag, T, 1}}
+  lz::Vector{ForwardDiff.Dual{Val{:SparseADHessian}, T, 1}}
+  glz::Vector{ForwardDiff.Dual{Val{:SparseADHessian}, T, 1}}
   sol::S
   longv::S
   Hvp::S
@@ -84,7 +84,7 @@ function SparseADHessian(
 
     ntotal = nvar + 2 * ncon + 1
     sol = similar(x0, ntotal)
-    lz = Vector{ForwardDiff.Dual{ForwardDiff.Tag{typeof(lag), T}, T, 1}}(undef, ntotal)
+    lz = Vector{ForwardDiff.Dual{Val{:SparseADHessian}, T, 1}}(undef, ntotal)
     glz = similar(lz)
     cfg = ForwardDiff.GradientConfig(lag, lz)
     function ∇φ!(gz, z; lag = lag, cfg = cfg)
@@ -116,7 +116,7 @@ function SparseADHessian(
   )
 end
 
-struct SparseReverseADHessian{Tagf, Tagψ, R, T, C, H, S, F, P} <: ADBackend
+struct SparseReverseADHessian{R, T, C, H, S, F, P} <: ADBackend
   nvar::Int
   rowval::Vector{Int}
   colptr::Vector{Int}
@@ -125,13 +125,13 @@ struct SparseReverseADHessian{Tagf, Tagψ, R, T, C, H, S, F, P} <: ADBackend
   coloring_mode::Symbol
   compressed_hessian::H
   seed::BitVector
-  z::Vector{ForwardDiff.Dual{Tagf, T, 1}}
-  gz::Vector{ForwardDiff.Dual{Tagf, T, 1}}
+  z::Vector{ForwardDiff.Dual{Val{:SparseReverseADHessian}, T, 1}}
+  gz::Vector{ForwardDiff.Dual{Val{:SparseReverseADHessian}, T, 1}}
   ∇f!::F
-  zψ::Vector{ForwardDiff.Dual{Tagψ, T, 1}}
-  yψ::Vector{ForwardDiff.Dual{Tagψ, T, 1}}
-  gzψ::Vector{ForwardDiff.Dual{Tagψ, T, 1}}
-  gyψ::Vector{ForwardDiff.Dual{Tagψ, T, 1}}
+  zψ::Vector{ForwardDiff.Dual{Val{:SparseReverseADHessian}, T, 1}}
+  yψ::Vector{ForwardDiff.Dual{Val{:SparseReverseADHessian}, T, 1}}
+  gzψ::Vector{ForwardDiff.Dual{Val{:SparseReverseADHessian}, T, 1}}
+  gyψ::Vector{ForwardDiff.Dual{Val{:SparseReverseADHessian}, T, 1}}
   ∇l!::P
   Hv_temp::S
   y::S
@@ -189,25 +189,24 @@ function SparseReverseADHessian(
 
   # unconstrained Hessian
   timer = @elapsed begin
-    tagf = ForwardDiff.Tag{typeof(f), T}
-    z = Vector{ForwardDiff.Dual{tagf, T, 1}}(undef, nvar)
+    z = Vector{ForwardDiff.Dual{Val{:SparseReverseADHessian}, T, 1}}(undef, nvar)
     gz = similar(z)
     f_tape = ReverseDiff.GradientTape(f, z)
     cfgf = ReverseDiff.compile(f_tape)
     ∇f!(gz, z; cfg = cfgf) = ReverseDiff.gradient!(gz, cfg, z)
 
     # constraints
-    ψ(x, u) = begin # ; tmp_out = _tmp_out
+    ψ(x, u) = begin
       ncon = length(u)
       tmp_out = similar(x, ncon)
       c!(tmp_out, x)
       dot(tmp_out, u)
     end
-    tagψ = ForwardDiff.Tag{typeof(ψ), T}
-    zψ = Vector{ForwardDiff.Dual{tagψ, T, 1}}(undef, nvar)
+    zψ = Vector{ForwardDiff.Dual{Val{:SparseReverseADHessian}, T, 1}}(undef, nvar)
     yψ = fill!(similar(zψ, ncon), zero(T))
-    ψ_tape = ReverseDiff.GradientConfig((zψ, yψ))
-    cfgψ = ReverseDiff.compile(ReverseDiff.GradientTape(ψ, (zψ, yψ), ψ_tape))
+    ψ_config = ReverseDiff.GradientConfig((zψ, yψ))
+    ψ_tape = ReverseDiff.GradientTape(ψ, (zψ, yψ), ψ_config)
+    cfgψ = ReverseDiff.compile(ψ_tape)
 
     gzψ = similar(zψ)
     gyψ = similar(yψ)
@@ -270,12 +269,12 @@ function NLPModels.hess_structure_residual!(
 end
 
 function sparse_hess_coord!(
-  b::SparseADHessian{Tag},
+  b::SparseADHessian,
   x::AbstractVector,
   obj_weight,
   y::AbstractVector,
   vals::AbstractVector,
-) where {Tag}
+)
   ncon = length(y)
   T = eltype(x)
   b.sol[1:ncon] .= zero(T)  # cx
@@ -301,9 +300,9 @@ function sparse_hess_coord!(
       (b.coloring_mode == :direct) ? b.compressed_hessian : view(b.compressed_hessian, :, icol)
 
     b.longv[(ncon + 1):(ncon + b.nvar)] .= b.seed
-    map!(ForwardDiff.Dual{Tag}, b.lz, b.sol, b.longv)
+    map!(ForwardDiff.Dual{Val{:SparseADHessian}}, b.lz, b.sol, b.longv)
     b.∇φ!(b.glz, b.lz)
-    ForwardDiff.extract_derivative!(Tag, b.Hvp, b.glz)
+    ForwardDiff.extract_derivative!(Val{:SparseADHessian}, b.Hvp, b.glz)
     compressed_hessian_icol .= view(b.Hvp, (ncon + 1):(ncon + b.nvar))
     if b.coloring_mode == :direct
       # Update the coefficients of the lower triangular part of the Hessian that are related to the color `icol`
@@ -318,12 +317,12 @@ function sparse_hess_coord!(
 end
 
 function sparse_hess_coord!(
-  b::SparseReverseADHessian{Tagf, Tagψ},
+  b::SparseReverseADHessian,
   x::AbstractVector,
   obj_weight,
   y::AbstractVector,
   vals::AbstractVector,
-) where {Tagf, Tagψ}
+)
   # SparseMatrixColorings.jl requires a SparseMatrixCSC for the decompression
   A = SparseMatrixCSC(b.nvar, b.nvar, b.colptr, b.rowval, b.nzval)
 
@@ -340,16 +339,16 @@ function sparse_hess_coord!(
       (b.coloring_mode == :direct) ? b.compressed_hessian : view(b.compressed_hessian, :, icol)
 
     # objective
-    map!(ForwardDiff.Dual{Tagf}, b.z, x, b.seed)  # x + ε * v
+    map!(ForwardDiff.Dual{Val{:SparseReverseADHessian}}, b.z, x, b.seed)  # x + ε * v
     b.∇f!(b.gz, b.z)
-    ForwardDiff.extract_derivative!(Tagf, compressed_hessian_icol, b.gz)
+    ForwardDiff.extract_derivative!(Val{:SparseReverseADHessian}, compressed_hessian_icol, b.gz)
     compressed_hessian_icol .*= obj_weight
 
     # constraints
-    map!(ForwardDiff.Dual{Tagψ}, b.zψ, x, b.seed)
+    map!(ForwardDiff.Dual{Val{:SparseReverseADHessian}}, b.zψ, x, b.seed)
     b.yψ .= y
     b.∇l!(b.gzψ, b.gyψ, b.zψ, b.yψ)
-    ForwardDiff.extract_derivative!(Tagψ, b.Hv_temp, b.gzψ)
+    ForwardDiff.extract_derivative!(Val{:SparseReverseADHessian}, b.Hv_temp, b.gzψ)
     compressed_hessian_icol .+= b.Hv_temp
 
     if b.coloring_mode == :direct
