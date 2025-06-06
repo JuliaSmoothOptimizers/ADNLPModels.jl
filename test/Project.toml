@@ -1,5 +1,6 @@
 [deps]
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 ManualNLPModels = "30dfa513-9b2f-4fb3-9796-781eabac1617"
 NLPModels = "a4795742-8479-5a88-8948-cc11e1c8c1a6"

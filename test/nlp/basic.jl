@@ -26,6 +26,7 @@ function test_autodiff_model(name; kwargs...)
   @test norm(grad(nlp, β)) < 1e-12
 
   test_getter_setter(nlp)
+  test_allocations(nlp)
 
   @testset "Constructors for ADNLPModel with $name" begin
     lvar, uvar, lcon, ucon, y0 = -ones(2), ones(2), -ones(1), ones(1), zeros(1)

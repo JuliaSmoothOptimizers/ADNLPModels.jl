@@ -4,8 +4,8 @@ function gradient!(::GenericForwardDiffADGradient, g, f, x)
   return ForwardDiff.gradient!(g, f, x)
 end
 
-struct ForwardDiffADGradient <: ADBackend
-  cfg
+struct ForwardDiffADGradient{GC} <: ADBackend
+  cfg::GC
 end
 function ForwardDiffADGradient(
   nvar::Integer,
