@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Backend · ADNLPModels.jl</title><meta name="title" content="Backend · ADNLPModels.jl"/><meta property="og:title" content="Backend · ADNLPModels.jl"/><meta property="twitter:title" content="Backend · ADNLPModels.jl"/><meta name="description" content="Documentation for ADNLPModels.jl."/><meta property="og:description" content="Documentation for ADNLPModels.jl."/><meta property="twitter:description" content="Documentation for ADNLPModels.jl."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script><link href="../assets/style.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../"><img src="../assets/logo.png" alt="ADNLPModels.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../">ADNLPModels.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../tutorial/">Tutorial</a></li><li class="is-active"><a class="tocitem" href>Backend</a><ul class="internal"><li><a class="tocitem" href="#Examples"><span>Examples</span></a></li></ul></li><li><a class="tocitem" href="../predefined/">Default backends</a></li><li><a class="tocitem" href="../mixed/">Build a hybrid NLPModel</a></li><li><a class="tocitem" href="../generic/">Support multiple precision</a></li><li><a class="tocitem" href="../sparse/">Sparse Jacobian and Hessian</a></li><li><a class="tocitem" href="../performance/">Performance tips</a></li><li><a class="tocitem" href="../sparsity_pattern/">Providing sparsity pattern for sparse derivatives</a></li><li><a class="tocitem" href="../reference/">Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Backend</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Backend</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl/blob/main/docs/src/backend.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="How-to-switch-backend-in-ADNLPModels"><a class="docs-heading-anchor" href="#How-to-switch-backend-in-ADNLPModels">How to switch backend in ADNLPModels</a><a id="How-to-switch-backend-in-ADNLPModels-1"></a><a class="docs-heading-anchor-permalink" href="#How-to-switch-backend-in-ADNLPModels" title="Permalink"></a></h1><p><code>ADNLPModels</code> allows the use of different backends to compute the derivatives required within NLPModel API. It uses <code>ForwardDiff.jl</code>, <code>ReverseDiff.jl</code>, and more via optional depencies.</p><p>The backend information is in a structure <a href="../reference/#ADNLPModels.ADModelBackend"><code>ADNLPModels.ADModelBackend</code></a> in the attribute <code>adbackend</code> of a <code>ADNLPModel</code>, it can also be accessed with <a href="../reference/#ADNLPModels.get_adbackend-Tuple{Union{ADNLPModels.AbstractADNLPModel{T, S}, ADNLPModels.AbstractADNLSModel{T, S}} where {T, S}}"><code>get_adbackend</code></a>.</p><p>The functions used internally to define the NLPModel API and the possible backends are defined in the following table:</p><table><tr><th style="text-align: right">Functions</th><th style="text-align: right">FowardDiff backends</th><th style="text-align: right">ReverseDiff backends</th><th style="text-align: right">Zygote backends</th><th style="text-align: right">Enzyme backend</th><th style="text-align: right">Sparse backend</th></tr><tr><td style="text-align: right"><code>gradient</code> and <code>gradient!</code></td><td style="text-align: right"><code>ForwardDiffADGradient</code>/<code>GenericForwardDiffADGradient</code></td><td style="text-align: right"><code>ReverseDiffADGradient</code>/<code>GenericReverseDiffADGradient</code></td><td style="text-align: right"><code>ZygoteADGradient</code></td><td style="text-align: right"><code>EnzymeReverseADGradient</code></td><td style="text-align: right">–</td></tr><tr><td style="text-align: right"><code>jacobian</code></td><td style="text-align: right"><code>ForwardDiffADJacobian</code></td><td style="text-align: right"><code>ReverseDiffADJacobian</code></td><td style="text-align: right"><code>ZygoteADJacobian</code></td><td style="text-align: right"><code>SparseEnzymeADJacobian</code></td><td style="text-align: right"><code>SparseADJacobian</code></td></tr><tr><td style="text-align: right"><code>hessian</code></td><td style="text-align: right"><code>ForwardDiffADHessian</code></td><td style="text-align: right"><code>ReverseDiffADHessian</code></td><td style="text-align: right"><code>ZygoteADHessian</code></td><td style="text-align: right"><code>SparseEnzymeADHessian</code></td><td style="text-align: right"><code>SparseADHessian</code>/<code>SparseReverseADHessian</code></td></tr><tr><td style="text-align: right"><code>Jprod</code></td><td style="text-align: right"><code>ForwardDiffADJprod</code>/<code>GenericForwardDiffADJprod</code></td><td style="text-align: right"><code>ReverseDiffADJprod</code>/<code>GenericReverseDiffADJprod</code></td><td style="text-align: right"><code>ZygoteADJprod</code></td><td style="text-align: right"><code>EnzymeReverseADJprod</code></td><td style="text-align: right">–</td></tr><tr><td style="text-align: right"><code>Jtprod</code></td><td style="text-align: right"><code>ForwardDiffADJtprod</code>/<code>GenericForwardDiffADJtprod</code></td><td style="text-align: right"><code>ReverseDiffADJtprod</code>/<code>GenericReverseDiffADJtprod</code></td><td style="text-align: right"><code>ZygoteADJtprod</code></td><td style="text-align: right"><code>EnzymeReverseADJtprod</code></td><td style="text-align: right">–</td></tr><tr><td style="text-align: right"><code>Hvprod</code></td><td style="text-align: right"><code>ForwardDiffADHvprod</code>/<code>GenericForwardDiffADHvprod</code></td><td style="text-align: right"><code>ReverseDiffADHvprod</code>/<code>GenericReverseDiffADHvprod</code></td><td style="text-align: right">–</td><td style="text-align: right"><code>EnzymeReverseADHvprod</code></td><td style="text-align: right">–</td></tr><tr><td style="text-align: right"><code>directional_second_derivative</code></td><td style="text-align: right"><code>ForwardDiffADGHjvprod</code></td><td style="text-align: right">–</td><td style="text-align: right">–</td><td style="text-align: right">–</td><td style="text-align: right">–</td></tr></table><p>The functions <code>hess_structure!</code>, <code>hess_coord!</code>, <code>jac_structure!</code> and <code>jac_coord!</code> defined in <code>ad.jl</code> are generic to all the backends for now.</p><pre><code class="language-julia hljs">using ADNLPModels
+f(x) = sum(x)
+x0 = ones(2)
+ADNLPModel(f, x0, show_time = true)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ADNLPModel - Model with automatic differentiation backend ADModelBackend{
+  ForwardDiffADGradient,
+  ForwardDiffADHvprod,
+  EmptyADbackend,
+  EmptyADbackend,
+  EmptyADbackend,
+  SparseADHessian,
+  EmptyADbackend,
+}
+  Problem name: Generic
+   All variables: ████████████████████ 2      All constraints: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+            free: ████████████████████ 2                 free: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           lower: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                lower: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           upper: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                upper: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+         low/upp: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0              low/upp: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           fixed: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                fixed: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+          infeas: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0               infeas: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+            nnzh: (100.00% sparsity)   0               linear: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+                                                    nonlinear: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+                                                         nnzj: (------% sparsity)         
+
+  Counters:
+             obj: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 grad: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 cons: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+        cons_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0             cons_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 jcon: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           jgrad: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                  jac: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0              jac_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+         jac_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                jprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0            jprod_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+       jprod_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0               jtprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0           jtprod_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+      jtprod_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 hess: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                hprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           jhess: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0               jhprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+</code></pre><p>The keyword <code>show_time</code> is set to <code>true</code> to display the time needed to instantiate each backend. For unconstrained problem, there is no need to compute derivatives of constraints so an <code>EmptyADbackend</code> is used for Jacobian computations.</p><h2 id="Examples"><a class="docs-heading-anchor" href="#Examples">Examples</a><a id="Examples-1"></a><a class="docs-heading-anchor-permalink" href="#Examples" title="Permalink"></a></h2><p>We now present a serie of practical examples. For simplicity, we focus here on unconstrained optimization problem. All these examples can be generalized to problems with bounds, constraints or nonlinear least-squares.</p><h3 id="Use-another-backend"><a class="docs-heading-anchor" href="#Use-another-backend">Use another backend</a><a id="Use-another-backend-1"></a><a class="docs-heading-anchor-permalink" href="#Use-another-backend" title="Permalink"></a></h3><p>As shown in <a href="../tutorial/#Tutorial">Tutorial</a>, it is very straightforward to instantiate an <code>ADNLPModel</code> using an objective function and an initial guess.</p><pre><code class="language-julia hljs">using ADNLPModels, NLPModels
+f(x) = sum(x)
+x0 = ones(3)
+nlp = ADNLPModel(f, x0)
+grad(nlp, nlp.meta.x0) # returns the gradient at x0</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">3-element Vector{Float64}:
+ 1.0
+ 1.0
+ 1.0</code></pre><p>Thanks to the backends inside <code>ADNLPModels.jl</code>, it is easy to change the backend for one (or more) function using the <code>kwargs</code> presented in the table above.</p><pre><code class="language-julia hljs">nlp = ADNLPModel(f, x0, gradient_backend = ADNLPModels.ReverseDiffADGradient)
+grad(nlp, nlp.meta.x0)  # returns the gradient at x0 using `ReverseDiff`</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">3-element Vector{Float64}:
+ 1.0
+ 1.0
+ 1.0</code></pre><p>It is also possible to try some new implementation for each function. First, we define a new <code>ADBackend</code> structure.</p><pre><code class="language-julia hljs">struct NewADGradient &lt;: ADNLPModels.ADBackend end
+function NewADGradient(
+  nvar::Integer,
+  f,
+  ncon::Integer = 0,
+  c::Function = (args...) -&gt; [];
+  kwargs...,
+)
+  return NewADGradient()
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Main.NewADGradient</code></pre><p>Then, we implement the desired functions following the table above.</p><pre><code class="language-julia hljs">ADNLPModels.gradient(adbackend::NewADGradient, f, x) = rand(Float64, size(x))
+function ADNLPModels.gradient!(adbackend::NewADGradient, g, f, x)
+  g .= rand(Float64, size(x))
+  return g
+end</code></pre><p>Finally, we use the homemade backend to compute the gradient.</p><pre><code class="language-julia hljs">nlp = ADNLPModel(sum, ones(3), gradient_backend = NewADGradient)
+grad(nlp, nlp.meta.x0)  # returns the gradient at x0 using `NewADGradient`</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">3-element Vector{Float64}:
+ 0.3177959964806204
+ 0.8304151302782848
+ 0.436104863202913</code></pre><h3 id="Change-backend"><a class="docs-heading-anchor" href="#Change-backend">Change backend</a><a id="Change-backend-1"></a><a class="docs-heading-anchor-permalink" href="#Change-backend" title="Permalink"></a></h3><p>Once an instance of an <code>ADNLPModel</code> has been created, it is possible to change the backends without re-instantiating the model.</p><pre><code class="language-julia hljs">using ADNLPModels, NLPModels
+f(x) = 100 * (x[2] - x[1]^2)^2 + (x[1] - 1)^2
+x0 = 3 * ones(2)
+nlp = ADNLPModel(f, x0)
+get_adbackend(nlp) # returns the `ADModelBackend` structure that regroup all the various backends.</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ADModelBackend{
+  ForwardDiffADGradient,
+  ForwardDiffADHvprod,
+  EmptyADbackend,
+  EmptyADbackend,
+  EmptyADbackend,
+  SparseADHessian,
+  EmptyADbackend,
+}</code></pre><p>There are currently two ways to modify instantiated backends. The first one is to instantiate a new <code>ADModelBackend</code> and use <code>set_adbackend!</code> to modify <code>nlp</code>.</p><pre><code class="language-julia hljs">adback = ADNLPModels.ADModelBackend(nlp.meta.nvar, nlp.f, gradient_backend = ADNLPModels.ForwardDiffADGradient)
+set_adbackend!(nlp, adback)
+get_adbackend(nlp)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ADModelBackend{
+  ForwardDiffADGradient,
+  ForwardDiffADHvprod,
+  EmptyADbackend,
+  EmptyADbackend,
+  EmptyADbackend,
+  SparseADHessian,
+  EmptyADbackend,
+}</code></pre><p>The alternative is to use <code>set_adbackend!</code> and pass the new backends via <code>kwargs</code>. In the second approach, it is possible to pass either the type of the desired backend or an instance as shown below.</p><pre><code class="language-julia hljs">set_adbackend!(
+  nlp,
+  gradient_backend = ADNLPModels.ForwardDiffADGradient,
+  jtprod_backend = ADNLPModels.GenericForwardDiffADJtprod(),
+)
+get_adbackend(nlp)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ADModelBackend{
+  ForwardDiffADGradient,
+  ForwardDiffADHvprod,
+  EmptyADbackend,
+  GenericForwardDiffADJtprod,
+  EmptyADbackend,
+  SparseADHessian,
+  EmptyADbackend,
+}</code></pre><h3 id="Support-multiple-precision-without-having-to-recreate-the-model"><a class="docs-heading-anchor" href="#Support-multiple-precision-without-having-to-recreate-the-model">Support multiple precision without having to recreate the model</a><a id="Support-multiple-precision-without-having-to-recreate-the-model-1"></a><a class="docs-heading-anchor-permalink" href="#Support-multiple-precision-without-having-to-recreate-the-model" title="Permalink"></a></h3><p>One of the strength of <code>ADNLPModels.jl</code> is the type flexibility. Let&#39;s assume, we first instantiate an <code>ADNLPModel</code> with a <code>Float64</code> initial guess.</p><pre><code class="language-julia hljs">using ADNLPModels, NLPModels
+f(x) = 100 * (x[2] - x[1]^2)^2 + (x[1] - 1)^2
+x0 = 3 * ones(2) # Float64 initial guess
+nlp = ADNLPModel(f, x0)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ADNLPModel - Model with automatic differentiation backend ADModelBackend{
+  ForwardDiffADGradient,
+  ForwardDiffADHvprod,
+  EmptyADbackend,
+  EmptyADbackend,
+  EmptyADbackend,
+  SparseADHessian,
+  EmptyADbackend,
+}
+  Problem name: Generic
+   All variables: ████████████████████ 2      All constraints: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+            free: ████████████████████ 2                 free: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           lower: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                lower: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           upper: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                upper: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+         low/upp: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0              low/upp: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           fixed: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                fixed: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+          infeas: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0               infeas: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+            nnzh: (  0.00% sparsity)   3               linear: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+                                                    nonlinear: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+                                                         nnzj: (------% sparsity)         
+
+  Counters:
+             obj: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 grad: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 cons: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+        cons_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0             cons_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 jcon: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           jgrad: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                  jac: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0              jac_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+         jac_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                jprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0            jprod_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+       jprod_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0               jtprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0           jtprod_lin: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+      jtprod_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 hess: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                hprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+           jhess: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0               jhprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
+</code></pre><p>Then, the gradient will return a vector of <code>Float64</code>.</p><pre><code class="language-julia hljs">x64 = rand(2)
+grad(nlp, x64)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2-element Vector{Float64}:
+  197.1862269034805
+ -118.67469062308105</code></pre><p>It is now possible to move to a different type, for instance <code>Float32</code>, while keeping the instance <code>nlp</code>.</p><pre><code class="language-julia hljs">x0_32 = ones(Float32, 2)
+set_adbackend!(nlp, gradient_backend = ADNLPModels.ForwardDiffADGradient, x0 = x0_32)
+x32 = rand(Float32, 2)
+grad(nlp, x32)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2-element Vector{Float64}:
+ -56.48250961303711
+  50.764644622802734</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../tutorial/">« Tutorial</a><a class="docs-footer-nextpage" href="../predefined/">Default backends »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Tuesday 15 July 2025 00:38">Tuesday 15 July 2025</span>. Using Julia version 1.10.10.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
