@@ -108,8 +108,8 @@ function GenericForwardDiffADJtprod(
 )
   return GenericForwardDiffADJtprod()
 end
-function Jtprod!(::GenericForwardDiffADJtprod, Jtv::S, f, x::S, v::S, ::Val) where{S}
-  Jtv .= ForwardDiff.gradient(x -> dot(f(x), v), x)::S
+function Jtprod!(::GenericForwardDiffADJtprod, Jtv, f, x, v, ::Val)
+  Jtv .= ForwardDiff.gradient(x -> dot(f(x), v), x)
   return Jtv
 end
 
@@ -138,8 +138,8 @@ function ForwardDiffADJtprod(
     c!(cx, x)
     dot(cx, u)
   end
-  #tagψ = ForwardDiff.Tag(ψ, T)
-  cfg = ForwardDiff.GradientConfig(ψ, temp)
+  tagψ = ForwardDiff.Tag(ψ, T)
+  cfg = ForwardDiff.GradientConfig(ψ, temp, ForwardDiff.Chunk(temp), tagψ)
 
   return ForwardDiffADJtprod(cfg, ψ, temp, sol)
 end
@@ -151,7 +151,7 @@ function Jtprod!(b::ForwardDiffADJtprod{Tag, GT, S}, Jtv, c!, x, v, ::Val) where
   b.sol[1:ncon] .= 0
   b.sol[(ncon + 1):(ncon + nvar)] .= x
   b.sol[(ncon + nvar + 1):(2 * ncon + nvar)] .= v
-  ForwardDiff.gradient!(b.temp, b.ψ, b.sol)
+  ForwardDiff.gradient!(b.temp, b.ψ, b.sol, b.cfg)
   Jtv .= view(b.temp, (ncon + 1):(nvar + ncon))
   return Jtv
 end
