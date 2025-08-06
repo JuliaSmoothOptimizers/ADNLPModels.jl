@@ -13,6 +13,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 ForwardDiff = "0.10"
+JET = "0.9"
 ManualNLPModels = "0.1"
 NLPModels = "0.21"
 NLPModelsModifiers = "0.7"
