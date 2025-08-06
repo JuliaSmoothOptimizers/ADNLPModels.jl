@@ -61,4 +61,5 @@ function test_allocations(nlp::ADNLSModel)
   @test_opt target_modules=(ADNLPModels,) obj(nlp, x)  
   @test_opt target_modules=(ADNLPModels,) cons!(nlp, x, y)
   @test_opt target_modules=(ADNLPModels,) grad!(nlp, x, g, Fx)
+  @test_opt target_modules=(ADNLPModels,) residual!(nlp, x, Fx)
 end

@@ -250,7 +250,7 @@ get_adbackend(nlp::ADModel) = nlp.adbackend
 Create a copy of nlp that replaces the current `adbackend` with `new_adbackend` or instantiate a new one with `kwargs`, see `ADModelBackend`.
 By default, the setter with kwargs will reuse existing backends.
 """
-function _set_adbackend(nlp::ADM, new_adbackend::ADModelBackend) where{ADM}
+function _set_adbackend(nlp::ADM, new_adbackend::ADModelBackend) where{ADM <: AbstractADNLPModel}
   values = [f == :adbackend ? new_adbackend : getfield(nlp, f) for f in fieldnames(ADM)]
   base_type = Base.typename(ADM).wrapper
   return base_type(values...)
