@@ -109,7 +109,7 @@ function GenericForwardDiffADJtprod(
   return GenericForwardDiffADJtprod()
 end
 function Jtprod!(::GenericForwardDiffADJtprod, Jtv, f, x, v, ::Val)
-  Jtv .= ForwardDiff.gradient(x -> dot(f(x), v), x)
+  ForwardDiff.gradient!(Jtv, x -> dot(f(x), v), x)
   return Jtv
 end
 
