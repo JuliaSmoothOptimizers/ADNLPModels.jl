@@ -4,28 +4,13 @@ function test_nlp_consistency(nlp, model; counters = true)
   v = 2 * ones(nvar)
   y = ones(ncon)
 
-  @test grad(nlp, x) == grad(model, x)
-  @test !counters || (neval_grad(model) == 2)
-  @test hess_coord(nlp, x) == hess_coord(model, x)
-  @test !counters || (neval_hess(model) == 2)
-  @test hprod(nlp, x, v) == hprod(model, x, v)
-  @test !counters || (neval_hprod(model) == 2)
+  # TODO: only test the backends that are defined
   if model.meta.nnln > 0
     @test jac(nlp, x) == jac(model, x)
     @test !counters || (neval_jac_nln(model) == 2)
     @test jprod(nlp, x, v) == jprod(model, x, v)
     @test !counters || (neval_jprod_nln(model) == 2)
     @test jtprod(nlp, x, y) == jtprod(model, x, y)
-    @test hess_coord(nlp, x, y) == hess_coord(model, x, y)
-    @test !counters || (neval_hess(model) == 4)
-    @test hprod(nlp, x, y, v) == hprod(model, x, y, v)
-    @test !counters || (neval_hprod(model) == 4)
-    @test ghjvprod(nlp, x, x, v) == ghjvprod(model, x, x, v)
-    @test !counters || (neval_hprod(model) == 6)
-    for j in model.meta.nln
-      @test jth_hess(nlp, x, j) == jth_hess(model, x, j)
-      @test jth_hprod(nlp, x, v, j) == jth_hprod(model, x, v, j)
-    end
   end
 
   if (nlp isa AbstractNLSModel) && (model isa AbstractNLSModel)
@@ -41,6 +26,25 @@ function test_nlp_consistency(nlp, model; counters = true)
     #for i=1:nequ
     #  @test hprod_residual(nlp, x, i, v) == hprod_residual(model, x, i, v)
     #end
+  else
+    @test grad(nlp, x) == grad(model, x)
+    @test !counters || (neval_grad(model) == 2)
+    @test hess_coord(nlp, x) == hess_coord(model, x)
+    @test !counters || (neval_hess(model) == 2)
+    @test hprod(nlp, x, v) == hprod(model, x, v)
+    @test !counters || (neval_hprod(model) == 2)
+    if model.meta.nnln > 0
+      @test hess_coord(nlp, x, y) == hess_coord(model, x, y)
+      @test !counters || (neval_hess(model) == 4)
+      @test hprod(nlp, x, y, v) == hprod(model, x, y, v)
+      @test !counters || (neval_hprod(model) == 4)
+      @test ghjvprod(nlp, x, x, v) == ghjvprod(model, x, x, v)
+      @test !counters || (neval_hprod(model) == 6)
+      for j in model.meta.nln
+        @test jth_hess(nlp, x, j) == jth_hess(model, x, j)
+        @test jth_hprod(nlp, x, v, j) == jth_hprod(model, x, v, j)
+      end
+    end
   end
 end
 
@@ -250,18 +254,12 @@ end
     c!,
     lcon,
     ucon,
-    gradient_backend = adbackend.gradient_backend,
-    hprod_backend = adbackend.hprod_backend,
-    hessian_backend = adbackend.hessian_backend,
     jprod_backend = adbackend.jprod_backend,
     jtprod_backend = adbackend.jtprod_backend,
     jacobian_backend = adbackend.jacobian_backend,
-    ghjvprod_backend = adbackend.ghjvprod_backend,
-    hprod_residual_backend = adbackend.hprod_residual_backend,
     jprod_residual_backend = adbackend.jprod_residual_backend,
     jtprod_residual_backend = adbackend.jtprod_residual_backend,
     jacobian_residual_backend = adbackend.jacobian_residual_backend,
-    hessian_residual_backend = adbackend.hessian_residual_backend,
   )
   test_nlp_consistency(nlp, nlp; counters = false)
 end
