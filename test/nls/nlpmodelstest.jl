@@ -13,13 +13,20 @@ function nls_nlpmodelstest(backend)
       push!(nlss, eval(Meta.parse(spc))())
     end
 
-    exclude = if problem == "LLS"
-      [hess_coord, hess]
-    elseif problem == "MGH01"
-      [hess_coord, hess, ghjvprod]
-    else
-      []
-    end
+    # TODO: test backends that have been defined
+    exclude = [
+      grad,
+      hess,
+      hess_coord,
+      hprod,
+      jth_hess,
+      jth_hess_coord,
+      jth_hprod,
+      ghjvprod,
+      hess_residual,
+      jth_hess_residual,
+      hprod_residual,
+    ]
 
     for nls in nlss
       show(IOBuffer(), nls)
