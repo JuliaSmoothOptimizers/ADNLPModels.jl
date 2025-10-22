@@ -7,8 +7,8 @@ end
 struct GenericReverseDiffADJprod <: ADBackend end
 struct GenericReverseDiffADJtprod <: ADBackend end
 
-struct ReverseDiffADGradient <: ADBackend
-  cfg
+struct ReverseDiffADGradient{GC} <: ADBackend
+  cfg::GC
 end
 
 function ReverseDiffADGradient(
