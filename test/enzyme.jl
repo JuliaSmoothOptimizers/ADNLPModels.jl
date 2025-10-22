@@ -1,4 +1,5 @@
 using LinearAlgebra, SparseArrays, Test
+using JET
 using SparseMatrixColorings
 using ADNLPModels, ManualNLPModels, NLPModels, NLPModelsModifiers, NLPModelsTest
 using ADNLPModels:
