@@ -160,7 +160,7 @@ function ADNLSModel!(model::AbstractNLSModel; kwargs...)
   end
 end
 
-export get_adbackend
+export get_adbackend, set_adbackend
 
 """
     get_c(nlp)
@@ -248,7 +248,7 @@ get_adbackend(nlp::ADModel) = nlp.adbackend
     new_nlp = set_adbackend(nlp; kwargs...)
 
 Create a copy of nlp that replaces the current `adbackend` with `new_adbackend` or instantiate a new one with `kwargs`, see `ADModelBackend`.
-By default, the setter with kwargs will reuse existing backends.
+By default, the setter with keyword arguments will reuse existing backends.
 """
 function _set_adbackend(nlp::ADM, new_adbackend::ADModelBackend) where{ADM}
   values = [f == :adbackend ? new_adbackend : getfield(nlp, f) for f in fieldnames(ADM)]
