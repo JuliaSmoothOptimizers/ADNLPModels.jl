@@ -21,7 +21,16 @@ The general form of the optimization problem is
 
 ## How to Cite
 
-If you use ADNLPModels.jl in your work, please cite using the format given in [CITATION.bib](https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl/blob/main/CITATION.bib).
+If you use `ADNLPModels.jl` in your work, we would greatly appreciate your citing it.
+
+```bibtex
+@misc{montoison-migot-orban-siqueira-2021,
+  title = {{ADNLPModels.jl}: Automatic Differentiation models implementing the NLPModels API},
+  author = {A. Montoison and T. Migot and D. Orban and A. S. Siqueira},
+  year = {2021},
+  doi = {10.5281/zenodo.4605982},
+}
+```
 
 ## Installation
 
