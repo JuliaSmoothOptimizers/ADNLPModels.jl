@@ -39,7 +39,7 @@ function ADNLPModel!(model::AbstractNLPModel; kwargs...)
       model.meta.x0,
       model.meta.lvar,
       model.meta.uvar,
-      jac_lin(model, model.meta.x0),
+      jac_lin(model),
       (cx, x) -> cons!(model, x, cx),
       model.meta.lcon,
       model.meta.ucon;
@@ -71,7 +71,7 @@ function ADNLPModel(model::AbstractNLPModel; kwargs...)
       model.meta.x0,
       model.meta.lvar,
       model.meta.uvar,
-      jac_lin(model, model.meta.x0),
+      jac_lin(model),
       model_c,
       model.meta.lcon,
       model.meta.ucon;
@@ -110,7 +110,7 @@ function ADNLSModel(model::AbstractNLSModel; kwargs...)
       model.nls_meta.nequ,
       model.meta.lvar,
       model.meta.uvar,
-      jac_lin(model, model.meta.x0),
+      jac_lin(model),
       model_c,
       model.meta.lcon,
       model.meta.ucon;
@@ -139,7 +139,7 @@ function ADNLSModel!(model::AbstractNLSModel; kwargs...)
       model.nls_meta.nequ,
       model.meta.lvar,
       model.meta.uvar,
-      jac_lin(model, model.meta.x0),
+      jac_lin(model),
       (cx, x) -> cons!(model, x, cx),
       model.meta.lcon,
       model.meta.ucon;

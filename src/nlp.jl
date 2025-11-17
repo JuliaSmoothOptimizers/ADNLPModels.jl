@@ -581,8 +581,7 @@ function NLPModels.jac_nln_structure!(
   return jac_structure!(nlp.adbackend.jacobian_backend, nlp, rows, cols)
 end
 
-function NLPModels.jac_lin_coord!(nlp::ADModel, x::AbstractVector, vals::AbstractVector)
-  @lencheck nlp.meta.nvar x
+function NLPModels.jac_lin_coord!(nlp::ADModel, vals::AbstractVector)
   @lencheck nlp.meta.lin_nnzj vals
   increment!(nlp, :neval_jac_lin)
   vals .= nlp.clinvals
@@ -598,11 +597,10 @@ end
 
 function NLPModels.jprod_lin!(
   nlp::ADModel,
-  x::AbstractVector,
   v::AbstractVector,
-  Jv::AbstractVector{T},
-) where {T}
-  @lencheck nlp.meta.nvar x v
+  Jv::AbstractVector,
+)
+  @lencheck nlp.meta.nvar v
   @lencheck nlp.meta.nlin Jv
   increment!(nlp, :neval_jprod_lin)
   coo_prod!(nlp.clinrows, nlp.clincols, nlp.clinvals, v, Jv)
@@ -646,11 +644,10 @@ end
 
 function NLPModels.jtprod_lin!(
   nlp::ADModel,
-  x::AbstractVector,
   v::AbstractVector,
-  Jtv::AbstractVector{T},
-) where {T}
-  @lencheck nlp.meta.nvar x Jtv
+  Jtv::AbstractVector,
+)
+  @lencheck nlp.meta.nvar Jtv
   @lencheck nlp.meta.nlin v
   increment!(nlp, :neval_jtprod_lin)
   coo_prod!(nlp.clincols, nlp.clinrows, nlp.clinvals, v, Jtv)
