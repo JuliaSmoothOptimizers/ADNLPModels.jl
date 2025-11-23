@@ -1,19 +1,19 @@
 export ADNLSModel, ADNLSModel!
 
-mutable struct ADNLSModel{T, S, Si} <: AbstractADNLSModel{T, S}
+mutable struct ADNLSModel{T, S, Si, F1, F2, ADMB <: ADModelBackend} <: AbstractADNLSModel{T, S}
   meta::NLPModelMeta{T, S}
   nls_meta::NLSMeta{T, S}
   counters::NLSCounters
-  adbackend::ADModelBackend
+  adbackend::ADMB
 
   # Function
-  F!
+  F!::F1
 
   clinrows::Si
   clincols::Si
   clinvals::S
 
-  c!
+  c!::F2
 end
 
 ADNLSModel(
