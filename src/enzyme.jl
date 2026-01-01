@@ -110,7 +110,7 @@ function SparseEnzymeADJacobian(
   ncon,
   c!;
   x0::AbstractVector = rand(nvar),
-  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
+  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(postprocessing=true),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
   show_time::Bool = false,
   kwargs...,
@@ -130,7 +130,7 @@ function SparseEnzymeADJacobian(
   c!,
   J::SparseMatrixCSC{Bool, Int};
   x0::AbstractVector{T} = rand(nvar),
-  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(),
+  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(postprocessing=true),
   show_time::Bool = false,
   kwargs...,
 ) where {T}
@@ -187,7 +187,7 @@ function SparseEnzymeADHessian(
   ncon,
   c!;
   x0::AbstractVector = rand(nvar),
-  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:substitution}(),
+  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:substitution}(postprocessing=true),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
   show_time::Bool = false,
   kwargs...,
@@ -206,7 +206,7 @@ function SparseEnzymeADHessian(
   c!,
   H::SparseMatrixCSC{Bool, Int};
   x0::AbstractVector{T} = rand(nvar),
-  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:substitution}(),
+  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:substitution}(postprocessing=true),
   show_time::Bool = false,
   kwargs...,
 ) where {T}
