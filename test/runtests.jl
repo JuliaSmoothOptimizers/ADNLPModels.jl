@@ -39,26 +39,54 @@ list_sparse_jac_backend =
 end
 
 list_sparse_hess_backend = (
-  (ADNLPModels.SparseADHessian, Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}())),
+  (ADNLPModels.SparseADHessian,
+    "star coloring with postprocessing",
+    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}(postprocessing=true)),
+  ),
+  (ADNLPModels.SparseADHessian,
+    "star coloring without postprocessing",
+    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}(postprocessing=false)),
+  ),
   (
     ADNLPModels.SparseADHessian,
-    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}()),
+    "acyclic coloring with postprocessing",
+    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}(postprocessing=true)),
+  ),
+  (
+    ADNLPModels.SparseADHessian,
+    "acyclic coloring without postprocessing",
+    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}(postprocessing=false)),
   ),
   (
     ADNLPModels.SparseReverseADHessian,
-    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}()),
+    "star coloring with postprocessing",
+    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}(postprocessing=true)),
   ),
   (
     ADNLPModels.SparseReverseADHessian,
-    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}()),
+    "star coloring without postprocessing",
+    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}(postprocessing=false)),
   ),
-  (ADNLPModels.ForwardDiffADHessian, Dict()),
+  (
+    ADNLPModels.SparseReverseADHessian,
+    "acyclic coloring with postprocessing",
+    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}(postprocessing=true)),
+  ),
+  (
+    ADNLPModels.SparseReverseADHessian,
+    "acyclic coloring without postprocessing",
+    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}(postprocessing=false)),
+  ),
+  (ADNLPModels.ForwardDiffADHessian,
+    "default",
+    Dict(),
+  ),
 )
 
 @testset "Sparse Hessian" begin
-  for (backend, kw) in list_sparse_hess_backend
-    sparse_hessian(backend, kw)
-    sparse_hessian_nls(backend, kw)
+  for (backend, info, kw) in list_sparse_hess_backend
+    sparse_hessian(backend, info, kw)
+    sparse_hessian_nls(backend, info, kw)
   end
 end
 
