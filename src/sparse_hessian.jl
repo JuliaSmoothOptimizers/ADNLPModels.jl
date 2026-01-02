@@ -22,7 +22,9 @@ function SparseADHessian(
   ncon,
   c!;
   x0::AbstractVector = rand(nvar),
-  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(postprocessing=true),
+  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(
+    postprocessing = true,
+  ),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
   show_time::Bool = false,
   kwargs...,
@@ -41,7 +43,9 @@ function SparseADHessian(
   c!,
   H::SparseMatrixCSC{Bool, Int64};
   x0::S = rand(nvar),
-  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(postprocessing=true),
+  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(
+    postprocessing = true,
+  ),
   show_time::Bool = false,
   kwargs...,
 ) where {S}
@@ -143,7 +147,9 @@ function SparseReverseADHessian(
   ncon,
   c!;
   x0::AbstractVector = rand(nvar),
-  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:substitution}(postprocessing=true),
+  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:substitution}(
+    postprocessing = true,
+  ),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
   show_time::Bool = false,
   kwargs...,
@@ -162,7 +168,9 @@ function SparseReverseADHessian(
   c!,
   H::SparseMatrixCSC{Bool, Int};
   x0::AbstractVector{T} = rand(nvar),
-  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:substitution}(postprocessing=true),
+  coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:substitution}(
+    postprocessing = true,
+  ),
   show_time::Bool = false,
   kwargs...,
 ) where {T}
