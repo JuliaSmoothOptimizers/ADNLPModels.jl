@@ -1,5 +1,6 @@
 function sparse_hessian_nls(backend, info, kw)
-  @testset "Basic Hessian of residual derivative with backend=$(backend) -- $info -- T=$(T)" for T in (
+  @testset "Basic Hessian of residual derivative with backend=$(backend) -- $info -- T=$(T)" for T in
+                                                                                                 (
     Float32,
     Float64,
   )
