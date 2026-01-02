@@ -111,6 +111,7 @@ function SparseEnzymeADJacobian(
   c!;
   x0::AbstractVector = rand(nvar),
   coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(
+    decompression_uplo = :L,
     postprocessing = true,
   ),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
@@ -133,6 +134,7 @@ function SparseEnzymeADJacobian(
   J::SparseMatrixCSC{Bool, Int};
   x0::AbstractVector{T} = rand(nvar),
   coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:direct}(
+    decompression_uplo = :L,
     postprocessing = true,
   ),
   show_time::Bool = false,
@@ -192,6 +194,7 @@ function SparseEnzymeADHessian(
   c!;
   x0::AbstractVector = rand(nvar),
   coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:substitution}(
+    decompression_uplo = :L,
     postprocessing = true,
   ),
   detector::AbstractSparsityDetector = TracerSparsityDetector(),
@@ -213,6 +216,7 @@ function SparseEnzymeADHessian(
   H::SparseMatrixCSC{Bool, Int};
   x0::AbstractVector{T} = rand(nvar),
   coloring_algorithm::AbstractColoringAlgorithm = GreedyColoringAlgorithm{:substitution}(
+    decompression_uplo = :L,
     postprocessing = true,
   ),
   show_time::Bool = false,
@@ -533,14 +537,14 @@ end
 
         if b.coloring_mode == :direct
           # Update the coefficients of the lower triangular part of the Hessian that are related to the color `icol`
-          decompress_single_color!(A, b.compressed_hessian_icol, icol, b.result_coloring, :L)
+          decompress_single_color!(A, b.compressed_hessian_icol, icol, b.result_coloring)
         end
         if b.coloring_mode == :substitution
           view(b.compressed_hessian, :, icol) .= b.compressed_hessian_icol
         end
       end
       if b.coloring_mode == :substitution
-        decompress!(A, b.compressed_hessian, b.result_coloring, :L)
+        decompress!(A, b.compressed_hessian, b.result_coloring)
       end
       vals .= b.nzval
       return vals
