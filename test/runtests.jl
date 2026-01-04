@@ -39,47 +39,48 @@ list_sparse_jac_backend =
 end
 
 list_sparse_hess_backend = (
-  (
-    ADNLPModels.SparseADHessian,
+  (ADNLPModels.SparseADHessian,
     "star coloring with postprocessing",
-    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}(postprocessing = true)),
+    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}(decompression_uplo=:L, postprocessing=true)),
   ),
-  (
-    ADNLPModels.SparseADHessian,
+  (ADNLPModels.SparseADHessian,
     "star coloring without postprocessing",
-    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}(postprocessing = false)),
+    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}(decompression_uplo=:L, postprocessing=false)),
   ),
   (
     ADNLPModels.SparseADHessian,
     "acyclic coloring with postprocessing",
-    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}(postprocessing = true)),
+    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}(decompression_uplo=:L, postprocessing=true)),
   ),
   (
     ADNLPModels.SparseADHessian,
     "acyclic coloring without postprocessing",
-    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}(postprocessing = false)),
+    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}(decompression_uplo=:L, postprocessing=false)),
   ),
   (
     ADNLPModels.SparseReverseADHessian,
     "star coloring with postprocessing",
-    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}(postprocessing = true)),
+    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}(decompression_uplo=:L, postprocessing=true)),
   ),
   (
     ADNLPModels.SparseReverseADHessian,
     "star coloring without postprocessing",
-    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}(postprocessing = false)),
+    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:direct}(decompression_uplo=:L, postprocessing=false)),
   ),
   (
     ADNLPModels.SparseReverseADHessian,
     "acyclic coloring with postprocessing",
-    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}(postprocessing = true)),
+    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}(decompression_uplo=:L, postprocessing=true)),
   ),
   (
     ADNLPModels.SparseReverseADHessian,
     "acyclic coloring without postprocessing",
-    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}(postprocessing = false)),
+    Dict(:coloring_algorithm => GreedyColoringAlgorithm{:substitution}(decompression_uplo=:L, postprocessing=false)),
   ),
-  (ADNLPModels.ForwardDiffADHessian, "default", Dict()),
+  (ADNLPModels.ForwardDiffADHessian,
+    "default",
+    Dict(),
+  ),
 )
 
 @testset "Sparse Hessian" begin
