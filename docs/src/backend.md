@@ -96,26 +96,27 @@ nlp = ADNLPModel(f, x0)
 get_adbackend(nlp) # returns the `ADModelBackend` structure that regroup all the various backends.
 ```
 
-There are currently two ways to modify instantiated backends. The first one is to instantiate a new `ADModelBackend` and use `set_adbackend!` to modify `nlp`.
+To instantiate a new `ADModelBackend` while preserving existing backends, use `set_adbackend`.
 
 ```@example adnlp2
 adback = ADNLPModels.ADModelBackend(nlp.meta.nvar, nlp.f, gradient_backend = ADNLPModels.ForwardDiffADGradient)
-set_adbackend!(nlp, adback)
-get_adbackend(nlp)
+new_nlp = set_adbackend(nlp, adback)
+get_adbackend(new_nlp)
 ```
 
-The alternative is to use `set_adbackend!` and pass the new backends via `kwargs`. In the second approach, it is possible to pass either the type of the desired backend or an instance as shown below.
+An alternative way to use `set_adbackend` is to pass the new backends as keyword arguments.
+In this approach, you can pass either the type of the desired backend or an existing instance, as shown below.
 
 ```@example adnlp2
-set_adbackend!(
+new_nlp = set_adbackend(
   nlp,
   gradient_backend = ADNLPModels.ForwardDiffADGradient,
   jtprod_backend = ADNLPModels.GenericForwardDiffADJtprod(),
 )
-get_adbackend(nlp)
+get_adbackend(new_nlp)
 ```
 
-### Support multiple precision without having to recreate the model
+### Multi-precision model creation with backend reuse
 
 One of the strength of `ADNLPModels.jl` is the type flexibility. Let's assume, we first instantiate an `ADNLPModel` with a `Float64` initial guess.
 
@@ -133,11 +134,11 @@ x64 = rand(2)
 grad(nlp, x64)
 ```
 
-It is now possible to move to a different type, for instance `Float32`, while keeping the instance `nlp`.
+It is now possible to move to a different type for the gradient, for instance `Float32`, while keeping the other backends from the original model `nlp`.
 
 ```@example adnlp3
 x0_32 = ones(Float32, 2)
-set_adbackend!(nlp, gradient_backend = ADNLPModels.ForwardDiffADGradient, x0 = x0_32)
+new_nlp = set_adbackend(nlp, gradient_backend = ADNLPModels.ForwardDiffADGradient, x0 = x0_32)
 x32 = rand(Float32, 2)
-grad(nlp, x32)
+grad(new_nlp, x32)
 ```
