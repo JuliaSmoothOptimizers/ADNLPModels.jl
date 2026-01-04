@@ -71,19 +71,21 @@ function sparse_hessian(backend, info, kw)
       x -> sum(100 * (x[i + 1] - x[i]^2)^2 + (x[i] - 1)^2 for i = 1:(n - 1)),
       x,
       hessian_backend = backend,
-      name = "Extended Rosenbrock",
+      name = "Extended Rosenbrock";
+      kw...,
     )
     @test hess(nlp, x) == T[802 -400 0 0; -400 1002 -400 0; 0 -400 1002 -400; 0 0 -400 200]
 
     x = ones(T, 2)
-    nlp = ADNLPModel(x -> x[1]^2 + x[1] * x[2], x, hessian_backend = backend)
+    nlp = ADNLPModel(x -> x[1]^2 + x[1] * x[2], x, hessian_backend = backend; kw...)
     @test hess(nlp, x) == T[2 1; 1 0]
 
     nlp = ADNLPModel(
       x -> sum(100 * (x[i + 1] - x[i]^2)^2 + (x[i] - 1)^2 for i = 1:(n - 1)),
       x,
       name = "Extended Rosenbrock",
-      matrix_free = true,
+      matrix_free = true;
+      kw...,
     )
     @test nlp.adbackend.hessian_backend isa ADNLPModels.EmptyADbackend
   end
