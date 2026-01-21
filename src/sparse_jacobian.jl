@@ -1,4 +1,4 @@
-struct SparseADJacobian{Tag, R, T, C, S} <: ADBackend
+struct SparseADJacobian{R, T, C, S} <: ADBackend
   nvar::Int
   ncon::Int
   rowval::Vector{Int}
@@ -7,8 +7,8 @@ struct SparseADJacobian{Tag, R, T, C, S} <: ADBackend
   result_coloring::C
   compressed_jacobian::S
   seed::BitVector
-  z::Vector{ForwardDiff.Dual{Tag, T, 1}}
-  cz::Vector{ForwardDiff.Dual{Tag, T, 1}}
+  z::Vector{ForwardDiff.Dual{Val{:SparseADJacobian}, T, 1}}
+  cz::Vector{ForwardDiff.Dual{Val{:SparseADJacobian}, T, 1}}
 end
 
 function SparseADJacobian(
@@ -42,7 +42,7 @@ function SparseADJacobian(
   kwargs...,
 ) where {T}
   timer = @elapsed begin
-    # We should support :row and :bidirectional in the future
+    # We should support :row and :bidirectional in the future with DI.jl
     problem = ColoringProblem{:nonsymmetric, :column}()
     result_coloring = coloring(J, problem, coloring_algorithm, decompression_eltype = T)
 
@@ -55,8 +55,7 @@ function SparseADJacobian(
   show_time && println("  • Coloring of the sparse Jacobian: $timer seconds.")
 
   timer = @elapsed begin
-    tag = ForwardDiff.Tag{typeof(c!), T}
-    z = Vector{ForwardDiff.Dual{tag, T, 1}}(undef, nvar)
+    z = Vector{ForwardDiff.Dual{Val{:SparseADJacobian}, T, 1}}(undef, nvar)
     cz = similar(z, ncon)
   end
   show_time && println("  • Allocation of the AD buffers for the sparse Jacobian: $timer seconds.")
@@ -96,10 +95,10 @@ end
 
 function sparse_jac_coord!(
   ℓ!::Function,
-  b::SparseADJacobian{Tag},
+  b::SparseADJacobian,
   x::AbstractVector,
   vals::AbstractVector,
-) where {Tag}
+)
   # SparseMatrixColorings.jl requires a SparseMatrixCSC for the decompression
   A = SparseMatrixCSC(b.ncon, b.nvar, b.colptr, b.rowval, b.nzval)
 
@@ -111,9 +110,9 @@ function sparse_jac_coord!(
       b.seed[col] = true
     end
 
-    map!(ForwardDiff.Dual{Tag}, b.z, x, b.seed)  # x + ε * v
+    map!(ForwardDiff.Dual{Val{:SparseADJacobian}}, b.z, x, b.seed)  # x + ε * v
     ℓ!(b.cz, b.z)  # c!(cz, x + ε * v)
-    ForwardDiff.extract_derivative!(Tag, b.compressed_jacobian, b.cz)  # ∇c!(cx, x)ᵀv
+    ForwardDiff.extract_derivative!(Val{:SparseADJacobian}, b.compressed_jacobian, b.cz)  # ∇c!(cx, x)ᵀv
 
     # Update the columns of the Jacobian that have the color `icol`
     decompress_single_color!(A, b.compressed_jacobian, icol, b.result_coloring)
