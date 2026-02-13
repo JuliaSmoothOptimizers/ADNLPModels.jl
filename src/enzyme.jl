@@ -62,8 +62,11 @@ function EnzymeReverseADHvprod(
   return EnzymeReverseADHvprod(grad,f)
 end
 
-struct EnzymeReverseADJprod{T} <: InPlaceADbackend
-  cx::Vector{T}
+struct EnzymeReverseADJprod{V} <: InPlaceADbackend
+  cx::V       # length ncon, primal output buffer
+  xbuf::V     # length nvar, input x buffer
+  vbuf::V     # length nvar, input v buffer (tangent direction)
+  jvbuf::V    # length ncon, output Jv buffer
 end
 
 function EnzymeReverseADJprod(
@@ -74,12 +77,18 @@ function EnzymeReverseADJprod(
   x0::AbstractVector{T} = rand(nvar),
   kwargs...,
 ) where {T}
-  cx = zeros(T, ncon)
-  return EnzymeReverseADJprod(cx)
+  cx = fill!(similar(x0, ncon), zero(T))
+  xbuf = similar(x0)
+  vbuf = similar(x0)
+  jvbuf = fill!(similar(x0, ncon), zero(T))
+  return EnzymeReverseADJprod(cx, xbuf, vbuf, jvbuf)
 end
 
-struct EnzymeReverseADJtprod{T} <: InPlaceADbackend
-  cx::Vector{T}
+struct EnzymeReverseADJtprod{V} <: InPlaceADbackend
+  cx::V       # length ncon, primal output buffer
+  xbuf::V     # length nvar, input x buffer
+  vbuf::V     # length ncon, cotangent seed buffer
+  jtvbuf::V   # length nvar, output Jtv buffer
 end
 
 function EnzymeReverseADJtprod(
@@ -90,11 +99,14 @@ function EnzymeReverseADJtprod(
   x0::AbstractVector{T} = rand(nvar),
   kwargs...,
 ) where {T}
-  cx = zeros(T, ncon)
-  return EnzymeReverseADJtprod(cx)
+  cx = fill!(similar(x0, ncon), zero(T))
+  xbuf = similar(x0)
+  vbuf = fill!(similar(x0, ncon), zero(T))
+  jtvbuf = similar(x0)
+  return EnzymeReverseADJtprod(cx, xbuf, vbuf, jtvbuf)
 end
 
-struct SparseEnzymeADJacobian{R, C, S} <: ADBackend
+struct SparseEnzymeADJacobian{R, C, S, V} <: ADBackend
   nvar::Int
   ncon::Int
   rowval::Vector{Int}
@@ -102,8 +114,9 @@ struct SparseEnzymeADJacobian{R, C, S} <: ADBackend
   nzval::Vector{R}
   result_coloring::C
   compressed_jacobian::S
-  v::Vector{R}
-  cx::Vector{R}
+  v::V
+  cx::V
+  xbuf::V
 end
 
 function SparseEnzymeADJacobian(
@@ -154,7 +167,8 @@ function SparseEnzymeADJacobian(
 
   timer = @elapsed begin
     v = similar(x0)
-    cx = zeros(T, ncon)
+    cx = fill!(similar(x0, ncon), zero(T))
+    xbuf = similar(x0)
   end
   show_time && println("  • Allocation of the AD buffers for the sparse Jacobian: $timer seconds.")
 
@@ -168,24 +182,26 @@ function SparseEnzymeADJacobian(
     compressed_jacobian,
     v,
     cx,
+    xbuf,
   )
 end
 
-struct SparseEnzymeADHessian{R, C, S, L, F} <: ADBackend
+struct SparseEnzymeADHessian{R, C, S, L, F, V} <: ADBackend
   nvar::Int
   rowval::Vector{Int}
   colptr::Vector{Int}
   nzval::Vector{R}
   result_coloring::C
   coloring_mode::Symbol
-  compressed_hessian_icol::Vector{R}
+  compressed_hessian_icol::V
   compressed_hessian::S
-  v::Vector{R}
-  y::Vector{R}
-  grad::Vector{R}
-  cx::Vector{R}
+  v::V
+  y::V
+  grad::V
+  cx::V
   f::F
   ℓ::L
+  xbuf::V
 end
 
 function SparseEnzymeADHessian(
@@ -248,6 +264,7 @@ function SparseEnzymeADHessian(
     y = similar(x0, ncon)
     cx = similar(x0, ncon)
     grad = similar(x0)
+    xbuf = similar(x0)
 
     function ℓ(x, y, obj_weight, cx)
       if ncon != 0
@@ -279,6 +296,7 @@ function SparseEnzymeADHessian(
     cx,
     f,
     ℓ,
+    xbuf,
   )
 end
 
@@ -366,23 +384,29 @@ end
     end
 
     function Jprod!(b::EnzymeReverseADJprod, Jv, c!, x, v, ::Val)
+      copyto!(b.xbuf, x)
+      copyto!(b.vbuf, v)
       Enzyme.autodiff(
         Enzyme.Forward,
         Enzyme.Const(c!),
-        Enzyme.Duplicated(b.cx, Jv),
-        Enzyme.Duplicated(x, v),
+        Enzyme.Duplicated(b.cx, b.jvbuf),
+        Enzyme.Duplicated(b.xbuf, b.vbuf),
       )
+      copyto!(Jv, b.jvbuf)
       return Jv
     end
 
     function Jtprod!(b::EnzymeReverseADJtprod, Jtv, c!, x, v, ::Val)
-      Enzyme.make_zero!(Jtv)
+      copyto!(b.xbuf, x)
+      copyto!(b.vbuf, v)
+      Enzyme.make_zero!(b.jtvbuf)
       Enzyme.autodiff(
         Enzyme.Reverse,
         Enzyme.Const(c!),
-        Enzyme.Duplicated(b.cx, v),
-        Enzyme.Duplicated(x, Jtv),
+        Enzyme.Duplicated(b.cx, b.vbuf),
+        Enzyme.Duplicated(b.xbuf, b.jtvbuf),
       )
+      copyto!(Jtv, b.jtvbuf)
       return Jtv
     end
 
@@ -442,6 +466,10 @@ end
       # SparseMatrixColorings.jl requires a SparseMatrixCSC for the decompression
       A = SparseMatrixCSC(b.ncon, b.nvar, b.colptr, b.rowval, b.nzval)
 
+      # Enzyme.Duplicated requires primal and shadow to have the same type.
+      # Copy x into a pre-allocated buffer to ensure type match with b.v.
+      copyto!(b.xbuf, x)
+
       groups = column_groups(b.result_coloring)
       for (icol, cols) in enumerate(groups)
         # Update the seed
@@ -456,7 +484,7 @@ end
           Enzyme.Forward,
           Enzyme.Const(c!),
           Enzyme.Duplicated(b.cx, b.compressed_jacobian),
-          Enzyme.Duplicated(x, b.v),
+          Enzyme.Duplicated(b.xbuf, b.v),
         )
 
         # Update the columns of the Jacobian that have the color `icol`
@@ -531,6 +559,10 @@ end
       # SparseMatrixColorings.jl requires a SparseMatrixCSC for the decompression
       A = SparseMatrixCSC(b.nvar, b.nvar, b.colptr, b.rowval, b.nzval)
 
+      # Enzyme.Duplicated requires primal and shadow to have the same type.
+      # Copy x into a pre-allocated buffer to ensure type match with b.v.
+      copyto!(b.xbuf, x)
+
       groups = column_groups(b.result_coloring)
       for (icol, cols) in enumerate(groups)
         # Update the seed
@@ -542,7 +574,7 @@ end
         _hvp!(
           Enzyme.DuplicatedNoNeed(b.grad, b.compressed_hessian_icol),
           b.ℓ,
-          x,
+          b.xbuf,
           b.v,
           y,
           obj_weight,
