@@ -396,12 +396,21 @@ end
       return Jv
     end
 
+    # Wrapper that calls c!(y, x) but returns nothing.
+    # Enzyme reverse mode requires functions to return nothing (not their output array),
+    # otherwise it errors with "Duplicated Returns not yet handled".
+    function _void_c!(c!, y, x)
+      c!(y, x)
+      return nothing
+    end
+
     function Jtprod!(b::EnzymeReverseADJtprod, Jtv, c!, x, v, ::Val)
       copyto!(b.xbuf, x)
       copyto!(b.vbuf, v)
       Enzyme.make_zero!(b.jtvbuf)
       Enzyme.autodiff(
         Enzyme.Reverse,
+        Enzyme.Const(_void_c!),
         Enzyme.Const(c!),
         Enzyme.Duplicated(b.cx, b.vbuf),
         Enzyme.Duplicated(b.xbuf, b.jtvbuf),
