@@ -45,9 +45,14 @@ function EnzymeReverseADHessian(
   return EnzymeReverseADHessian(seed, Hv, f)
 end
 
-struct EnzymeReverseADHvprod{T,F} <: InPlaceADbackend
-  grad::Vector{T}
+struct EnzymeReverseADHvprod{V, F, C, L} <: InPlaceADbackend
+  grad::V
+  xbuf::V
+  cx::V
   f::F
+  c!::C
+  ℓ::L
+  ncon::Int
 end
 
 function EnzymeReverseADHvprod(
@@ -58,8 +63,24 @@ function EnzymeReverseADHvprod(
   x0::AbstractVector{T} = rand(nvar),
   kwargs...,
 ) where {T}
-  grad = zeros(T, nvar)
-  return EnzymeReverseADHvprod(grad,f)
+  grad = fill!(similar(x0), zero(T))
+  xbuf = similar(x0)
+  cx = fill!(similar(x0, ncon), zero(T))
+
+  function ℓ(x, y, obj_weight, cx)
+    if ncon != 0
+      c!(cx, x)
+    end
+    res = obj_weight * f(x)
+    if ncon != 0
+      for i = 1:ncon
+        res += cx[i] * y[i]
+      end
+    end
+    return res
+  end
+
+  return EnzymeReverseADHvprod(grad, xbuf, cx, f, c!, ℓ, ncon)
 end
 
 struct EnzymeReverseADJprod{V} <: InPlaceADbackend
@@ -424,12 +445,13 @@ end
       Hv,
       x,
       v,
-      ℓ,
+      ℓ_unused,
       ::Val{:lag},
       y,
       obj_weight::Real = one(eltype(x)),
     )
-      _hvp!(Enzyme.DuplicatedNoNeed(b.grad, Hv), ℓ, x, v)
+      copyto!(b.xbuf, x)
+      _hvp!(Enzyme.DuplicatedNoNeed(b.grad, Hv), b.ℓ, b.xbuf, v, y, obj_weight, b.cx)
       return Hv
     end
 
@@ -438,11 +460,25 @@ end
       Hv,
       x,
       v,
-      f,
+      f_unused,
       ::Val{:obj},
       obj_weight::Real = one(eltype(x)),
     )
-      _hvp!(Enzyme.DuplicatedNoNeed(b.grad, Hv), f, x, v)
+      copyto!(b.xbuf, x)
+      _hvp!(Enzyme.DuplicatedNoNeed(b.grad, Hv), b.ℓ, b.xbuf, v, Float64[], obj_weight, b.cx)
+      return Hv
+    end
+
+    function Hvprod!(
+      b::EnzymeReverseADHvprod,
+      Hv,
+      x,
+      v,
+      ci,
+      ::Val{:ci},
+    )
+      copyto!(b.xbuf, x)
+      _hvp!(Enzyme.DuplicatedNoNeed(b.grad, Hv), ci, b.xbuf, v)
       return Hv
     end
 

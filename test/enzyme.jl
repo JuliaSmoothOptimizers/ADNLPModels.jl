@@ -7,14 +7,17 @@ using ADNLPModels:
 # Automatically loads the code for Enzyme with Requires
 import Enzyme
 
+_noop_c!(y, x) = nothing
+_noop_ℓ(x, y, obj_weight, cx) = zero(eltype(x))
+
 EnzymeReverseAD() = ADNLPModels.ADModelBackend(
   ADNLPModels.EnzymeReverseADGradient(),
-  ADNLPModels.EnzymeReverseADHvprod(zeros(1), identity),
+  ADNLPModels.EnzymeReverseADHvprod(zeros(1), zeros(1), zeros(0), identity, _noop_c!, _noop_ℓ, 0),
   ADNLPModels.EnzymeReverseADJprod(zeros(1), zeros(1), zeros(1), zeros(1)),
   ADNLPModels.EnzymeReverseADJtprod(zeros(1), zeros(1), zeros(1), zeros(1)),
   ADNLPModels.EnzymeReverseADJacobian(),
   ADNLPModels.EnzymeReverseADHessian(zeros(1), zeros(1), identity),
-  ADNLPModels.EnzymeReverseADHvprod(zeros(1), identity),
+  ADNLPModels.EnzymeReverseADHvprod(zeros(1), zeros(1), zeros(0), identity, _noop_c!, _noop_ℓ, 0),
   ADNLPModels.EmptyADbackend(),
   ADNLPModels.EmptyADbackend(),
   ADNLPModels.EmptyADbackend(),
@@ -47,13 +50,13 @@ push!(
     :gradient_backend => ADNLPModels.EnzymeReverseADGradient,
     :jprod_backend => ADNLPModels.EnzymeReverseADJprod,
     :jtprod_backend => ADNLPModels.EnzymeReverseADJtprod,
-    :hprod_backend => ADNLPModels.ForwardDiffADHvprod,
+    :hprod_backend => ADNLPModels.EnzymeReverseADHvprod,
     :jacobian_backend => ADNLPModels.SparseEnzymeADJacobian,
     :hessian_backend => ADNLPModels.SparseEnzymeADHessian,
     :ghjvprod_backend => ADNLPModels.ForwardDiffADGHjvprod,
     :jprod_residual_backend => ADNLPModels.EnzymeReverseADJprod,
     :jtprod_residual_backend => ADNLPModels.EnzymeReverseADJtprod,
-    :hprod_residual_backend => ADNLPModels.ForwardDiffADHvprod,
+    :hprod_residual_backend => ADNLPModels.EnzymeReverseADHvprod,
     :jacobian_residual_backend => ADNLPModels.SparseEnzymeADJacobian,
     :hessian_residual_backend => ADNLPModels.SparseEnzymeADHessian,
   ),
