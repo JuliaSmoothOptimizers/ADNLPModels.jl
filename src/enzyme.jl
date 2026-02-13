@@ -465,20 +465,55 @@ end
       obj_weight::Real = one(eltype(x)),
     )
       copyto!(b.xbuf, x)
-      _hvp!(Enzyme.DuplicatedNoNeed(b.grad, Hv), b.ℓ, b.xbuf, v, Float64[], obj_weight, b.cx)
+      _hvp!(Enzyme.DuplicatedNoNeed(b.grad, Hv), b.f, b.xbuf, v)
+      Hv .*= obj_weight
       return Hv
     end
 
-    function Hvprod!(
+    # jth_hprod: Hessian-vector product for the j-th constraint.
+    # Uses the Lagrangian with y = e_j (unit vector) and obj_weight = 0,
+    # avoiding the closure x -> c(x)[j] that Enzyme can't handle.
+    function NLPModels.hprod!(
       b::EnzymeReverseADHvprod,
-      Hv,
-      x,
-      v,
-      ci,
-      ::Val{:ci},
+      nlp::ADModel,
+      x::AbstractVector,
+      v::AbstractVector,
+      j::Integer,
+      Hv::AbstractVector,
     )
       copyto!(b.xbuf, x)
-      _hvp!(Enzyme.DuplicatedNoNeed(b.grad, Hv), ci, b.xbuf, v)
+      b.cx .= 0
+      # Build y = e_{j-nlin} (unit vector for nonlinear constraint index)
+      y_ej = Enzyme.make_zero(b.cx)
+      k = 0
+      for i in nlp.meta.nln
+        k += 1
+        if i == j
+          y_ej[k] = one(eltype(x))
+          break
+        end
+      end
+      _hvp!(
+        Enzyme.DuplicatedNoNeed(b.grad, Hv),
+        b.ℓ, b.xbuf, v, y_ej, zero(eltype(x)), b.cx,
+      )
+      return Hv
+    end
+
+    # hprod_residual: Hessian-vector product for the i-th residual.
+    # Uses forward-over-reverse on F_i(x) = F(x)[i].
+    function NLPModels.hprod_residual!(
+      b::EnzymeReverseADHvprod,
+      nls::AbstractADNLSModel,
+      x::AbstractVector,
+      v::AbstractVector,
+      i::Integer,
+      Hv::AbstractVector,
+    )
+      F = get_F(nls)  # out-of-place version
+      Fi(x) = F(x)[i]
+      copyto!(b.xbuf, x)
+      _hvp!(Enzyme.DuplicatedNoNeed(b.grad, Hv), Fi, b.xbuf, v)
       return Hv
     end
 
