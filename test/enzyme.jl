@@ -7,17 +7,30 @@ using ADNLPModels:
 # Automatically loads the code for Enzyme with Requires
 import Enzyme
 
+# Dummy constraint and Lagrangian functions for constructing an EnzymeReverseADHvprod
+# with no constraints.  These are only used by EnzymeReverseAD() below, which builds
+# a minimal ADModelBackend for the low-level smoke tests (gradient, jacobian, …).
+# Real models get their own ℓ constructed from f and c! at model-creation time.
 _noop_c!(y, x) = nothing
 _noop_ℓ(x, y, obj_weight, cx) = zero(eltype(x))
 
+# Construct an EnzymeReverseADHvprod with pre-allocated buffers of size `n` and
+# no constraints (ncon = 0).  Fields: grad, hvbuf, xbuf, vbuf, cx, ybuf, f, c!, ℓ, ncon.
+function _make_enzyme_hvprod(n)
+  ADNLPModels.EnzymeReverseADHvprod(
+    zeros(n), zeros(n), zeros(n), zeros(n), zeros(0), zeros(0),
+    identity, _noop_c!, _noop_ℓ, 0,
+  )
+end
+
 EnzymeReverseAD() = ADNLPModels.ADModelBackend(
   ADNLPModels.EnzymeReverseADGradient(),
-  ADNLPModels.EnzymeReverseADHvprod(zeros(1), zeros(1), zeros(0), identity, _noop_c!, _noop_ℓ, 0),
+  _make_enzyme_hvprod(1),
   ADNLPModels.EnzymeReverseADJprod(zeros(1), zeros(1), zeros(1), zeros(1)),
   ADNLPModels.EnzymeReverseADJtprod(zeros(1), zeros(1), zeros(1), zeros(1)),
   ADNLPModels.EnzymeReverseADJacobian(),
   ADNLPModels.EnzymeReverseADHessian(zeros(1), zeros(1), identity),
-  ADNLPModels.EnzymeReverseADHvprod(zeros(1), zeros(1), zeros(0), identity, _noop_c!, _noop_ℓ, 0),
+  _make_enzyme_hvprod(1),
   ADNLPModels.EmptyADbackend(),
   ADNLPModels.EmptyADbackend(),
   ADNLPModels.EmptyADbackend(),

@@ -46,9 +46,12 @@ function EnzymeReverseADHessian(
 end
 
 struct EnzymeReverseADHvprod{V, F, C, L} <: InPlaceADbackend
-  grad::V
-  xbuf::V
-  cx::V
+  grad::V     # length nvar, gradient buffer (primal in DuplicatedNoNeed)
+  hvbuf::V    # length nvar, Hv output buffer (shadow in DuplicatedNoNeed)
+  xbuf::V     # length nvar, input x buffer
+  vbuf::V     # length nvar, input v buffer (tangent direction)
+  cx::V       # length ncon, constraint output buffer
+  ybuf::V     # length ncon, multiplier buffer for jth_hprod
   f::F
   c!::C
   ℓ::L
@@ -64,8 +67,11 @@ function EnzymeReverseADHvprod(
   kwargs...,
 ) where {T}
   grad = fill!(similar(x0), zero(T))
+  hvbuf = similar(x0)
   xbuf = similar(x0)
+  vbuf = similar(x0)
   cx = fill!(similar(x0, ncon), zero(T))
+  ybuf = fill!(similar(x0, ncon), zero(T))
 
   function ℓ(x, y, obj_weight, cx)
     if ncon != 0
@@ -80,7 +86,7 @@ function EnzymeReverseADHvprod(
     return res
   end
 
-  return EnzymeReverseADHvprod(grad, xbuf, cx, f, c!, ℓ, ncon)
+  return EnzymeReverseADHvprod(grad, hvbuf, xbuf, vbuf, cx, ybuf, f, c!, ℓ, ncon)
 end
 
 struct EnzymeReverseADJprod{V} <: InPlaceADbackend
@@ -451,7 +457,9 @@ end
       obj_weight::Real = one(eltype(x)),
     )
       copyto!(b.xbuf, x)
-      _hvp!(Enzyme.DuplicatedNoNeed(b.grad, Hv), b.ℓ, b.xbuf, v, y, obj_weight, b.cx)
+      copyto!(b.vbuf, v)
+      _hvp!(Enzyme.DuplicatedNoNeed(b.grad, b.hvbuf), b.ℓ, b.xbuf, b.vbuf, y, obj_weight, b.cx)
+      copyto!(Hv, b.hvbuf)
       return Hv
     end
 
@@ -465,8 +473,9 @@ end
       obj_weight::Real = one(eltype(x)),
     )
       copyto!(b.xbuf, x)
-      _hvp!(Enzyme.DuplicatedNoNeed(b.grad, Hv), b.f, b.xbuf, v)
-      Hv .*= obj_weight
+      copyto!(b.vbuf, v)
+      _hvp!(Enzyme.DuplicatedNoNeed(b.grad, b.hvbuf), b.f, b.xbuf, b.vbuf)
+      @. Hv = obj_weight * b.hvbuf
       return Hv
     end
 
@@ -482,21 +491,23 @@ end
       Hv::AbstractVector,
     )
       copyto!(b.xbuf, x)
+      copyto!(b.vbuf, v)
       b.cx .= 0
       # Build y = e_{j-nlin} (unit vector for nonlinear constraint index)
-      y_ej = Enzyme.make_zero(b.cx)
+      b.ybuf .= 0
       k = 0
       for i in nlp.meta.nln
         k += 1
         if i == j
-          y_ej[k] = one(eltype(x))
+          b.ybuf[k] = one(eltype(x))
           break
         end
       end
       _hvp!(
-        Enzyme.DuplicatedNoNeed(b.grad, Hv),
-        b.ℓ, b.xbuf, v, y_ej, zero(eltype(x)), b.cx,
+        Enzyme.DuplicatedNoNeed(b.grad, b.hvbuf),
+        b.ℓ, b.xbuf, b.vbuf, b.ybuf, zero(eltype(x)), b.cx,
       )
+      copyto!(Hv, b.hvbuf)
       return Hv
     end
 
@@ -513,7 +524,9 @@ end
       F = get_F(nls)  # out-of-place version
       Fi(x) = F(x)[i]
       copyto!(b.xbuf, x)
-      _hvp!(Enzyme.DuplicatedNoNeed(b.grad, Hv), Fi, b.xbuf, v)
+      copyto!(b.vbuf, v)
+      _hvp!(Enzyme.DuplicatedNoNeed(b.grad, b.hvbuf), Fi, b.xbuf, b.vbuf)
+      copyto!(Hv, b.hvbuf)
       return Hv
     end
 
