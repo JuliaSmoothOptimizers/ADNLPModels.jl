@@ -57,26 +57,6 @@ end
 
 test_autodiff_backend_error()
 
-push!(
-  ADNLPModels.predefined_backend,
-  :enzyme_backend => Dict(
-    :gradient_backend => ADNLPModels.EnzymeReverseADGradient,
-    :jprod_backend => ADNLPModels.EnzymeReverseADJprod,
-    :jtprod_backend => ADNLPModels.EnzymeReverseADJtprod,
-    :hprod_backend => ADNLPModels.EnzymeReverseADHvprod,
-    :jacobian_backend => ADNLPModels.SparseEnzymeADJacobian,
-    :hessian_backend => ADNLPModels.SparseEnzymeADHessian,
-    :ghjvprod_backend => ADNLPModels.ForwardDiffADGHjvprod,
-    :jprod_residual_backend => ADNLPModels.EnzymeReverseADJprod,
-    :jtprod_residual_backend => ADNLPModels.EnzymeReverseADJtprod,
-    :hprod_residual_backend => ADNLPModels.EnzymeReverseADHvprod,
-    :jacobian_residual_backend => ADNLPModels.SparseEnzymeADJacobian,
-    :hessian_residual_backend => ADNLPModels.SparseEnzymeADHessian,
-  ),
-)
-
-const test_enzyme = true
-
 include("sparse_jacobian.jl")
 include("sparse_jacobian_nls.jl")
 include("sparse_hessian.jl")
@@ -124,18 +104,18 @@ include("nls/basic.jl")
 include("nlp/nlpmodelstest.jl")
 include("nls/nlpmodelstest.jl")
 
-@testset "Basic NLP tests using enzyme_backend" begin
-  test_autodiff_model("enzyme_backend", backend = :enzyme_backend)
+@testset "Basic NLP tests using enzyme" begin
+  test_autodiff_model("enzyme_backend", backend = :enzyme)
 end
 
-@testset "Basic NLS tests using enzyme_backend" begin
-  autodiff_nls_test("enzyme_backend", backend = :enzyme_backend)
+@testset "Basic NLS tests using enzyme" begin
+  autodiff_nls_test("enzyme_backend", backend = :enzyme)
 end
 
-@testset "Checking NLPModelsTest (NLP) tests with enzyme_backend" begin
-  nlp_nlpmodelstest(:enzyme_backend)
+@testset "Checking NLPModelsTest (NLP) tests with enzyme" begin
+  nlp_nlpmodelstest(:enzyme)
 end
 
-@testset "Checking NLPModelsTest (NLS) tests with enzyme_backend" begin
-  nls_nlpmodelstest(:enzyme_backend)
+@testset "Checking NLPModelsTest (NLS) tests with enzyme" begin
+  nls_nlpmodelstest(:enzyme)
 end
