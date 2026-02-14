@@ -56,5 +56,3 @@ get_adbackend(nlp)
 
 !!! danger
     The interface for Enzyme.jl is still under development.
-
-The backend `:zygote` focuses on backend based on [Zygote.jl](https://github.com/FluxML/Zygote.jl).

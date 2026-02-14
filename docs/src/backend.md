@@ -7,15 +7,15 @@ The backend information is in a structure [`ADNLPModels.ADModelBackend`](@ref) i
 
 The functions used internally to define the NLPModel API and the possible backends are defined in the following table:
 
-| Functions | FowardDiff backends | ReverseDiff backends | Zygote backends | Enzyme backend | Sparse backend |
-| --------- | ------------------- | -------------------- | --------------- | -------------- | -------------- |
-| `gradient` and `gradient!` | `ForwardDiffADGradient`/`GenericForwardDiffADGradient` | `ReverseDiffADGradient`/`GenericReverseDiffADGradient` | `ZygoteADGradient` | `EnzymeReverseADGradient` | -- |
-| `jacobian` | `ForwardDiffADJacobian` | `ReverseDiffADJacobian` | `ZygoteADJacobian` | `SparseEnzymeADJacobian` | `SparseADJacobian` |
-| `hessian` | `ForwardDiffADHessian` | `ReverseDiffADHessian` | `ZygoteADHessian` | `SparseEnzymeADHessian` | `SparseADHessian`/`SparseReverseADHessian` |
-| `Jprod` | `ForwardDiffADJprod`/`GenericForwardDiffADJprod` | `ReverseDiffADJprod`/`GenericReverseDiffADJprod` | `ZygoteADJprod` | `EnzymeReverseADJprod` | -- |
-| `Jtprod` | `ForwardDiffADJtprod`/`GenericForwardDiffADJtprod` | `ReverseDiffADJtprod`/`GenericReverseDiffADJtprod` | `ZygoteADJtprod` | `EnzymeReverseADJtprod` | -- |
-| `Hvprod` | `ForwardDiffADHvprod`/`GenericForwardDiffADHvprod` | `ReverseDiffADHvprod`/`GenericReverseDiffADHvprod` | -- | `EnzymeReverseADHvprod` | -- |
-| `directional_second_derivative` | `ForwardDiffADGHjvprod` | -- | -- | -- | -- |
+| Functions | FowardDiff backends | ReverseDiff backends | Enzyme backend | Sparse backend |
+| --------- | ------------------- | -------------------- | -------------- | -------------- |
+| `gradient` and `gradient!` | `ForwardDiffADGradient`/`GenericForwardDiffADGradient` | `ReverseDiffADGradient`/`GenericReverseDiffADGradient` | `EnzymeReverseADGradient` | -- |
+| `jacobian` | `ForwardDiffADJacobian` | `ReverseDiffADJacobian` | `SparseEnzymeADJacobian` | `SparseADJacobian` |
+| `hessian` | `ForwardDiffADHessian` | `ReverseDiffADHessian` | `SparseEnzymeADHessian` | `SparseADHessian`/`SparseReverseADHessian` |
+| `Jprod` | `ForwardDiffADJprod`/`GenericForwardDiffADJprod` | `ReverseDiffADJprod`/`GenericReverseDiffADJprod` | `EnzymeReverseADJprod` | -- |
+| `Jtprod` | `ForwardDiffADJtprod`/`GenericForwardDiffADJtprod` | `ReverseDiffADJtprod`/`GenericReverseDiffADJtprod` | `EnzymeReverseADJtprod` | -- |
+| `Hvprod` | `ForwardDiffADHvprod`/`GenericForwardDiffADHvprod` | `ReverseDiffADHvprod`/`GenericReverseDiffADHvprod` | `EnzymeReverseADHvprod` | -- |
+| `directional_second_derivative` | `ForwardDiffADGHjvprod` | -- | -- | -- |
 
 The functions `hess_structure!`, `hess_coord!`, `jac_structure!` and `jac_coord!` defined in `ad.jl` are generic to all the backends for now.
 
