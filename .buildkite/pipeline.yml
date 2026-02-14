@@ -11,18 +11,18 @@ steps:
       julia --color=yes --project=test -e 'include("test/gpu.jl")'
     timeout_in_minutes: 30
 
-  # - label: "CPUs -- Enzyme.jl"
-  #   plugins:
-  #     - JuliaCI/julia#v1:
-  #         version: "1.10"
-  #   agents:
-  #     queue: "juliaecosystem"
-  #     os: "linux"
-  #     arch: "x86_64"
-  #   command: |
-  #     julia --color=yes --project=test -e 'using Pkg; Pkg.add("Enzyme"); Pkg.develop(path="."); Pkg.instantiate()'
-  #     julia --color=yes --project=test -e 'include("test/enzyme.jl")'
-  #   timeout_in_minutes: 30
+  - label: "CPUs -- Enzyme.jl"
+    plugins:
+      - JuliaCI/julia#v1:
+          version: "1.10"
+    agents:
+      queue: "juliaecosystem"
+      os: "linux"
+      arch: "x86_64"
+    command: |
+      julia --color=yes --project=test -e 'using Pkg; Pkg.add("Enzyme"); Pkg.develop(path="."); Pkg.instantiate()'
+      julia --color=yes --project=test -e 'include("test/enzyme.jl")'
+    timeout_in_minutes: 30
 
   - label: "CPUs -- Zygote.jl"
     plugins:

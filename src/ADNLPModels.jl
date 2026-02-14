@@ -207,7 +207,6 @@ Return the lagrangian function `ℓ(x) = obj_weight * f(x) + c(x)ᵀy`.
 function get_lag(nlp::AbstractADNLPModel, b::ADBackend, obj_weight::Real)
   return ℓ(x; obj_weight = obj_weight) = obj_weight * nlp.f(x)
 end
-
 function get_lag(nlp::AbstractADNLPModel, b::ADBackend, obj_weight::Real, y::AbstractVector)
   if nlp.meta.nnln == 0
     return get_lag(nlp, b, obj_weight)
