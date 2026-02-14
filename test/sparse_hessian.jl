@@ -1,5 +1,6 @@
 function sparse_hessian(backend, info, kw)
   @testset "Basic Hessian derivative with backend=$(backend) -- $info -- T=$(T)" for T in (
+    Float32,
     Float64,
   )
     c!(cx, x) = begin
@@ -33,7 +34,6 @@ function sparse_hessian(backend, info, kw)
 
     # Test also the implementation of the backends
     b = nlp.adbackend.hessian_backend
-    @show b
     obj_weight = 0.5
     @test nlp.meta.nnzh == ADNLPModels.get_nln_nnzh(b, nvar)
     ADNLPModels.hess_structure!(b, nlp, rows, cols)
@@ -70,17 +70,8 @@ function sparse_hessian(backend, info, kw)
     function f(x)
       n = length(x)
       sum(100 * (x[i + 1] - x[i]^2)^2 + (x[i] - 1)^2 for i = 1:(n - 1))
-      # res = 0
-      # n = length(x)
-      # for i in 1:(n-1)
-      #   res += 100 * (x[i + 1] - x[i]^2)^2 + (x[i] - 1)^2
-      # end
-      # res
     end
     nlp = ADNLPModel(
-      # x -> sum(100 * (x[i + 1] - x[i]^2)^2 + (x[i] - 1)^2 for i = 1:(n - 1)),
-      # x -> sum(100 * (x[i + 1] - x[i]^2)^2 + (x[i] - 1)^2 for i = 1:3),
-      # x -> 100 * (x[2] - x[1]^2)^2 + (x[1] - 1)^2,
       f,
       x0,
       hessian_backend = backend,
