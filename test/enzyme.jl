@@ -18,8 +18,16 @@ _noop_ℓ(x, y, obj_weight, cx) = zero(eltype(x))
 # no constraints (ncon = 0).  Fields: grad, hvbuf, xbuf, vbuf, cx, ybuf, f, c!, ℓ, ncon.
 function _make_enzyme_hvprod(n)
   ADNLPModels.EnzymeReverseADHvprod(
-    zeros(n), zeros(n), zeros(n), zeros(n), zeros(0), zeros(0),
-    identity, _noop_c!, _noop_ℓ, 0,
+    zeros(n),
+    zeros(n),
+    zeros(n),
+    zeros(n),
+    zeros(0),
+    zeros(0),
+    identity,
+    _noop_c!,
+    _noop_ℓ,
+    0,
   )
 end
 

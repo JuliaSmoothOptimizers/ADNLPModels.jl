@@ -23,7 +23,7 @@ function EnzymeReverseADJacobian(
   return EnzymeReverseADJacobian()
 end
 
-struct EnzymeReverseADHessian{T,F} <: ADBackend
+struct EnzymeReverseADHessian{T, F} <: ADBackend
   seed::Vector{T}
   Hv::Vector{T}
   f::F
@@ -383,7 +383,12 @@ end
 
     function ADNLPModels.gradient(::EnzymeReverseADGradient, f, x)
       g = similar(x)
-      Enzyme.autodiff(Enzyme.set_runtime_activity(Enzyme.Reverse), Enzyme.Const(f), Enzyme.Active, Enzyme.Duplicated(x, g))
+      Enzyme.autodiff(
+        Enzyme.set_runtime_activity(Enzyme.Reverse),
+        Enzyme.Const(f),
+        Enzyme.Active,
+        Enzyme.Duplicated(x, g),
+      )
       return g
     end
 
@@ -505,7 +510,12 @@ end
       end
       _hvp!(
         Enzyme.DuplicatedNoNeed(b.grad, b.hvbuf),
-        b.ℓ, b.xbuf, b.vbuf, b.ybuf, zero(eltype(x)), b.cx,
+        b.ℓ,
+        b.xbuf,
+        b.vbuf,
+        b.ybuf,
+        zero(eltype(x)),
+        b.cx,
       )
       copyto!(Hv, b.hvbuf)
       return Hv
