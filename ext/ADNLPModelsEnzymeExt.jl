@@ -74,7 +74,8 @@ function ADNLPModels.gradient!(::ADNLPModels.EnzymeReverseADGradient, g, f, x)
   return g
 end
 
-ADNLPModels.jacobian(::ADNLPModels.EnzymeReverseADJacobian, f, x) = Enzyme.jacobian(Enzyme.Reverse, f, x)
+ADNLPModels.jacobian(::ADNLPModels.EnzymeReverseADJacobian, f, x) =
+  Enzyme.jacobian(Enzyme.Reverse, f, x)
 
 function ADNLPModels.hessian(b::ADNLPModels.EnzymeReverseADHessian, f, x)
   T = eltype(x)
