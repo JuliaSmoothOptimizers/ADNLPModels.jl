@@ -1,6 +1,9 @@
 module ADNLPModelsEnzymeExt
 
-using Enzyme, ADNLPModels
+using SparseArrays
+using ADNLPModels, NLPModels
+using SparseMatrixColorings
+using Enzyme
 
 function _gradient!(dx, f, x)
   Enzyme.make_zero!(dx)
@@ -71,9 +74,9 @@ function ADNLPModels.gradient!(::ADNLPModels.EnzymeReverseADGradient, g, f, x)
   return g
 end
 
-jacobian(::ADNLPModels.EnzymeReverseADJacobian, f, x) = Enzyme.jacobian(Enzyme.Reverse, f, x)
+ADNLPModels.jacobian(::ADNLPModels.EnzymeReverseADJacobian, f, x) = Enzyme.jacobian(Enzyme.Reverse, f, x)
 
-function hessian(b::ADNLPModels.EnzymeReverseADHessian, f, x)
+function ADNLPModels.hessian(b::ADNLPModels.EnzymeReverseADHessian, f, x)
   T = eltype(x)
   n = length(x)
   hess = zeros(T, n, n)
@@ -88,7 +91,7 @@ function hessian(b::ADNLPModels.EnzymeReverseADHessian, f, x)
   return hess
 end
 
-function Jprod!(b::ADNLPModels.EnzymeReverseADJprod, Jv, c!, x, v, ::Val)
+function ADNLPModels.Jprod!(b::ADNLPModels.EnzymeReverseADJprod, Jv, c!, x, v, ::Val)
   copyto!(b.xbuf, x)
   copyto!(b.vbuf, v)
   Enzyme.autodiff(
@@ -109,7 +112,7 @@ function _void_c!(c!, y, x)
   return nothing
 end
 
-function Jtprod!(b::ADNLPModels.EnzymeReverseADJtprod, Jtv, c!, x, v, ::Val)
+function ADNLPModels.Jtprod!(b::ADNLPModels.EnzymeReverseADJtprod, Jtv, c!, x, v, ::Val)
   copyto!(b.xbuf, x)
   copyto!(b.vbuf, v)
   Enzyme.make_zero!(b.jtvbuf)
@@ -124,7 +127,7 @@ function Jtprod!(b::ADNLPModels.EnzymeReverseADJtprod, Jtv, c!, x, v, ::Val)
   return Jtv
 end
 
-function Hvprod!(
+function ADNLPModels.Hvprod!(
   b::ADNLPModels.EnzymeReverseADHvprod,
   Hv,
   x,
@@ -141,7 +144,7 @@ function Hvprod!(
   return Hv
 end
 
-function Hvprod!(
+function ADNLPModels.Hvprod!(
   b::ADNLPModels.EnzymeReverseADHvprod,
   Hv,
   x,
@@ -162,7 +165,7 @@ end
 # avoiding the closure x -> c(x)[j] that Enzyme can't handle.
 function NLPModels.hprod!(
   b::ADNLPModels.EnzymeReverseADHvprod,
-  nlp::ADModel,
+  nlp::ADNLPModels.ADModel,
   x::AbstractVector,
   v::AbstractVector,
   j::Integer,
@@ -198,7 +201,7 @@ end
 # Uses forward-over-reverse on F_i(x) = F(x)[i].
 function NLPModels.hprod_residual!(
   b::ADNLPModels.EnzymeReverseADHvprod,
-  nls::AbstractADNLSModel,
+  nls::ADNLPModels.AbstractADNLSModel,
   x::AbstractVector,
   v::AbstractVector,
   i::Integer,
@@ -214,13 +217,13 @@ function NLPModels.hprod_residual!(
 end
 
 # Sparse Jacobian
-function get_nln_nnzj(b::ADNLPModels.SparseEnzymeADJacobian, nvar, ncon)
+function ADNLPModels.get_nln_nnzj(b::ADNLPModels.SparseEnzymeADJacobian, nvar, ncon)
   length(b.rowval)
 end
 
 function NLPModels.jac_structure!(
   b::ADNLPModels.SparseEnzymeADJacobian,
-  nlp::ADModel,
+  nlp::ADNLPModels.ADModel,
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
 )
@@ -272,7 +275,7 @@ end
 
 function NLPModels.jac_coord!(
   b::ADNLPModels.SparseEnzymeADJacobian,
-  nlp::ADModel,
+  nlp::ADNLPModels.ADModel,
   x::AbstractVector,
   vals::AbstractVector,
 )
@@ -282,7 +285,7 @@ end
 
 function NLPModels.jac_structure_residual!(
   b::ADNLPModels.SparseEnzymeADJacobian,
-  nls::AbstractADNLSModel,
+  nls::ADNLPModels.AbstractADNLSModel,
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
 )
@@ -297,7 +300,7 @@ end
 
 function NLPModels.jac_coord_residual!(
   b::ADNLPModels.SparseEnzymeADJacobian,
-  nls::AbstractADNLSModel,
+  nls::ADNLPModels.AbstractADNLSModel,
   x::AbstractVector,
   vals::AbstractVector,
 )
@@ -306,13 +309,13 @@ function NLPModels.jac_coord_residual!(
 end
 
 # Sparse Hessian
-function get_nln_nnzh(b::ADNLPModels.SparseEnzymeADHessian, nvar)
+function ADNLPModels.get_nln_nnzh(b::ADNLPModels.SparseEnzymeADHessian, nvar)
   return length(b.rowval)
 end
 
 function NLPModels.hess_structure!(
   b::ADNLPModels.SparseEnzymeADHessian,
-  nlp::ADModel,
+  nlp::ADNLPModels.ADModel,
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
 )
@@ -374,7 +377,7 @@ end
 
 function NLPModels.hess_coord!(
   b::ADNLPModels.SparseEnzymeADHessian,
-  nlp::ADModel,
+  nlp::ADNLPModels.ADModel,
   x::AbstractVector,
   y::AbstractVector,
   obj_weight::Real,
@@ -386,7 +389,7 @@ end
 # Could be optimized!
 function NLPModels.hess_coord!(
   b::ADNLPModels.SparseEnzymeADHessian,
-  nlp::ADModel,
+  nlp::ADNLPModels.ADModel,
   x::AbstractVector,
   obj_weight::Real,
   vals::AbstractVector,
@@ -397,7 +400,7 @@ end
 
 function NLPModels.hess_coord!(
   b::ADNLPModels.SparseEnzymeADHessian,
-  nlp::ADModel,
+  nlp::ADNLPModels.ADModel,
   x::AbstractVector,
   j::Integer,
   vals::AbstractVector,
@@ -412,7 +415,7 @@ end
 
 function NLPModels.hess_structure_residual!(
   b::ADNLPModels.SparseEnzymeADHessian,
-  nls::AbstractADNLSModel,
+  nls::ADNLPModels.AbstractADNLSModel,
   rows::AbstractVector{<:Integer},
   cols::AbstractVector{<:Integer},
 )
@@ -421,7 +424,7 @@ end
 
 function NLPModels.hess_coord_residual!(
   b::ADNLPModels.SparseEnzymeADHessian,
-  nls::AbstractADNLSModel,
+  nls::ADNLPModels.AbstractADNLSModel,
   x::AbstractVector,
   v::AbstractVector,
   vals::AbstractVector,
