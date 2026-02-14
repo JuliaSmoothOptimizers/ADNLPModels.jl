@@ -58,27 +58,11 @@ enzyme_backend = Dict(
   :hessian_residual_backend => SparseEnzymeADHessian,
 )
 
-zygote_backend = Dict(
-  :gradient_backend => ZygoteADGradient,
-  :jprod_backend => ZygoteADJprod,
-  :jtprod_backend => ZygoteADJtprod,
-  :hprod_backend => ForwardDiffADHvprod,
-  :jacobian_backend => ZygoteADJacobian,
-  :hessian_backend => ZygoteADHessian,
-  :ghjvprod_backend => ForwardDiffADGHjvprod,
-  :jprod_residual_backend => ZygoteADJprod,
-  :jtprod_residual_backend => ZygoteADJtprod,
-  :hprod_residual_backend => ForwardDiffADHvprod,
-  :jacobian_residual_backend => ZygoteADJacobian,
-  :hessian_residual_backend => ZygoteADHessian,
-)
-
 predefined_backend = Dict(
   :default => default_backend,
   :optimized => optimized_backend,
   :generic => generic_backend,
   :enzyme => enzyme_backend,
-  :zygote => zygote_backend,
 )
 
 """

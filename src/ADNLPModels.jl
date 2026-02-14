@@ -11,7 +11,6 @@ using ForwardDiff, ReverseDiff
 
 # JSO
 using NLPModels
-using Requires
 
 abstract type AbstractADNLPModel{T, S} <: AbstractNLPModel{T, S} end
 abstract type AbstractADNLSModel{T, S} <: AbstractNLSModel{T, S} end
@@ -28,7 +27,6 @@ include("sparse_hessian.jl")
 include("forward.jl")
 include("reverse.jl")
 include("enzyme.jl")
-include("zygote.jl")
 include("predefined_backend.jl")
 include("nlp.jl")
 

@@ -103,27 +103,23 @@ include("nls/basic.jl")
 include("nls/nlpmodelstest.jl")
 
 @testset "Basic NLP tests using $backend " for backend in keys(ADNLPModels.predefined_backend)
-  (backend == :zygote) && continue
   (backend == :enzyme) && continue
   test_autodiff_model("$backend", backend = backend)
 end
 
 @testset "Checking NLPModelsTest (NLP) tests with $backend" for backend in
                                                                 keys(ADNLPModels.predefined_backend)
-  (backend == :zygote) && continue
   (backend == :enzyme) && continue
   nlp_nlpmodelstest(backend)
 end
 
 @testset "Basic NLS tests using $backend " for backend in keys(ADNLPModels.predefined_backend)
-  (backend == :zygote) && continue
   (backend == :enzyme) && continue
   autodiff_nls_test("$backend", backend = backend)
 end
 
 @testset "Checking NLPModelsTest (NLS) tests with $backend" for backend in
                                                                 keys(ADNLPModels.predefined_backend)
-  (backend == :zygote) && continue
   (backend == :enzyme) && continue
   nls_nlpmodelstest(backend)
 end

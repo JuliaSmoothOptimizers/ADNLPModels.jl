@@ -63,7 +63,6 @@ One can specify a new backend with the keyword arguments `backend::ADNLPModels.A
 There are three pre-coded backends:
 - the default `ForwardDiffAD`.
 - `ReverseDiffAD`.
-- `ZygoteDiffAD` accessible after loading `Zygote.jl` in your environment.
 For an advanced usage, one can define its own backend and redefine the API as done in [ADNLPModels.jl/src/forward.jl](https://github.com/JuliaSmoothOptimizers/ADNLPModels.jl/blob/main/src/forward.jl).
 
 # Examples
@@ -74,9 +73,6 @@ x0 = ones(3)
 nvar = 3
 ADNLPModel(f, x0) # uses the default ForwardDiffAD backend.
 ADNLPModel(f, x0; backend = ADNLPModels.ReverseDiffAD) # uses ReverseDiffAD backend.
-
-using Zygote
-ADNLPModel(f, x0; backend = ADNLPModels.ZygoteAD)
 ```
 
 ```julia
@@ -87,9 +83,6 @@ c(x) = [1x[1] + x[2]; x[2]]
 nvar, ncon = 3, 2
 ADNLPModel(f, x0, c, zeros(ncon), zeros(ncon)) # uses the default ForwardDiffAD backend.
 ADNLPModel(f, x0, c, zeros(ncon), zeros(ncon); backend = ADNLPModels.ReverseDiffAD) # uses ReverseDiffAD backend.
-
-using Zygote
-ADNLPModel(f, x0, c, zeros(ncon), zeros(ncon); backend = ADNLPModels.ZygoteAD)
 ```
 
 For in-place constraints function, use one of the following constructors:

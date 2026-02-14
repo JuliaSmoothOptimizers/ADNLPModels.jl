@@ -24,8 +24,8 @@ ADNLPModels.jl functionalities are extended by other packages that are not autom
 In other words, you sometimes need to load the desired package separately to access some functionalities.
 
 ```julia
-using ADNLPModels # load only the default functionalities
-using Zygote # load the Zygote backends
+using ADNLPModels  # load only the default functionalities
+using Enzyme       # load the Enzyme backends
 ```
 
 Versions compatibility for the extensions are available in the file `test/Project.toml`.
