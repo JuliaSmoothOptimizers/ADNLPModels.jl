@@ -160,7 +160,7 @@ function ADNLSModel!(model::AbstractNLSModel; kwargs...)
   end
 end
 
-export get_adbackend, set_adbackend!
+export get_adbackend, set_adbackend
 
 """
     get_c(nlp)
@@ -243,22 +243,24 @@ Returns the value `adbackend` from nlp.
 get_adbackend(nlp::ADModel) = nlp.adbackend
 
 """
-    set_adbackend!(nlp, new_adbackend)
-    set_adbackend!(nlp; kwargs...)
+    new_nlp = set_adbackend(nlp, new_adbackend)
+    new_nlp = set_adbackend(nlp; kwargs...)
 
-Replace the current `adbackend` value of nlp by `new_adbackend` or instantiate a new one with `kwargs`, see `ADModelBackend`.
-By default, the setter with kwargs will reuse existing backends.
+Create a copy of nlp that replaces the current `adbackend` with `new_adbackend` or instantiate a new one with `kwargs`, see `ADModelBackend`.
+By default, the setter with keyword arguments will reuse existing backends.
 """
-function set_adbackend!(nlp::ADModel, new_adbackend::ADModelBackend)
-  nlp.adbackend = new_adbackend
-  return nlp
+function _set_adbackend(nlp::ADM, new_adbackend::ADModelBackend) where{ADM}
+  values = [f == :adbackend ? new_adbackend : getfield(nlp, f) for f in fieldnames(ADM)]
+  base_type = Base.typename(ADM).wrapper
+  return base_type(values...)
 end
-function set_adbackend!(nlp::ADModel; kwargs...)
+
+function _set_adbackend(nlp::ADModel; kwargs...)
   args = []
   for field in fieldnames(ADNLPModels.ADModelBackend)
     push!(args, if field in keys(kwargs) && typeof(kwargs[field]) <: ADBackend
       kwargs[field]
-    elseif field in keys(kwargs) && typeof(kwargs[field]) <: DataType
+    elseif field in keys(kwargs) && kwargs[field] <: ADBackend
       if typeof(nlp) <: ADNLPModel
         kwargs[field](nlp.meta.nvar, nlp.f, nlp.meta.ncon; kwargs...)
       elseif typeof(nlp) <: ADNLSModel
@@ -268,8 +270,8 @@ function set_adbackend!(nlp::ADModel; kwargs...)
       getfield(nlp.adbackend, field)
     end)
   end
-  nlp.adbackend = ADModelBackend(args...)
-  return nlp
+  new_nlp = set_adbackend(nlp, ADModelBackend(args...))
+  return new_nlp
 end
 
 end # module
