@@ -105,11 +105,11 @@ include("nlp/nlpmodelstest.jl")
 include("nls/nlpmodelstest.jl")
 
 @testset "Basic NLP tests using enzyme" begin
-  test_autodiff_model("enzyme_backend", backend = :enzyme)
+  test_autodiff_model("enzyme", backend = :enzyme)
 end
 
 @testset "Basic NLS tests using enzyme" begin
-  autodiff_nls_test("enzyme_backend", backend = :enzyme)
+  autodiff_nls_test("enzyme", backend = :enzyme)
 end
 
 @testset "Checking NLPModelsTest (NLP) tests with enzyme" begin
