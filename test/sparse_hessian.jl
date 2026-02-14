@@ -1,7 +1,5 @@
 function sparse_hessian(backend, info, kw)
-  @testset "Basic Hessian derivative with backend=$(backend) -- $info -- T=$(T)" for T in (
-    Float64,
-  )
+  @testset "Basic Hessian derivative with backend=$(backend) -- $info -- T=$(T)" for T in (Float64,)
     c!(cx, x) = begin
       cx[1] = x[1] - 1
       cx[2] = 10 * (x[2] - x[1]^2)
