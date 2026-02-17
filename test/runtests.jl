@@ -3,7 +3,6 @@ using SparseMatrixColorings
 using ADNLPModels, ManualNLPModels, NLPModels, NLPModelsModifiers, NLPModelsTest
 using ADNLPModels:
   gradient, gradient!, jacobian, hessian, Jprod!, Jtprod!, directional_second_derivative, Hvprod!
-import DifferentiationInterface: MissingBackendError
 
 @testset "Test sparsity pattern of Jacobian and Hessian" begin
   f(x) = sum(x .^ 2)
@@ -133,14 +132,6 @@ function test_getter_setter(nlp)
   @test typeof(get_adbackend(nlp).jtprod_backend) <: ADNLPModels.GenericForwardDiffADJtprod
   @test typeof(get_adbackend(nlp).hessian_backend) <: ADNLPModels.ReverseDiffADHessian
 end
-
-# @testset "Error without loading package - $package" for package in
-#   [:Enzyme, :Zygote, :Mooncake, :Diffractor, :Tracker, :Symbolics, :ChainRules,
-#    :FastDifferentiation, :FiniteDiff, :FiniteDifferences, :PolyesterForwardDiff]
-#   adbackend = ADNLPModels.predefined_backend[package]
-#   @test_throws MissingBackendError gradient(adbackend[:gradient_backend](1, x -> sum(x)), sum, [1.0])
-#   @test_throws MissingBackendError gradient!(adbackend[:gradient_backend](1, x -> sum(x)), [1.0], sum, [1.0])
-# end
 
 include("nlp/basic.jl")
 include("nlp/nlpmodelstest.jl")
