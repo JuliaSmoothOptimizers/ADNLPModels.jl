@@ -121,7 +121,7 @@ function SparseDIADJacobian(
   y = similar(x0, ncon)
   sparse_backend = DifferentiationInterface.AutoSparse(backend, sparsity_detector=detector, coloring_algorithm=coloring_algorithm)
   prep = DifferentiationInterface.prepare_jacobian(c, y, sparse_backend, x0)
-  return SparseDIADJacobian(backend, prep)
+  return SparseDIADJacobian(sparse_backend, prep)
 end
 
 function jacobian(b::SparseDIADJacobian, c, x)
@@ -200,7 +200,7 @@ function SparseDIADHessian(
   backend = DifferentiationInterface.SecondOrder(second_backend, first_backend)
   sparse_backend = DifferentiationInterface.AutoSparse(backend, sparsity_detector=detector, coloring_algorithm=coloring_algorithm)
   prep = DifferentiationInterface.prepare_hessian(f, backend, x0)
-  return SparseDIADHessian(backend, prep)
+  return SparseDIADHessian(sparse_backend, prep)
 end
 
 function hessian(b::SparseDIADHessian, f, x)
