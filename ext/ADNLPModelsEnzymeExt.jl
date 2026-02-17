@@ -5,6 +5,10 @@ using ADNLPModels, NLPModels
 using SparseMatrixColorings
 using Enzyme
 
+# Configure Enzyme for robustness
+Enzyme.API.strictAliasing!(false)   # handle Union types in Printf/@sprintf
+Enzyme.API.looseTypeAnalysis!(true) # handle unresolved types in complex structs
+
 function _gradient!(dx, f, x)
   Enzyme.make_zero!(dx)
   Enzyme.autodiff(
@@ -70,12 +74,21 @@ end
 
 function ADNLPModels.gradient!(::ADNLPModels.EnzymeReverseADGradient, g, f, x)
   Enzyme.make_zero!(g)
-  Enzyme.autodiff(Enzyme.Reverse, Enzyme.Const(f), Enzyme.Active, Enzyme.Duplicated(x, g))
+  Enzyme.autodiff(
+    Enzyme.set_runtime_activity(Enzyme.Reverse),
+    Enzyme.Const(f),
+    Enzyme.Active,
+    Enzyme.Duplicated(x, g),
+  )
   return g
 end
 
 ADNLPModels.jacobian(::ADNLPModels.EnzymeReverseADJacobian, f, x) =
-  Enzyme.jacobian(Enzyme.Reverse, f, x)
+  Enzyme.jacobian(
+    Enzyme.set_runtime_activity(Enzyme.Reverse),
+    f,
+    x
+  )
 
 function ADNLPModels.hessian(b::ADNLPModels.EnzymeReverseADHessian, f, x)
   T = eltype(x)
@@ -96,7 +109,7 @@ function ADNLPModels.Jprod!(b::ADNLPModels.EnzymeReverseADJprod, Jv, c!, x, v, :
   copyto!(b.xbuf, x)
   copyto!(b.vbuf, v)
   Enzyme.autodiff(
-    Enzyme.Forward,
+    Enzyme.set_runtime_activity(Enzyme.Forward),
     Enzyme.Const(c!),
     Enzyme.Duplicated(b.cx, b.jvbuf),
     Enzyme.Duplicated(b.xbuf, b.vbuf),
@@ -118,7 +131,7 @@ function ADNLPModels.Jtprod!(b::ADNLPModels.EnzymeReverseADJtprod, Jtv, c!, x, v
   copyto!(b.vbuf, v)
   Enzyme.make_zero!(b.jtvbuf)
   Enzyme.autodiff(
-    Enzyme.Reverse,
+    Enzyme.set_runtime_activity(Enzyme.Reverse),
     Enzyme.Const(_void_c!),
     Enzyme.Const(c!),
     Enzyme.Duplicated(b.cx, b.vbuf),
@@ -261,7 +274,7 @@ function sparse_jac_coord!(
     # b.compressed_jacobian is just a vector Jv here
     # We don't use the vector mode
     Enzyme.autodiff(
-      Enzyme.Forward,
+      Enzyme.set_runtime_activity(Enzyme.Forward),
       Enzyme.Const(c!),
       Enzyme.Duplicated(b.cx, b.compressed_jacobian),
       Enzyme.Duplicated(b.xbuf, b.v),
