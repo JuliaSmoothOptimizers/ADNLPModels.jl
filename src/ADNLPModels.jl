@@ -5,9 +5,7 @@ using LinearAlgebra, SparseArrays
 
 # external
 import DifferentiationInterface
-using ADTypes: ADTypes, AbstractADType, AbstractColoringAlgorithm, AbstractSparsityDetector, AutoEnzyme, AutoZygote
-using ADTypes: AutoForwardDiff, AutoReverseDiff, AutoMooncake, AutoDiffractor, AutoTracker, AutoSymbolics
-using ADTypes: AutoChainRules, AutoFastDifferentiation, AutoFiniteDiff, AutoFiniteDifferences, AutoPolyesterForwardDiff
+using ADTypes: ADTypes, AbstractADType, AbstractColoringAlgorithm, AbstractSparsityDetector, AutoForwardDiff, AutoReverseDiff
 using SparseConnectivityTracer: TracerSparsityDetector
 using SparseMatrixColorings
 using ForwardDiff, ReverseDiff

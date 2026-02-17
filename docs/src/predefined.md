@@ -40,8 +40,6 @@ ADNLPModels.predefined_backend[:optimized]
 
 The backend `:generic` focuses on backend that make no assumptions on the element type, see [Creating an ADNLPModels backend that supports multiple precisions](https://jso.dev/tutorials/generic-adnlpmodels/).
 
-Each supported AD package also has its own symbol, such as `:Enzyme` or `:Zygote`, to easily switch between backends.
-
 It is possible to use these pre-defined backends by using the keyword argument `backend` when instantiating the model.
 
 ```@example ex1

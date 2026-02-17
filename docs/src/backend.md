@@ -17,7 +17,7 @@ The functions used internally to define the NLPModel API and the possible backen
 | `Hvprod` | `ForwardDiffADHvprod`/`GenericForwardDiffADHvprod` | `ReverseDiffADHvprod`/`GenericReverseDiffADHvprod` | `EnzymeReverseADHvprod` | -- | `DIADHvprod` |
 | `directional_second_derivative` | `ForwardDiffADGHjvprod` | -- | -- | -- | -- |
 
-Except for the backends based on `ForwardDiff.jl` and `ReverseDiff.jl`, all other backends require the associated AD package to be manually installed by the user to work.
+The functions `hess_structure!`, `hess_coord!`, `jac_structure!` and `jac_coord!` defined in `ad.jl` are generic to all the backends for now.
 
 ```@example ex1
 using ADNLPModels
