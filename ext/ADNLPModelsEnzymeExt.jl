@@ -5,15 +5,15 @@ using ADNLPModels, NLPModels
 using SparseMatrixColorings
 using Enzyme
 
-# Configure Enzyme for robustness
-Enzyme.API.strictAliasing!(false)   # handle Union types in Printf/@sprintf
-Enzyme.API.looseTypeAnalysis!(true) # handle unresolved types in complex structs
+# Configure Enzyme for robustness. This should be in the user code.
+# Enzyme.API.strictAliasing!(false)   # handle Union types in Printf/@sprintf
+# Enzyme.API.looseTypeAnalysis!(true) # handle unresolved types in complex structs
 
 function _gradient!(dx, f, x)
   Enzyme.make_zero!(dx)
   Enzyme.autodiff(
     Enzyme.set_runtime_activity(Enzyme.Reverse),
-    f,
+    Enzyme.Const(f),
     Enzyme.Active,
     Enzyme.Duplicated(x, dx),
   )
@@ -36,7 +36,7 @@ function _gradient!(dx, ℓ, x, y, obj_weight, cx)
   dcx = Enzyme.make_zero(cx)
   Enzyme.autodiff(
     Enzyme.set_runtime_activity(Enzyme.Reverse),
-    ℓ,
+    Enzyme.Const(ℓ),
     Enzyme.Active,
     Enzyme.Duplicated(x, dx),
     Enzyme.Const(y),
