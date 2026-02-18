@@ -4,26 +4,37 @@ using SparseArrays
 using ADNLPModels, NLPModels
 using SparseMatrixColorings
 using Enzyme
+using ForwardDiff
 
 function _gradient!(dx, f, x)
   Enzyme.make_zero!(dx)
   Enzyme.autodiff(
     Enzyme.set_runtime_activity(Enzyme.Reverse),
-    f,
+    Enzyme.Const(f),
     Enzyme.Active,
     Enzyme.Duplicated(x, dx),
   )
   return nothing
 end
 
+# Helpers for ForwardDiff-over-Enzyme-reverse HVP.
+# Enzyme reverse-differentiates these; the Active return is a Float64 scalar.
+_dual_objective(f, x_d) = ForwardDiff.partials(f(x_d), 1)
+_dual_lagrangian(ℓ, x_d, y, obj_weight, cx_d) = ForwardDiff.partials(ℓ(x_d, y, obj_weight, cx_d), 1)
+
 function _hvp!(res, f, x, v)
+  x_d = ForwardDiff.Dual{Nothing}.(x, v)
+  dx_d = zero.(x_d)
+
   Enzyme.autodiff(
-    Enzyme.set_runtime_activity(Enzyme.Forward),
-    _gradient!,
-    res,
+    Enzyme.set_runtime_activity(Enzyme.Reverse),
+    Enzyme.Const(_dual_objective),
+    Enzyme.Active,
     Enzyme.Const(f),
-    Enzyme.Duplicated(x, v),
+    Enzyme.Duplicated(x_d, dx_d),
   )
+
+  res.dval .= ForwardDiff.value.(dx_d)
   return nothing
 end
 
@@ -32,7 +43,7 @@ function _gradient!(dx, ℓ, x, y, obj_weight, cx)
   dcx = Enzyme.make_zero(cx)
   Enzyme.autodiff(
     Enzyme.set_runtime_activity(Enzyme.Reverse),
-    ℓ,
+    Enzyme.Const(ℓ),
     Enzyme.Active,
     Enzyme.Duplicated(x, dx),
     Enzyme.Const(y),
@@ -43,17 +54,26 @@ function _gradient!(dx, ℓ, x, y, obj_weight, cx)
 end
 
 function _hvp!(res, ℓ, x, v, y, obj_weight, cx)
-  dcx = Enzyme.make_zero(cx)
+  D = ForwardDiff.Dual{Nothing, eltype(x), 1}
+
+  x_d = ForwardDiff.Dual{Nothing}.(x, v)
+  dx_d = zero.(x_d)
+
+  cx_d = fill!(similar(cx, D), zero(D))
+  dcx_d = fill!(similar(cx, D), zero(D))
+
   Enzyme.autodiff(
-    Enzyme.set_runtime_activity(Enzyme.Forward),
-    _gradient!,
-    res,
+    Enzyme.set_runtime_activity(Enzyme.Reverse),
+    Enzyme.Const(_dual_lagrangian),
+    Enzyme.Active,
     Enzyme.Const(ℓ),
-    Enzyme.Duplicated(x, v),
+    Enzyme.Duplicated(x_d, dx_d),
     Enzyme.Const(y),
     Enzyme.Const(obj_weight),
-    Enzyme.Duplicated(cx, dcx),
+    Enzyme.Duplicated(cx_d, dcx_d),
   )
+
+  res.dval .= ForwardDiff.value.(dx_d)
   return nothing
 end
 
@@ -70,12 +90,21 @@ end
 
 function ADNLPModels.gradient!(::ADNLPModels.EnzymeReverseADGradient, g, f, x)
   Enzyme.make_zero!(g)
-  Enzyme.autodiff(Enzyme.Reverse, Enzyme.Const(f), Enzyme.Active, Enzyme.Duplicated(x, g))
+  Enzyme.autodiff(
+    Enzyme.set_runtime_activity(Enzyme.Reverse),
+    Enzyme.Const(f),
+    Enzyme.Active,
+    Enzyme.Duplicated(x, g),
+  )
   return g
 end
 
 ADNLPModels.jacobian(::ADNLPModels.EnzymeReverseADJacobian, f, x) =
-  Enzyme.jacobian(Enzyme.Reverse, f, x)
+  Enzyme.jacobian(
+    Enzyme.set_runtime_activity(Enzyme.Reverse),
+    f,
+    x
+  )
 
 function ADNLPModels.hessian(b::ADNLPModels.EnzymeReverseADHessian, f, x)
   T = eltype(x)
@@ -96,7 +125,7 @@ function ADNLPModels.Jprod!(b::ADNLPModels.EnzymeReverseADJprod, Jv, c!, x, v, :
   copyto!(b.xbuf, x)
   copyto!(b.vbuf, v)
   Enzyme.autodiff(
-    Enzyme.Forward,
+    Enzyme.set_runtime_activity(Enzyme.Forward),
     Enzyme.Const(c!),
     Enzyme.Duplicated(b.cx, b.jvbuf),
     Enzyme.Duplicated(b.xbuf, b.vbuf),
@@ -118,7 +147,7 @@ function ADNLPModels.Jtprod!(b::ADNLPModels.EnzymeReverseADJtprod, Jtv, c!, x, v
   copyto!(b.vbuf, v)
   Enzyme.make_zero!(b.jtvbuf)
   Enzyme.autodiff(
-    Enzyme.Reverse,
+    Enzyme.set_runtime_activity(Enzyme.Reverse),
     Enzyme.Const(_void_c!),
     Enzyme.Const(c!),
     Enzyme.Duplicated(b.cx, b.vbuf),
@@ -261,7 +290,7 @@ function sparse_jac_coord!(
     # b.compressed_jacobian is just a vector Jv here
     # We don't use the vector mode
     Enzyme.autodiff(
-      Enzyme.Forward,
+      Enzyme.set_runtime_activity(Enzyme.Forward),
       Enzyme.Const(c!),
       Enzyme.Duplicated(b.cx, b.compressed_jacobian),
       Enzyme.Duplicated(b.xbuf, b.v),
