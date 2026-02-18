@@ -4,10 +4,7 @@ using SparseArrays
 using ADNLPModels, NLPModels
 using SparseMatrixColorings
 using Enzyme
-
-# Configure Enzyme for robustness. This should be in the user code.
-# Enzyme.API.strictAliasing!(false)   # handle Union types in Printf/@sprintf
-# Enzyme.API.looseTypeAnalysis!(true) # handle unresolved types in complex structs
+using ForwardDiff
 
 function _gradient!(dx, f, x)
   Enzyme.make_zero!(dx)
@@ -20,14 +17,24 @@ function _gradient!(dx, f, x)
   return nothing
 end
 
+# Helpers for ForwardDiff-over-Enzyme-reverse HVP.
+# Enzyme reverse-differentiates these; the Active return is a Float64 scalar.
+_dual_objective(f, x_d) = ForwardDiff.partials(f(x_d), 1)
+_dual_lagrangian(ℓ, x_d, y, obj_weight, cx_d) = ForwardDiff.partials(ℓ(x_d, y, obj_weight, cx_d), 1)
+
 function _hvp!(res, f, x, v)
+  x_d = ForwardDiff.Dual{Nothing}.(x, v)
+  dx_d = zero.(x_d)
+
   Enzyme.autodiff(
-    Enzyme.set_runtime_activity(Enzyme.Forward),
-    _gradient!,
-    res,
+    Enzyme.set_runtime_activity(Enzyme.Reverse),
+    Enzyme.Const(_dual_objective),
+    Enzyme.Active,
     Enzyme.Const(f),
-    Enzyme.Duplicated(x, v),
+    Enzyme.Duplicated(x_d, dx_d),
   )
+
+  res.dval .= ForwardDiff.value.(dx_d)
   return nothing
 end
 
@@ -47,17 +54,26 @@ function _gradient!(dx, ℓ, x, y, obj_weight, cx)
 end
 
 function _hvp!(res, ℓ, x, v, y, obj_weight, cx)
-  dcx = Enzyme.make_zero(cx)
+  D = ForwardDiff.Dual{Nothing, eltype(x), 1}
+
+  x_d = ForwardDiff.Dual{Nothing}.(x, v)
+  dx_d = zero.(x_d)
+
+  cx_d = fill!(similar(cx, D), zero(D))
+  dcx_d = fill!(similar(cx, D), zero(D))
+
   Enzyme.autodiff(
-    Enzyme.set_runtime_activity(Enzyme.Forward),
-    _gradient!,
-    res,
+    Enzyme.set_runtime_activity(Enzyme.Reverse),
+    Enzyme.Const(_dual_lagrangian),
+    Enzyme.Active,
     Enzyme.Const(ℓ),
-    Enzyme.Duplicated(x, v),
+    Enzyme.Duplicated(x_d, dx_d),
     Enzyme.Const(y),
     Enzyme.Const(obj_weight),
-    Enzyme.Duplicated(cx, dcx),
+    Enzyme.Duplicated(cx_d, dcx_d),
   )
+
+  res.dval .= ForwardDiff.value.(dx_d)
   return nothing
 end
 
