@@ -58,11 +58,27 @@ enzyme_backend = Dict(
   :hessian_residual_backend => SparseEnzymeADHessian,
 )
 
+di_backend = Dict(
+  :gradient_backend => DIADGradient,
+  :jprod_backend => DIADJprod,
+  :jtprod_backend => DIADJtprod,
+  :hprod_backend => DIADHvprod,
+  :jacobian_backend => DIADJacobian, # SparseDIADJacobian,
+  :hessian_backend => DIADHessian, # SparseDIADHessian,
+  :ghjvprod_backend => EmptyADbackend,
+  :jprod_residual_backend => DIADJprod,
+  :jtprod_residual_backend => DIADJtprod,
+  :hprod_residual_backend => DIADHvprod,
+  :jacobian_residual_backend => DIADJacobian, # SparseDIADJacobian,
+  :hessian_residual_backend => DIADHessian, # SparseDIADHessian,
+)
+
 predefined_backend = Dict(
   :default => default_backend,
   :optimized => optimized_backend,
   :generic => generic_backend,
   :enzyme => enzyme_backend,
+  :di => di_backend,
 )
 
 """
