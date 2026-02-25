@@ -40,14 +40,15 @@ function DIADJprod(
   backend = AutoReverseDiff(),
   kwargs...,
 )
+  T = eltype(x0)
   dy = similar(x0, ncon)
-  dx = similar(x0, nvar)
+  dx = ntuple(_ -> zero(T), nvar)
   prep = DifferentiationInterface.prepare_pushforward(c, dy, backend, x0, dx)
   return DIADJprod(backend, prep)
 end
 
 function Jprod!(b::DIADJprod, Jv, c, x, v, ::Val)
-  DifferentiationInterface.pushforward!(c, Jv, b.prep, b.backend, x, v)
+  DifferentiationInterface.pushforward!(c, Jv, b.prep, b.backend, x, Tuple(v))
   return Jv
 end
 
@@ -65,14 +66,15 @@ function DIADJtprod(
   backend = AutoReverseDiff(),
   kwargs...,
 )
+  T = eltype(x0)
   dx = similar(x0, nvar)
-  dy = similar(x0, ncon)
+  dy = ntuple(_ -> zero(T), ncon)
   prep = DifferentiationInterface.prepare_pullback(c, dx, backend, x0, dy)
   return DIADJtprod(backend, prep)
 end
 
 function Jtprod!(b::DIADJtprod, Jtv, c, x, v, ::Val)
-  DifferentiationInterface.pullback!(c, Jtv, b.prep, b.backend, x, v)
+  DifferentiationInterface.pullback!(c, Jtv, b.prep, b.backend, x, Tuple(v))
   return Jtv
 end
 
@@ -143,13 +145,14 @@ function DIADHvprod(
   backend = AutoReverseDiff(),
   kwargs...,
 )
-  tx = similar(x0)
+  T = eltype(x0)
+  tx = ntuple(_ -> zero(T), nvar)
   prep = DifferentiationInterface.prepare_hvp(f, backend, x0, tx)
   return DIADHvprod(backend, prep)
 end
 
 function Hvprod!(b::DIADHvprod, Hv, f, x, v, ::Val)
-  DifferentiationInterface.hvp!(f, Hv, b.prep, b.backend, x, v)
+  DifferentiationInterface.hvp!(f, Hv, b.prep, b.backend, x, Tuple(v))
   return Hv
 end
 
