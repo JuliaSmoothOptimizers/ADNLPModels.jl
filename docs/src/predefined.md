@@ -40,7 +40,7 @@ ADNLPModels.predefined_backend[:optimized]
 
 The backend `:generic` focuses on backend that make no assumptions on the element type, see [Creating an ADNLPModels backend that supports multiple precisions](https://jso.dev/tutorials/generic-adnlpmodels/).
 
-It is possible to use these pre-defined backends using the keyword argument `backend` when instantiating the model.
+It is possible to use these pre-defined backends by using the keyword argument `backend` when instantiating the model.
 
 ```@example ex1
 nlp = ADNLPModel!(f, x0, lvar, uvar, c!, lcon, ucon, backend = :optimized)
