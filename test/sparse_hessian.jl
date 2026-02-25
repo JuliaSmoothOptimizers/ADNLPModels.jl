@@ -3,6 +3,24 @@ function sparse_hessian(backend, info, kw)
     Float32,
     Float64,
   )
+    # When using ForwardDiff.Dual{Nothing,Float32,1} inside Enzyme reverse mode,
+    # LLVM may scalar-replace the Dual and pack its (value, partial) fields into
+    # a single i64. This packing is implemented using integer bit operations such
+    # as `shl`, `zext`, and `or disjoint`.
+    #
+    # Enzyme reverse mode does not support differentiating these low-level
+    # integer bitwise operations. As a result, it throws:
+    #
+    # "cannot handle unknown binary operator: or disjoint i64"
+    #
+    # This issue typically appears with Float32 (8-byte Dual → packed into i64),
+    # but not with Float64 (16-byte Dual → kept as two f64 values).
+    #
+    # In short: this is not a numerical precision issue, but a limitation of
+    # Enzyme when differentiating LLVM bit-manipulation code generated for
+    # packed Dual numbers
+    (backend == ADNLPModels.SparseEnzymeADHessian) && (T == Float32) && continue
+
     c!(cx, x) = begin
       cx[1] = x[1] - 1
       cx[2] = 10 * (x[2] - x[1]^2)
