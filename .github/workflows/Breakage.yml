@@ -1,7 +1,7 @@
 name: Breakage
 on:
-    pull_request:
-      types: [opened, synchronize, reopened]
+  pull_request:
+    types: [opened, synchronize, reopened]
 jobs:
   breakage:
     uses: JuliaSmoothOptimizers/.github/.github/workflows/Breakage.yml@main

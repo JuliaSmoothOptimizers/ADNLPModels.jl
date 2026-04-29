@@ -3,7 +3,7 @@ name: Comment Breakage
 on:
   workflow_run:
     workflows: ["Breakage"]
-    types: 
+    types:
       - completed
 
 jobs:
