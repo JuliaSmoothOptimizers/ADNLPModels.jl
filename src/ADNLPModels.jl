@@ -1,3 +1,5 @@
+# BREAKAGE TEST - DO NOT MERGE
+
 module ADNLPModels
 
 # stdlib
