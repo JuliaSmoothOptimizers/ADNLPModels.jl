@@ -103,8 +103,7 @@ The following AD packages are supported:
 
 and as optional dependencies (you must load the package before):
 
-- `Enzyme.jl`;
-- `Zygote.jl`.
+- `Enzyme.jl`.
 
 ## Bug reports and discussions
 
