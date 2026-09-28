@@ -6,6 +6,27 @@ abstract type InPlaceADbackend <: ADBackend end
 struct EmptyADbackend <: ADBackend end
 EmptyADbackend(args...; kwargs...) = EmptyADbackend()
 
+"""
+    ==(a::ADModelBackend, b::ADModelBackend)
+
+Two `ADModelBackend`s are equal when they hold the same backend object in every slot.
+
+This is defined explicitly rather than left to the `===` fallback. `ADModelBackend` is an
+immutable struct, so `===` compares it structurally and recurses into each backend's
+`DifferentiationInterface` preparation object. Those preparations are immutable structs
+whose layout may contain padding, and `===` compares padding bytes, whose contents depend on
+whether the compiler chose to box the struct — a codegen decision that varies across
+platforms. Comparing slot by slot keeps the comparison at the level of backend identity,
+which is what callers actually mean.
+"""
+function Base.:(==)(a::ADModelBackend, b::ADModelBackend)
+  typeof(a) === typeof(b) || return false
+  for i = 1:fieldcount(ADModelBackend)
+    getfield(a, i) === getfield(b, i) || return false
+  end
+  return true
+end
+
 function Base.show(
   io::IO,
   backend::ADModelBackend{GB, HvB, JvB, JtvB, JB, HB, GHJ, HvBLS, JvBLS, JtvBLS, JBLS, HBLS},

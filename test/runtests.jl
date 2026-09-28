@@ -1,4 +1,5 @@
 using LinearAlgebra, SparseArrays, Test
+using ForwardDiff
 using SparseMatrixColorings
 using ADNLPModels, ManualNLPModels, NLPModels, NLPModelsModifiers, NLPModelsTest
 using ADNLPModels:
@@ -22,6 +23,8 @@ end
 @testset "Test using a NLPModel instead of AD-backend" begin
   include("manual.jl")
 end
+
+include("tape_seeding.jl")
 
 include("sparse_jacobian.jl")
 include("sparse_jacobian_nls.jl")
