@@ -7,8 +7,9 @@ end
 struct GenericReverseDiffADJprod <: ADBackend end
 struct GenericReverseDiffADJtprod <: ADBackend end
 
-struct ReverseDiffADGradient <: ADBackend
-  cfg
+struct ReverseDiffADGradient{B, P} <: ADBackend
+  backend::B
+  prep::P
 end
 
 function ReverseDiffADGradient(
@@ -21,13 +22,13 @@ function ReverseDiffADGradient(
 )
   @assert nvar > 0
   @lencheck nvar x0
-  f_tape = ReverseDiff.GradientTape(f, x0)
-  cfg = ReverseDiff.compile(f_tape)
-  return ReverseDiffADGradient(cfg)
+  # `RDBackend` compiles the tape, matching the previous `ReverseDiff.compile` behaviour.
+  prep = DI.prepare_gradient(f, RDBackend, x0; strict = Val(false))
+  return ReverseDiffADGradient(RDBackend, prep)
 end
 
-function gradient!(adbackend::ReverseDiffADGradient, g, f, x)
-  return ReverseDiff.gradient!(g, adbackend.cfg, x)
+function gradient!(b::ReverseDiffADGradient, g, f, x)
+  return DI.gradient!(f, g, b.prep, b.backend, x)
 end
 
 struct GenericReverseDiffADGradient <: ADBackend end
@@ -44,7 +45,7 @@ function GenericReverseDiffADGradient(
 end
 
 function gradient!(::GenericReverseDiffADGradient, g, f, x)
-  return ReverseDiff.gradient!(g, f, x)
+  return DI.gradient!(f, g, RDBackendNC, x)
 end
 
 function ReverseDiffADJacobian(
@@ -58,7 +59,7 @@ function ReverseDiffADJacobian(
   nnzj = nvar * ncon
   return ReverseDiffADJacobian(nnzj)
 end
-jacobian(::ReverseDiffADJacobian, f, x) = ReverseDiff.jacobian(f, x)
+jacobian(::ReverseDiffADJacobian, f, x) = DI.jacobian(f, RDBackendNC, x)
 
 function ReverseDiffADHessian(
   nvar::Integer,
@@ -71,7 +72,7 @@ function ReverseDiffADHessian(
   nnzh = nvar * (nvar + 1) / 2
   return ReverseDiffADHessian(nnzh)
 end
-hessian(::ReverseDiffADHessian, f, x) = ReverseDiff.hessian(f, x)
+hessian(::ReverseDiffADHessian, f, x) = DI.hessian(f, RDBackendNC, x)
 
 function GenericReverseDiffADJprod(
   nvar::Integer,
@@ -83,16 +84,14 @@ function GenericReverseDiffADJprod(
   return GenericReverseDiffADJprod()
 end
 function Jprod!(::GenericReverseDiffADJprod, Jv, f, x, v, ::Val)
-  Jv .= vec(ReverseDiff.jacobian(t -> f(x + t[1] * v), [0.0]))
+  DI.pushforward!(f, (Jv,), RDBackendNC, x, (v,))
   return Jv
 end
 
-struct ReverseDiffADJprod{T, S, F} <: InPlaceADbackend
-  ϕ!::F
-  tmp_in::Vector{ReverseDiff.TrackedReal{T, T, Nothing}}
-  tmp_out::Vector{ReverseDiff.TrackedReal{T, T, Nothing}}
-  _tmp_out::S
-  z::Vector{T}
+struct ReverseDiffADJprod{B, P, S} <: InPlaceADbackend
+  backend::B
+  prep::P
+  cx::S
 end
 
 function ReverseDiffADJprod(
@@ -103,25 +102,14 @@ function ReverseDiffADJprod(
   x0::AbstractVector{T} = rand(nvar),
   kwargs...,
 ) where {T}
-  tmp_in = Vector{ReverseDiff.TrackedReal{T, T, Nothing}}(undef, nvar)
-  tmp_out = Vector{ReverseDiff.TrackedReal{T, T, Nothing}}(undef, ncon)
-  _tmp_out = similar(x0, ncon)
-  z = [zero(T)]
-
-  # ... auxiliary function for J(x) * v
-  # ... J(x) * v is the derivative at t = 0 of t ↦ r(x + tv)
-  ϕ!(out, t; x = x0, v = x0, tmp_in = tmp_in, c! = c!) = begin
-    # here t is a vector of ReverseDiff.TrackedReal
-    tmp_in .= (t[1] .* v .+ x)
-    c!(out, tmp_in)
-    out
-  end
-
-  return ReverseDiffADJprod(ϕ!, tmp_in, tmp_out, _tmp_out, z)
+  cx = similar(x0, ncon)
+  v0 = fill!(similar(x0, nvar), zero(T))
+  prep = DI.prepare_pushforward(c!, cx, RDBackendNC, x0, (v0,); strict = Val(false))
+  return ReverseDiffADJprod(RDBackendNC, prep, cx)
 end
 
 function Jprod!(b::ReverseDiffADJprod, Jv, c!, x, v, ::Val)
-  ReverseDiff.jacobian!(Jv, (out, t) -> b.ϕ!(out, t, x = x, v = v), b._tmp_out, b.z)
+  DI.pushforward!(c!, b.cx, (Jv,), b.prep, b.backend, x, (v,))
   return Jv
 end
 
@@ -135,7 +123,7 @@ function GenericReverseDiffADJtprod(
   return GenericReverseDiffADJtprod()
 end
 function Jtprod!(::GenericReverseDiffADJtprod, Jtv, f, x, v, ::Val)
-  Jtv .= ReverseDiff.gradient(x -> dot(f(x), v), x)
+  DI.gradient!(x -> dot(f(x), v), Jtv, RDBackendNC, x)
   return Jtv
 end
 
@@ -184,7 +172,7 @@ function GenericReverseDiffADHvprod(
   return GenericReverseDiffADHvprod()
 end
 function Hvprod!(::GenericReverseDiffADHvprod, Hv, x, v, f, args...)
-  Hv .= ForwardDiff.derivative(t -> ReverseDiff.gradient(f, x + t * v), 0)
+  DI.hvp!(f, (Hv,), FoRBackendNC, x, (v,))
   return Hv
 end
 
@@ -210,7 +198,7 @@ function ReverseDiffADHvprod(
 ) where {T}
   # unconstrained Hessian
   tagf = ForwardDiff.Tag{typeof(f), T}
-  z = Vector{ForwardDiff.Dual{tagf, T, 1}}(undef, nvar)
+  z = seeded_duals(tagf, x0, nvar)
   gz = similar(z)
   f_tape = ReverseDiff.GradientTape(f, z)
   cfgf = ReverseDiff.compile(f_tape)
@@ -224,7 +212,7 @@ function ReverseDiffADHvprod(
     dot(tmp_out, u)
   end
   tagψ = ForwardDiff.Tag{typeof(ψ), T}
-  zψ = Vector{ForwardDiff.Dual{tagψ, T, 1}}(undef, nvar)
+  zψ = seeded_duals(tagψ, x0, nvar)
   yψ = fill!(similar(zψ, ncon), zero(T))
   ψ_tape = ReverseDiff.GradientConfig((zψ, yψ))
   cfgψ = ReverseDiff.compile(ReverseDiff.GradientTape(ψ, (zψ, yψ), ψ_tape))

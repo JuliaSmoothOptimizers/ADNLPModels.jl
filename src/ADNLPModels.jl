@@ -4,10 +4,14 @@ module ADNLPModels
 using LinearAlgebra, SparseArrays
 
 # external
-using ADTypes: ADTypes, AbstractColoringAlgorithm, AbstractSparsityDetector
+using ADTypes:
+  ADTypes, AbstractColoringAlgorithm, AbstractSparsityDetector, AutoForwardDiff, AutoReverseDiff
+using DifferentiationInterface: DifferentiationInterface, Cache, Constant, SecondOrder
 using SparseConnectivityTracer: TracerSparsityDetector
 using SparseMatrixColorings
 using ForwardDiff, ReverseDiff
+
+const DI = DifferentiationInterface
 
 # JSO
 using NLPModels
@@ -19,6 +23,7 @@ const ADModel{T, S} = Union{AbstractADNLPModel{T, S}, AbstractADNLSModel{T, S}}
 
 include("ad.jl")
 include("ad_api.jl")
+include("di_utils.jl")
 
 include("sparsity_pattern.jl")
 include("sparse_jacobian.jl")
@@ -256,7 +261,7 @@ function set_adbackend!(nlp::ADModel; kwargs...)
   for field in fieldnames(ADNLPModels.ADModelBackend)
     push!(args, if field in keys(kwargs) && typeof(kwargs[field]) <: ADBackend
       kwargs[field]
-    elseif field in keys(kwargs) && typeof(kwargs[field]) <: DataType
+    elseif field in keys(kwargs) && kwargs[field] isa Type
       if typeof(nlp) <: ADNLPModel
         kwargs[field](nlp.meta.nvar, nlp.f, nlp.meta.ncon; kwargs...)
       elseif typeof(nlp) <: ADNLSModel

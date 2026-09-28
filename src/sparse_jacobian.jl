@@ -1,4 +1,4 @@
-struct SparseADJacobian{Tag, R, T, C, S} <: ADBackend
+struct SparseADJacobian{B, P, R, C, S} <: ADBackend
   nvar::Int
   ncon::Int
   rowval::Vector{Int}
@@ -6,9 +6,10 @@ struct SparseADJacobian{Tag, R, T, C, S} <: ADBackend
   nzval::Vector{R}
   result_coloring::C
   compressed_jacobian::S
-  seed::BitVector
-  z::Vector{ForwardDiff.Dual{Tag, T, 1}}
-  cz::Vector{ForwardDiff.Dual{Tag, T, 1}}
+  seed::S
+  backend::B
+  prep::P
+  cx::S
 end
 
 function SparseADJacobian(
@@ -50,14 +51,13 @@ function SparseADJacobian(
     colptr = J.colptr
     nzval = T.(J.nzval)
     compressed_jacobian = similar(x0, ncon)
-    seed = BitVector(undef, nvar)
+    seed = fill!(similar(x0, nvar), zero(T))
   end
   show_time && println("  • Coloring of the sparse Jacobian: $timer seconds.")
 
   timer = @elapsed begin
-    tag = ForwardDiff.Tag{typeof(c!), T}
-    z = Vector{ForwardDiff.Dual{tag, T, 1}}(undef, nvar)
-    cz = similar(z, ncon)
+    cx = similar(x0, ncon)
+    prep = DI.prepare_pushforward(c!, cx, FDBackend, x0, (seed,); strict = Val(false))
   end
   show_time && println("  • Allocation of the AD buffers for the sparse Jacobian: $timer seconds.")
 
@@ -70,8 +70,9 @@ function SparseADJacobian(
     result_coloring,
     compressed_jacobian,
     seed,
-    z,
-    cz,
+    FDBackend,
+    prep,
+    cx,
   )
 end
 
@@ -96,24 +97,24 @@ end
 
 function sparse_jac_coord!(
   ℓ!::Function,
-  b::SparseADJacobian{Tag},
+  b::SparseADJacobian,
   x::AbstractVector,
   vals::AbstractVector,
-) where {Tag}
+)
   # SparseMatrixColorings.jl requires a SparseMatrixCSC for the decompression
   A = SparseMatrixCSC(b.ncon, b.nvar, b.colptr, b.rowval, b.nzval)
+  T = eltype(b.seed)
 
   groups = column_groups(b.result_coloring)
   for (icol, cols) in enumerate(groups)
     # Update the seed
-    b.seed .= false
+    fill!(b.seed, zero(T))
     for col in cols
-      b.seed[col] = true
+      b.seed[col] = one(T)
     end
 
-    map!(ForwardDiff.Dual{Tag}, b.z, x, b.seed)  # x + ε * v
-    ℓ!(b.cz, b.z)  # c!(cz, x + ε * v)
-    ForwardDiff.extract_derivative!(Tag, b.compressed_jacobian, b.cz)  # ∇c!(cx, x)ᵀv
+    # One dense Jacobian-vector product per color: ∇c!(cx, x) * seed
+    DI.pushforward!(ℓ!, b.cx, (b.compressed_jacobian,), b.prep, b.backend, x, (b.seed,))
 
     # Update the columns of the Jacobian that have the color `icol`
     decompress_single_color!(A, b.compressed_jacobian, icol, b.result_coloring)

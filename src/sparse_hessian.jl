@@ -1,4 +1,4 @@
-struct SparseADHessian{Tag, R, T, C, H, S, GT} <: ADBackend
+struct SparseADHessian{B, L, P, R, C, H, S} <: ADBackend
   nvar::Int
   rowval::Vector{Int}
   colptr::Vector{Int}
@@ -6,13 +6,11 @@ struct SparseADHessian{Tag, R, T, C, H, S, GT} <: ADBackend
   result_coloring::C
   coloring_mode::Symbol
   compressed_hessian::H
-  seed::BitVector
-  lz::Vector{ForwardDiff.Dual{Tag, T, 1}}
-  glz::Vector{ForwardDiff.Dual{Tag, T, 1}}
-  sol::S
-  longv::S
-  Hvp::S
-  ∇φ!::GT
+  seed::S
+  backend::B
+  ℓ::L
+  prep::P
+  cx::S
   y::S
 end
 
@@ -68,36 +66,24 @@ function SparseADHessian(
       ncolors = length(group)
       compressed_hessian = similar(x0, (nvar, ncolors))
     end
-    seed = BitVector(undef, nvar)
+    seed = fill!(similar(x0, nvar), zero(T))
   end
   show_time && println("  • Coloring of the sparse Hessian: $timer seconds.")
 
   timer = @elapsed begin
-    function lag(z; nvar = nvar, ncon = ncon, f = f, c! = c!)
-      cx, x, y, ob = view(z, 1:ncon),
-      view(z, (ncon + 1):(nvar + ncon)),
-      view(z, (nvar + ncon + 1):(nvar + ncon + ncon)),
-      z[end]
-      if ncon > 0
-        c!(cx, x)
-        return ob * f(x) + dot(cx, y)
-      else
-        return ob * f(x)
-      end
-    end
-
-    ntotal = nvar + 2 * ncon + 1
-    sol = similar(x0, ntotal)
-    lz = Vector{ForwardDiff.Dual{ForwardDiff.Tag{typeof(lag), T}, T, 1}}(undef, ntotal)
-    glz = similar(lz)
-    cfg = ForwardDiff.GradientConfig(lag, lz)
-    function ∇φ!(gz, z; lag = lag, cfg = cfg)
-      ForwardDiff.gradient!(gz, lag, z, cfg)
-      return gz
-    end
-    longv = fill!(S(undef, ntotal), 0)
-    Hvp = fill!(S(undef, ntotal), 0)
-    y = fill!(S(undef, ncon), 0)
+    ℓ = LagrangianFunction(f, c!, ncon)
+    cx = similar(x0, ncon)
+    y = fill!(similar(x0, ncon), zero(T))
+    prep = DI.prepare_hvp(
+      ℓ,
+      FDBackend,
+      x0,
+      (seed,),
+      Cache(cx),
+      Constant(y),
+      Constant(one(T));
+      strict = Val(false),
+    )
   end
   show_time && println("  • Allocation of the AD buffers for the sparse Hessian: $timer seconds.")
 
@@ -110,12 +96,10 @@ function SparseADHessian(
     coloring_mode,
     compressed_hessian,
     seed,
-    lz,
-    glz,
-    sol,
-    longv,
-    Hvp,
-    ∇φ!,
+    FDBackend,
+    ℓ,
+    prep,
+    cx,
     y,
   )
 end
@@ -198,7 +182,7 @@ function SparseReverseADHessian(
   # unconstrained Hessian
   timer = @elapsed begin
     tagf = ForwardDiff.Tag{typeof(f), T}
-    z = Vector{ForwardDiff.Dual{tagf, T, 1}}(undef, nvar)
+    z = seeded_duals(tagf, x0, nvar)
     gz = similar(z)
     f_tape = ReverseDiff.GradientTape(f, z)
     cfgf = ReverseDiff.compile(f_tape)
@@ -212,7 +196,7 @@ function SparseReverseADHessian(
       dot(tmp_out, u)
     end
     tagψ = ForwardDiff.Tag{typeof(ψ), T}
-    zψ = Vector{ForwardDiff.Dual{tagψ, T, 1}}(undef, nvar)
+    zψ = seeded_duals(tagψ, x0, nvar)
     yψ = fill!(similar(zψ, ncon), zero(T))
     ψ_tape = ReverseDiff.GradientConfig((zψ, yψ))
     cfgψ = ReverseDiff.compile(ReverseDiff.GradientTape(ψ, (zψ, yψ), ψ_tape))
@@ -278,20 +262,16 @@ function NLPModels.hess_structure_residual!(
 end
 
 function sparse_hess_coord!(
-  b::SparseADHessian{Tag},
-  x::AbstractVector,
+  b::SparseADHessian,
+  x::AbstractVector{T},
   obj_weight,
   y::AbstractVector,
   vals::AbstractVector,
-) where {Tag}
-  ncon = length(y)
-  T = eltype(x)
-  b.sol[1:ncon] .= zero(T)  # cx
-  b.sol[(ncon + 1):(ncon + b.nvar)] .= x
-  b.sol[(ncon + b.nvar + 1):(2 * ncon + b.nvar)] .= y
-  b.sol[end] = obj_weight
-
-  b.longv .= 0
+) where {T}
+  # Copy into the backend-owned buffers so that the `Constant` contexts keep the types used
+  # at preparation time, even when the caller passes a view or a differently typed scalar.
+  b.y .= y
+  ob = T(obj_weight)
 
   # SparseMatrixColorings.jl requires a SparseMatrixCSC for the decompression
   A = SparseMatrixCSC(b.nvar, b.nvar, b.colptr, b.rowval, b.nzval)
@@ -299,20 +279,28 @@ function sparse_hess_coord!(
   groups = column_groups(b.result_coloring)
   for (icol, cols) in enumerate(groups)
     # Update the seed
-    b.seed .= false
+    fill!(b.seed, zero(T))
     for col in cols
-      b.seed[col] = true
+      b.seed[col] = one(T)
     end
 
     # column icol of the compressed hessian
     compressed_hessian_icol =
       (b.coloring_mode == :direct) ? b.compressed_hessian : view(b.compressed_hessian, :, icol)
 
-    b.longv[(ncon + 1):(ncon + b.nvar)] .= b.seed
-    map!(ForwardDiff.Dual{Tag}, b.lz, b.sol, b.longv)
-    b.∇φ!(b.glz, b.lz)
-    ForwardDiff.extract_derivative!(Tag, b.Hvp, b.glz)
-    compressed_hessian_icol .= view(b.Hvp, (ncon + 1):(ncon + b.nvar))
+    # One dense Hessian-vector product of the Lagrangian per color
+    DI.hvp!(
+      b.ℓ,
+      (compressed_hessian_icol,),
+      b.prep,
+      b.backend,
+      x,
+      (b.seed,),
+      Cache(b.cx),
+      Constant(b.y),
+      Constant(ob),
+    )
+
     if b.coloring_mode == :direct
       # Update the coefficients of the lower triangular part of the Hessian that are related to the color `icol`
       decompress_single_color!(A, compressed_hessian_icol, icol, b.result_coloring, :L)
