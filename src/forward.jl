@@ -1,11 +1,12 @@
 struct GenericForwardDiffADGradient <: ADBackend end
 GenericForwardDiffADGradient(args...; kwargs...) = GenericForwardDiffADGradient()
 function gradient!(::GenericForwardDiffADGradient, g, f, x)
-  return ForwardDiff.gradient!(g, f, x)
+  return DI.gradient!(f, g, FDBackend, x)
 end
 
-struct ForwardDiffADGradient <: ADBackend
-  cfg
+struct ForwardDiffADGradient{B, P} <: ADBackend
+  backend::B
+  prep::P
 end
 function ForwardDiffADGradient(
   nvar::Integer,
@@ -17,11 +18,11 @@ function ForwardDiffADGradient(
 )
   @assert nvar > 0
   @lencheck nvar x0
-  cfg = ForwardDiff.GradientConfig(f, x0)
-  return ForwardDiffADGradient(cfg)
+  prep = DI.prepare_gradient(f, FDBackend, x0; strict = Val(false))
+  return ForwardDiffADGradient(FDBackend, prep)
 end
-function gradient!(adbackend::ForwardDiffADGradient, g, f, x)
-  return ForwardDiff.gradient!(g, f, x, adbackend.cfg)
+function gradient!(b::ForwardDiffADGradient, g, f, x)
+  return DI.gradient!(f, g, b.prep, b.backend, x)
 end
 
 struct ForwardDiffADJacobian <: ADBackend
@@ -38,7 +39,7 @@ function ForwardDiffADJacobian(
   nnzj = nvar * ncon
   return ForwardDiffADJacobian(nnzj)
 end
-jacobian(::ForwardDiffADJacobian, f, x) = ForwardDiff.jacobian(f, x)
+jacobian(::ForwardDiffADJacobian, f, x) = DI.jacobian(f, FDBackend, x)
 
 struct ForwardDiffADHessian <: ADBackend
   nnzh::Int
@@ -54,7 +55,7 @@ function ForwardDiffADHessian(
   nnzh = nvar * (nvar + 1) / 2
   return ForwardDiffADHessian(nnzh)
 end
-hessian(::ForwardDiffADHessian, f, x) = ForwardDiff.hessian(f, x)
+hessian(::ForwardDiffADHessian, f, x) = DI.hessian(f, FDBackend, x)
 
 struct GenericForwardDiffADJprod <: ADBackend end
 function GenericForwardDiffADJprod(
@@ -67,13 +68,14 @@ function GenericForwardDiffADJprod(
   return GenericForwardDiffADJprod()
 end
 function Jprod!(::GenericForwardDiffADJprod, Jv, f, x, v, ::Val)
-  Jv .= ForwardDiff.derivative(t -> f(x + t * v), 0)
+  DI.pushforward!(f, (Jv,), FDBackend, x, (v,))
   return Jv
 end
 
-struct ForwardDiffADJprod{T, Tag} <: InPlaceADbackend
-  z::Vector{ForwardDiff.Dual{Tag, T, 1}}
-  cz::Vector{ForwardDiff.Dual{Tag, T, 1}}
+struct ForwardDiffADJprod{B, P, S} <: InPlaceADbackend
+  backend::B
+  prep::P
+  cx::S
 end
 
 function ForwardDiffADJprod(
@@ -84,17 +86,14 @@ function ForwardDiffADJprod(
   x0::AbstractVector{T} = rand(nvar),
   kwargs...,
 ) where {T}
-  tag = ForwardDiff.Tag{typeof(c!), T}
-
-  z = Vector{ForwardDiff.Dual{tag, T, 1}}(undef, nvar)
-  cz = similar(z, ncon)
-  return ForwardDiffADJprod(z, cz)
+  cx = similar(x0, ncon)
+  v0 = fill!(similar(x0, nvar), zero(T))
+  prep = DI.prepare_pushforward(c!, cx, FDBackend, x0, (v0,); strict = Val(false))
+  return ForwardDiffADJprod(FDBackend, prep, cx)
 end
 
-function Jprod!(b::ForwardDiffADJprod{T, Tag}, Jv, c!, x, v, ::Val) where {T, Tag}
-  map!(ForwardDiff.Dual{Tag}, b.z, x, v) # x + ε * v
-  c!(b.cz, b.z) # c!(cz, x + ε * v)
-  ForwardDiff.extract_derivative!(Tag, Jv, b.cz) # ∇c!(cx, x)ᵀv
+function Jprod!(b::ForwardDiffADJprod, Jv, c!, x, v, ::Val)
+  DI.pushforward!(c!, b.cx, (Jv,), b.prep, b.backend, x, (v,))
   return Jv
 end
 
@@ -109,15 +108,15 @@ function GenericForwardDiffADJtprod(
   return GenericForwardDiffADJtprod()
 end
 function Jtprod!(::GenericForwardDiffADJtprod, Jtv, f, x, v, ::Val)
-  Jtv .= ForwardDiff.gradient(x -> dot(f(x), v), x)
+  DI.gradient!(x -> dot(f(x), v), Jtv, FDBackend, x)
   return Jtv
 end
 
-struct ForwardDiffADJtprod{Tag, GT, S} <: InPlaceADbackend
-  cfg::ForwardDiff.GradientConfig{Tag}
+struct ForwardDiffADJtprod{B, P, GT, S} <: InPlaceADbackend
+  backend::B
   ψ::GT
-  temp::S
-  sol::S
+  prep::P
+  cx::S
 end
 
 function ForwardDiffADJtprod(
@@ -128,31 +127,15 @@ function ForwardDiffADJtprod(
   x0::AbstractVector{T} = rand(nvar),
   kwargs...,
 ) where {T}
-  temp = similar(x0, nvar + 2 * ncon)
-  sol = similar(x0, nvar + 2 * ncon)
-
-  function ψ(z; nvar = nvar, ncon = ncon)
-    cx, x, u = view(z, 1:ncon),
-    view(z, (ncon + 1):(nvar + ncon)),
-    view(z, (nvar + ncon + 1):(nvar + ncon + ncon))
-    c!(cx, x)
-    dot(cx, u)
-  end
-  tagψ = ForwardDiff.Tag(ψ, T)
-  cfg = ForwardDiff.GradientConfig(ψ, temp, ForwardDiff.Chunk(temp), tagψ)
-
-  return ForwardDiffADJtprod(cfg, ψ, temp, sol)
+  ψ = DotConstraints(c!)
+  cx = similar(x0, ncon)
+  u0 = fill!(similar(x0, ncon), zero(T))
+  prep = DI.prepare_gradient(ψ, FDBackend, x0, Cache(cx), Constant(u0); strict = Val(false))
+  return ForwardDiffADJtprod(FDBackend, ψ, prep, cx)
 end
 
-function Jtprod!(b::ForwardDiffADJtprod{Tag, GT, S}, Jtv, c!, x, v, ::Val) where {Tag, GT, S}
-  ncon = length(v)
-  nvar = length(x)
-
-  b.sol[1:ncon] .= 0
-  b.sol[(ncon + 1):(ncon + nvar)] .= x
-  b.sol[(ncon + nvar + 1):(2 * ncon + nvar)] .= v
-  ForwardDiff.gradient!(b.temp, b.ψ, b.sol, b.cfg)
-  Jtv .= view(b.temp, (ncon + 1):(nvar + ncon))
+function Jtprod!(b::ForwardDiffADJtprod, Jtv, c!, x, v, ::Val)
+  DI.gradient!(b.ψ, Jtv, b.prep, b.backend, x, Cache(b.cx), Constant(v))
   return Jtv
 end
 
@@ -167,20 +150,18 @@ function GenericForwardDiffADHvprod(
   return GenericForwardDiffADHvprod()
 end
 function Hvprod!(::GenericForwardDiffADHvprod, Hv, x, v, f, args...)
-  Hv .= ForwardDiff.derivative(t -> ForwardDiff.gradient(f, x + t * v), 0)
+  DI.hvp!(f, (Hv,), FDBackend, x, (v,))
   return Hv
 end
 
-struct ForwardDiffADHvprod{Tag, GT, S, T, F, Tagf} <: ADBackend
-  lz::Vector{ForwardDiff.Dual{Tag, T, 1}}
-  glz::Vector{ForwardDiff.Dual{Tag, T, 1}}
-  sol::S
-  longv
-  Hvp
-  ∇φ!::GT
-  z::Vector{ForwardDiff.Dual{Tagf, T, 1}}
-  gz::Vector{ForwardDiff.Dual{Tagf, T, 1}}
-  ∇f!::F
+struct ForwardDiffADHvprod{B, F, L, P1, P2, S} <: ADBackend
+  backend::B
+  f::F
+  ℓ::L
+  prep_obj::P1
+  prep_lag::P2
+  cx::S
+  y::S
 end
 
 function ForwardDiffADHvprod(
@@ -192,44 +173,30 @@ function ForwardDiffADHvprod(
   kwargs...,
 ) where {S}
   T = eltype(S)
-  function lag(z; nvar = nvar, ncon = ncon, f = f, c! = c!)
-    cx, x, y, ob = view(z, 1:ncon),
-    view(z, (ncon + 1):(nvar + ncon)),
-    view(z, (nvar + ncon + 1):(nvar + ncon + ncon)),
-    z[end]
-    if ncon > 0
-      c!(cx, x)
-      return ob * f(x) + dot(cx, y)
-    else
-      return ob * f(x)
-    end
-  end
+  ℓ = LagrangianFunction(f, c!, ncon)
+  cx = similar(x0, ncon)
+  y = fill!(similar(x0, ncon), zero(T))
+  v0 = fill!(similar(x0, nvar), zero(T))
 
-  ntotal = nvar + 2 * ncon + 1
+  prep_obj = DI.prepare_hvp(f, FDBackend, x0, (v0,); strict = Val(false))
+  prep_lag = DI.prepare_hvp(
+    ℓ,
+    FDBackend,
+    x0,
+    (v0,),
+    Cache(cx),
+    Constant(y),
+    Constant(one(T));
+    strict = Val(false),
+  )
 
-  sol = similar(x0, ntotal)
-  lz = Vector{ForwardDiff.Dual{ForwardDiff.Tag{typeof(lag), T}, T, 1}}(undef, ntotal)
-  glz = similar(lz)
-  cfg = ForwardDiff.GradientConfig(lag, lz)
-  function ∇φ!(gz, z; lag = lag, cfg = cfg)
-    ForwardDiff.gradient!(gz, lag, z, cfg)
-    return gz
-  end
-  longv = fill!(S(undef, ntotal), 0)
-  Hvp = fill!(S(undef, ntotal), 0)
-
-  # unconstrained Hessian
-  tagf = ForwardDiff.Tag{typeof(f), T}
-  z = Vector{ForwardDiff.Dual{tagf, T, 1}}(undef, nvar)
-  gz = similar(z)
-  cfgf = ForwardDiff.GradientConfig(f, z)
-  ∇f!(gz, z; f = f, cfgf = cfgf) = ForwardDiff.gradient!(gz, f, z, cfgf)
-
-  return ForwardDiffADHvprod(lz, glz, sol, longv, Hvp, ∇φ!, z, gz, ∇f!)
+  return ForwardDiffADHvprod(FDBackend, f, ℓ, prep_obj, prep_lag, cx, y)
 end
 
+# `y` is copied into the backend-owned buffer `b.y` so that the `Constant` context always has
+# the same type as the one used at preparation, even when the caller passes a view.
 function Hvprod!(
-  b::ForwardDiffADHvprod{Tag, GT, S, T},
+  b::ForwardDiffADHvprod,
   Hv,
   x::AbstractVector{T},
   v,
@@ -237,101 +204,59 @@ function Hvprod!(
   ::Val{:lag},
   y,
   obj_weight::Real = one(T),
-) where {Tag, GT, S, T}
-  nvar = length(x)
-  ncon = Int((length(b.sol) - nvar - 1) / 2)
-  b.sol[1:ncon] .= zero(T)
-  b.sol[(ncon + 1):(ncon + nvar)] .= x
-  b.sol[(ncon + nvar + 1):(2 * ncon + nvar)] .= y
-  b.sol[end] = obj_weight
-
-  b.longv .= 0
-  b.longv[(ncon + 1):(ncon + nvar)] .= v
-  map!(ForwardDiff.Dual{Tag}, b.lz, b.sol, b.longv)
-
-  b.∇φ!(b.glz, b.lz)
-  ForwardDiff.extract_derivative!(Tag, b.Hvp, b.glz)
-  Hv .= view(b.Hvp, (ncon + 1):(ncon + nvar))
+) where {T}
+  b.y .= y
+  DI.hvp!(b.ℓ, (Hv,), b.prep_lag, b.backend, x, (v,), Cache(b.cx), Constant(b.y), Constant(T(obj_weight)))
   return Hv
 end
 
 function Hvprod!(
-  b::ForwardDiffADHvprod{Tag, GT, S, T, F, Tagf},
+  b::ForwardDiffADHvprod,
   Hv,
   x::AbstractVector{T},
   v,
   f,
   ::Val{:obj},
   obj_weight::Real = one(T),
-) where {Tag, GT, S, T, F, Tagf}
-  map!(ForwardDiff.Dual{Tagf}, b.z, x, v) # x + ε * v
-  b.∇f!(b.gz, b.z) # ∇f(x + ε * v) = ∇f(x) + ε * ∇²f(x)ᵀv
-  ForwardDiff.extract_derivative!(Tagf, Hv, b.gz)  # ∇²f(x)ᵀv
+) where {T}
+  DI.hvp!(b.f, (Hv,), b.prep_obj, b.backend, x, (v,))
   Hv .*= obj_weight
   return Hv
 end
 
+# Hessian of the `j`-th nonlinear constraint: reuse the Lagrangian preparation with `y = eⱼ`
+# and a zero objective weight.
 function NLPModels.hprod!(
-  b::ForwardDiffADHvprod{Tag, GT, S, T},
+  b::ForwardDiffADHvprod,
   nlp::ADModel,
-  x::AbstractVector,
+  x::AbstractVector{T},
   v::AbstractVector,
   j::Integer,
   Hv::AbstractVector,
-) where {Tag, GT, S, T}
-  nvar = nlp.meta.nvar
-  ncon = nlp.meta.nnln
-
-  b.sol[1:ncon] .= 0
-  b.sol[(ncon + 1):(ncon + nvar)] .= x
+) where {T}
   k = 0
   for i = 1:(nlp.meta.ncon)
     if i in nlp.meta.nln
       k += 1
-      b.sol[ncon + nvar + k] = i == j ? one(T) : zero(T)
+      b.y[k] = i == j ? one(T) : zero(T)
     end
   end
-
-  b.sol[end] = zero(T)
-
-  b.longv .= 0
-  b.longv[(ncon + 1):(ncon + nvar)] .= v
-  map!(ForwardDiff.Dual{Tag}, b.lz, b.sol, b.longv)
-
-  b.∇φ!(b.glz, b.lz)
-  ForwardDiff.extract_derivative!(Tag, b.Hvp, b.glz)
-  Hv .= view(b.Hvp, (ncon + 1):(ncon + nvar))
+  DI.hvp!(b.ℓ, (Hv,), b.prep_lag, b.backend, x, (v,), Cache(b.cx), Constant(b.y), Constant(zero(T)))
   return Hv
 end
 
 function NLPModels.hprod_residual!(
-  b::ForwardDiffADHvprod{Tag, GT, S, T},
+  b::ForwardDiffADHvprod,
   nls::AbstractADNLSModel,
-  x::AbstractVector,
+  x::AbstractVector{T},
   v::AbstractVector,
   j::Integer,
   Hv::AbstractVector,
-) where {Tag, GT, S, T}
-  nvar = nls.meta.nvar
-  nequ = nls.nls_meta.nequ
-
-  b.sol[1:nequ] .= 0
-  b.sol[(nequ + 1):(nequ + nvar)] .= x
-  for i = 1:nequ
-    b.sol[nequ + nvar + i] = i == j ? one(T) : zero(T)
+) where {T}
+  for i = 1:(nls.nls_meta.nequ)
+    b.y[i] = i == j ? one(T) : zero(T)
   end
-
-  b.sol[end] = zero(T)
-
-  b.longv .= 0
-  b.longv[(nequ + 1):(nequ + nvar)] .= v
-
-  map!(ForwardDiff.Dual{Tag}, b.lz, b.sol, b.longv)
-
-  b.∇φ!(b.glz, b.lz)
-
-  ForwardDiff.extract_derivative!(Tag, b.Hvp, b.glz)
-  Hv .= view(b.Hvp, (nequ + 1):(nequ + nvar))
+  DI.hvp!(b.ℓ, (Hv,), b.prep_lag, b.backend, x, (v,), Cache(b.cx), Constant(b.y), Constant(zero(T)))
   return Hv
 end
 
