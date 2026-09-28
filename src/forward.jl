@@ -206,7 +206,17 @@ function Hvprod!(
   obj_weight::Real = one(T),
 ) where {T}
   b.y .= y
-  DI.hvp!(b.ℓ, (Hv,), b.prep_lag, b.backend, x, (v,), Cache(b.cx), Constant(b.y), Constant(T(obj_weight)))
+  DI.hvp!(
+    b.ℓ,
+    (Hv,),
+    b.prep_lag,
+    b.backend,
+    x,
+    (v,),
+    Cache(b.cx),
+    Constant(b.y),
+    Constant(T(obj_weight)),
+  )
   return Hv
 end
 

@@ -32,8 +32,7 @@
   # Both backends used to record on uninitialised memory. `SparseADHessian` and the
   # ForwardDiff backends never did, and are kept here as controls.
   builders = (
-    "SparseReverseADHessian" =>
-      () -> ADNLPModels.SparseReverseADHessian(nvar, f, ncon, c!, Hpat),
+    "SparseReverseADHessian" => () -> ADNLPModels.SparseReverseADHessian(nvar, f, ncon, c!, Hpat),
     "ReverseDiffADHvprod" => () -> ADNLPModels.ReverseDiffADHvprod(nvar, f, ncon, c!),
     "SparseADHessian" => () -> ADNLPModels.SparseADHessian(nvar, f, ncon, c!, Hpat),
     "ForwardDiffADHvprod" => () -> ADNLPModels.ForwardDiffADHvprod(nvar, f, ncon, c!),
