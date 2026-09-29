@@ -254,8 +254,11 @@ By default, the setter with kwargs will reuse existing backends.
 This will create a new `ADNLPModel` or `ADNLSModel` instance, leaving the original one unchanged.
 """
 function set_adbackend(nlp::ADModel, new_adbackend::ADModelBackend)
-  obj = isa(nlp, ADNLSModel) ? nlp.F! : nlp.f
-  return ADNLPModel(nlp.meta, nlp.counters, new_adbackend, obj, nlp.c!)
+  return ADNLPModel(nlp.meta, nlp.counters, new_adbackend, nlp.f, nlp.c!)
+end
+
+function set_adbackend(nlp::ADNLSModel, new_adbackend::ADModelBackend)
+  return ADNLSModel(nlp.meta, nlp.nls_meta, nlp.counters, new_adbackend, nlp.F!, nlp.c!)
 end
 
 function set_adbackend(nlp::ADModel; kwargs...)
