@@ -86,7 +86,7 @@ grad(nlp, nlp.meta.x0)  # returns the gradient at x0 using `NewADGradient`
 
 ### Change backend
 
-Once an instance of an `ADNLPModel` has been created, it is possible to change the backends without re-instantiating the model.
+Once an instance of an `ADNLPModel` has been created, it is possible to change the backends, by creating a new instance of `ADNLPModel` with the updated backend.
 
 ```@example adnlp2
 using ADNLPModels, NLPModels
@@ -96,18 +96,18 @@ nlp = ADNLPModel(f, x0)
 get_adbackend(nlp) # returns the `ADModelBackend` structure that regroup all the various backends.
 ```
 
-There are currently two ways to modify instantiated backends. The first one is to instantiate a new `ADModelBackend` and use `set_adbackend!` to modify `nlp`.
+There are currently two ways to modify instantiated backends. The first one is to instantiate a new `ADModelBackend` and use `set_adbackend`.
 
 ```@example adnlp2
 adback = ADNLPModels.ADModelBackend(nlp.meta.nvar, nlp.f, gradient_backend = ADNLPModels.ForwardDiffADGradient)
-set_adbackend!(nlp, adback)
+nlp = set_adbackend(nlp, adback)
 get_adbackend(nlp)
 ```
 
-The alternative is to use `set_adbackend!` and pass the new backends via `kwargs`. In the second approach, it is possible to pass either the type of the desired backend or an instance as shown below.
+The alternative is to use `set_adbackend` and pass the new backends via `kwargs`. In the second approach, it is possible to pass either the type of the desired backend or an instance as shown below.
 
 ```@example adnlp2
-set_adbackend!(
+nlp = set_adbackend(
   nlp,
   gradient_backend = ADNLPModels.ForwardDiffADGradient,
   jtprod_backend = ADNLPModels.GenericForwardDiffADJtprod(),
@@ -115,9 +115,9 @@ set_adbackend!(
 get_adbackend(nlp)
 ```
 
-### Support multiple precision without having to recreate the model
+### Multiple precision support
 
-One of the strength of `ADNLPModels.jl` is the type flexibility. Let's assume, we first instantiate an `ADNLPModel` with a `Float64` initial guess.
+Let's assume, we instantiate an `ADNLPModel` with a `Float64` initial guess.
 
 ```@example adnlp3
 using ADNLPModels, NLPModels
@@ -133,11 +133,11 @@ x64 = rand(2)
 grad(nlp, x64)
 ```
 
-It is now possible to move to a different type, for instance `Float32`, while keeping the instance `nlp`.
+It is possible to move to a different type, for instance `Float32`.
 
 ```@example adnlp3
 x0_32 = ones(Float32, 2)
-set_adbackend!(nlp, gradient_backend = ADNLPModels.ForwardDiffADGradient, x0 = x0_32)
+nlp = set_adbackend(nlp, gradient_backend = ADNLPModels.ForwardDiffADGradient, x0 = x0_32)
 x32 = rand(Float32, 2)
 grad(nlp, x32)
 ```
