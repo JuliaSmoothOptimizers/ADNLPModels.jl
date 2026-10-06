@@ -267,7 +267,7 @@ function set_adbackend(nlp::ADNLPModel, new_adbackend::ADModelBackend)
 end
 
 function set_adbackend(nlp::ADNLSModel, new_adbackend::ADModelBackend)
-  return ADNLSModel!(
+  return ADNLSModel(
     nlp.meta,
     nlp.nls_meta,
     nlp.counters,
