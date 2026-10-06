@@ -163,7 +163,7 @@ function ADNLSModel!(model::AbstractNLSModel; kwargs...)
   end
 end
 
-export get_adbackend, set_adbackend!, set_adbackend
+export get_adbackend, set_adbackend
 
 """
     get_c(nlp)
@@ -249,16 +249,35 @@ get_adbackend(nlp::ADModel) = nlp.adbackend
     set_adbackend(nlp, new_adbackend)
     set_adbackend(nlp; kwargs...)
 
-Replace the current `adbackend` value of nlp by `new_adbackend` or instantiate a new one with `kwargs`, see `ADModelBackend`.
-By default, the setter with kwargs will reuse existing backends.
-This will create a new `ADNLPModel` or `ADNLSModel` instance, leaving the original one unchanged.
+Return a new `ADNLPModel` or `ADNLSModel` whose `adbackend` is `new_adbackend`, or a new one instantiated from `kwargs`, see `ADModelBackend`.
+By default, the setter with kwargs will reuse the existing backends.
+The original model is left unchanged, but the new model shares its `counters`, functions and linear constraints with it.
 """
-function set_adbackend(nlp::ADModel, new_adbackend::ADModelBackend)
-  return ADNLPModel(nlp.meta, nlp.counters, new_adbackend, nlp.f, nlp.c!)
+function set_adbackend(nlp::ADNLPModel, new_adbackend::ADModelBackend)
+  return ADNLPModel(
+    nlp.meta,
+    nlp.counters,
+    new_adbackend,
+    nlp.f,
+    nlp.clinrows,
+    nlp.clincols,
+    nlp.clinvals,
+    nlp.c!,
+  )
 end
 
 function set_adbackend(nlp::ADNLSModel, new_adbackend::ADModelBackend)
-  return ADNLSModel(nlp.meta, nlp.nls_meta, nlp.counters, new_adbackend, nlp.F!, nlp.c!)
+  return ADNLSModel!(
+    nlp.meta,
+    nlp.nls_meta,
+    nlp.counters,
+    new_adbackend,
+    nlp.F!,
+    nlp.clinrows,
+    nlp.clincols,
+    nlp.clinvals,
+    nlp.c!,
+  )
 end
 
 function set_adbackend(nlp::ADModel; kwargs...)
@@ -277,36 +296,6 @@ function set_adbackend(nlp::ADModel; kwargs...)
     end)
   end
   return set_adbackend(nlp, ADModelBackend(args...))
-end
-
-"""
-    set_adbackend!(nlp, new_adbackend)
-    set_adbackend!(nlp; kwargs...)
-
-Replace the current `adbackend` value of nlp by `new_adbackend` or instantiate a new one with `kwargs`, see `ADModelBackend`.
-By default, the setter with kwargs will reuse existing backends.
-"""
-function set_adbackend!(nlp::ADModel, new_adbackend::ADModelBackend)
-  nlp.adbackend = new_adbackend
-  return nlp
-end
-function set_adbackend!(nlp::ADModel; kwargs...)
-  args = []
-  for field in fieldnames(ADNLPModels.ADModelBackend)
-    push!(args, if field in keys(kwargs) && typeof(kwargs[field]) <: ADBackend
-      kwargs[field]
-    elseif field in keys(kwargs) && kwargs[field] isa Type
-      if typeof(nlp) <: ADNLPModel
-        kwargs[field](nlp.meta.nvar, nlp.f, nlp.meta.ncon; kwargs...)
-      elseif typeof(nlp) <: ADNLSModel
-        kwargs[field](nlp.meta.nvar, x -> sum(nlp.F(x) .^ 2), nlp.meta.ncon; kwargs...)
-      end
-    else
-      getfield(nlp.adbackend, field)
-    end)
-  end
-  nlp.adbackend = ADModelBackend(args...)
-  return nlp
 end
 
 end # module
