@@ -45,7 +45,7 @@ These arguments specify the sparsity pattern detector and the coloring algorithm
 ```@example ex1
 import SparseConnectivityTracer.TracerLocalSparsityDetector
 
-set_adbackend!(
+nlp = set_adbackend(
   nlp,
   jacobian_backend = ADNLPModels.SparseADJacobian(nvar, f, ncon, c!, detector=TracerLocalSparsityDetector()),
   hessian_backend = ADNLPModels.SparseADHessian(nvar, f, ncon, c!, detector=TracerLocalSparsityDetector()),
@@ -59,7 +59,7 @@ set_adbackend!(
 ```@example ex1
 using SparseMatrixColorings
 
-set_adbackend!(
+nlp = set_adbackend(
   nlp,
   hessian_backend = ADNLPModels.SparseADHessian(nvar, f, ncon, c!, coloring_algorithm=GreedyColoringAlgorithm{:substitution}()),
 )
