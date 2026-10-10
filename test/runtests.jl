@@ -25,6 +25,7 @@ end
 end
 
 include("tape_seeding.jl")
+include("tag_ordering.jl")
 
 include("sparse_jacobian.jl")
 include("sparse_jacobian_nls.jl")
