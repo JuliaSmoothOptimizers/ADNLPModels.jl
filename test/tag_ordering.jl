@@ -20,7 +20,8 @@
   x, y, v = ones(3), ones(3), [1.0, 2.0, 3.0]
   H = [2.0 0.0 0.0; 0.0 0.0 -0.5; 0.0 -0.5 0.0]
 
-  nlp = ADNLPModel!(f, x, c!, zeros(3), zeros(3), hessian_backend = ADNLPModels.SparseReverseADHessian)
+  nlp =
+    ADNLPModel!(f, x, c!, zeros(3), zeros(3), hessian_backend = ADNLPModels.SparseReverseADHessian)
   @test hess(nlp, x, y) ≈ H
 
   nlp = ADNLPModel!(f, x, c!, zeros(3), zeros(3), hprod_backend = ADNLPModels.ReverseDiffADHvprod)
