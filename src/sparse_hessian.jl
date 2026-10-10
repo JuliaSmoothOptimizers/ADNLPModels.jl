@@ -181,7 +181,7 @@ function SparseReverseADHessian(
 
   # unconstrained Hessian
   timer = @elapsed begin
-    tagf = ForwardDiff.Tag{typeof(f), T}
+    tagf = typeof(ForwardDiff.Tag(f, T))
     z = seeded_duals(tagf, x0, nvar)
     gz = similar(z)
     f_tape = ReverseDiff.GradientTape(f, z)
@@ -195,7 +195,7 @@ function SparseReverseADHessian(
       c!(tmp_out, x)
       dot(tmp_out, u)
     end
-    tagψ = ForwardDiff.Tag{typeof(ψ), T}
+    tagψ = typeof(ForwardDiff.Tag(ψ, T))
     zψ = seeded_duals(tagψ, x0, nvar)
     yψ = fill!(similar(zψ, ncon), zero(T))
     ψ_tape = ReverseDiff.GradientConfig((zψ, yψ))
